@@ -152,7 +152,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-end mb-6">
+      <div className="flex items-center justify-end mb-2">
         <Link
           to="/announcements"
           className="relative p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
@@ -167,8 +167,8 @@ export default function Profile() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-        <div className="flex flex-col items-center gap-4">
+      <div className="bg-white rounded-2xl shadow-sm pt-4 px-6 pb-6 mb-4">
+        <div className="flex flex-col items-center gap-3">
           <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-red-500 shadow-lg">
             <img src="/dezajuku_icon_0531_1-05 copy.png" alt="Profile" className="w-full h-full object-cover" />
           </div>
