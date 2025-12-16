@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -74,6 +74,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) throw error;
+
+    if (data.user) {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ name: name })
+        .eq('id', data.user.id);
+
+      if (updateError) {
+        console.error('Error updating user name:', updateError);
+      }
+    }
   };
 
   const signIn = async (email: string, password: string) => {

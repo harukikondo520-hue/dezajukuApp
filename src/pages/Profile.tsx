@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Bell } from 'lucide-react';
+import { LogOut, Bell, Edit2, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
@@ -22,6 +22,8 @@ export default function Profile() {
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -80,6 +82,34 @@ export default function Profile() {
     }
   };
 
+  const handleEditName = () => {
+    setEditedName(profile?.name || '');
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!user || !editedName.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ name: editedName.toUpperCase() })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating name:', error);
+      alert('名前の更新に失敗しました');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setEditedName('');
+  };
+
   const hasBadge = (badgeId: string) => badges.some((b) => b.badge_id === badgeId);
 
   if (loading) {
@@ -112,8 +142,44 @@ export default function Profile() {
           <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-red-500 shadow-lg">
             <img src="/dezajuku_icon_0531_1-05 copy.png" alt="Profile" className="w-full h-full object-cover" />
           </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-slate-900">{profile?.name}</h1>
+          <div className="text-center w-full max-w-sm">
+            {isEditingName ? (
+              <div className="flex items-center justify-center gap-2">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value.toUpperCase())}
+                  placeholder="TARO YAMADA"
+                  className="text-xl font-bold text-slate-900 border-2 border-red-500 rounded-lg px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-red-500"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                  title="保存"
+                >
+                  <Check size={20} />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="p-2 bg-slate-400 text-white rounded-lg hover:bg-slate-500 transition"
+                  title="キャンセル"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-2xl font-bold text-slate-900">{profile?.name || '名前未設定'}</h1>
+                <button
+                  onClick={handleEditName}
+                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                  title="名前を編集"
+                >
+                  <Edit2 size={18} />
+                </button>
+              </div>
+            )}
           </div>
           <div className="flex gap-2">
             <button
