@@ -183,7 +183,7 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-slate-900">Hello,</h1>
           <img src="/logox4.png" alt="デザジュク" className="h-9" />
         </div>
-        <p className="text-2xl text-slate-700">ようこそ、{profile?.name}さん</p>
+        <p className="text-sm text-slate-700">ようこそ、{profile?.name}さん</p>
       </div>
 
       <div className="mb-0 -mx-4">

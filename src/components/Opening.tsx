@@ -23,12 +23,8 @@ export default function Opening({ onComplete }: OpeningProps) {
     setIsLoading(false);
   };
 
-  const handleSkip = () => {
-    onComplete();
-  };
-
   return (
-    <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-white flex items-center justify-center overflow-hidden">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-slate-600"></div>
@@ -37,6 +33,7 @@ export default function Opening({ onComplete }: OpeningProps) {
 
       <video
         className="w-full h-full object-contain"
+        style={{ transform: 'scale(1.2)' }}
         autoPlay
         playsInline
         muted
@@ -48,13 +45,6 @@ export default function Opening({ onComplete }: OpeningProps) {
           type="video/mp4"
         />
       </video>
-
-      <button
-        onClick={handleSkip}
-        className="absolute bottom-8 right-8 px-6 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-full text-sm font-medium transition-all shadow-lg"
-      >
-        スキップ
-      </button>
     </div>
   );
 }
