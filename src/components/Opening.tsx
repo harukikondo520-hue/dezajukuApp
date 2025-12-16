@@ -28,10 +28,10 @@ export default function Opening({ onComplete }: OpeningProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-slate-600"></div>
         </div>
       )}
 
@@ -51,7 +51,7 @@ export default function Opening({ onComplete }: OpeningProps) {
 
       <button
         onClick={handleSkip}
-        className="absolute bottom-8 right-8 px-6 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-full text-sm font-medium transition-all backdrop-blur-sm"
+        className="absolute bottom-8 right-8 px-6 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-full text-sm font-medium transition-all shadow-lg"
       >
         スキップ
       </button>

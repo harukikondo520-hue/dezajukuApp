@@ -46,7 +46,7 @@ export default function SignUp() {
     <div className="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 py-8" style={{ backgroundImage: 'url(/login_bg2-1.jpg)' }}>
       <div className="max-w-md w-full">
         <div className="bg-white rounded-3xl shadow-sm p-8 sm:p-12">
-          <div className="flex justify-center mb-8 mt-4">
+          <div className="flex justify-center mb-6">
             <img src="/logo_black.svg" alt="デザジュク" className="h-10" />
           </div>
 
