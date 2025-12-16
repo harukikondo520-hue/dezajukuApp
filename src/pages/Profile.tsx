@@ -50,11 +50,15 @@ export default function Profile() {
   useEffect(() => {
     if (scrollContainerRef.current) {
       const container = scrollContainerRef.current;
-      const bannerWidth = container.offsetWidth;
-      container.scrollTo({
-        left: bannerWidth * currentBanner,
-        behavior: 'smooth',
-      });
+      const banners = container.children;
+      if (banners[currentBanner]) {
+        const banner = banners[currentBanner] as HTMLElement;
+        const containerPadding = parseInt(getComputedStyle(container).paddingLeft) || 0;
+        container.scrollTo({
+          left: banner.offsetLeft - containerPadding,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [currentBanner]);
 
@@ -219,17 +223,17 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 -mx-4 sm:mx-0">
         <div className="relative">
           <div
             ref={scrollContainerRef}
-            className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+            className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-4 sm:px-0"
             style={{ scrollSnapType: 'x mandatory' }}
           >
             {BANNERS.map((banner) => (
               <div
                 key={banner.id}
-                className="min-w-full snap-start"
+                className="flex-shrink-0 w-[82%] sm:w-[85%] snap-start"
               >
                 <img
                   src={banner.image}
