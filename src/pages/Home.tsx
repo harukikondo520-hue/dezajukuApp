@@ -194,7 +194,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-black rounded-2xl p-6 mb-8 -mt-12 text-white overflow-hidden aspect-[1.586/1]" style={{
+      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-black rounded-2xl p-5 sm:p-6 mb-8 -mt-12 text-white overflow-hidden aspect-[1.586/1]" style={{
         boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)',
         transform: 'translateZ(0)',
       }}>
@@ -210,7 +210,7 @@ export default function Home() {
           </div>
           <div>
             <div className="text-xs uppercase tracking-widest text-white/70 font-medium mb-2">Total Income</div>
-            <div className="text-5xl font-bold tracking-tight" style={{ fontFamily: "'DIN Next', 'DIN', system-ui, -apple-system, sans-serif" }}>
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight break-words" style={{ fontFamily: "'DIN Next', 'DIN', system-ui, -apple-system, sans-serif" }}>
               ¥{totalIncome.toLocaleString()}
             </div>
           </div>
