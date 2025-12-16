@@ -194,7 +194,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-black rounded-2xl p-4 sm:p-6 mb-8 -mt-12 text-white overflow-hidden aspect-[1.586/1]" style={{
+      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-black rounded-2xl p-6 sm:p-8 mb-8 -mt-12 text-white overflow-hidden min-h-[240px] sm:aspect-[1.586/1]" style={{
         boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)',
         transform: 'translateZ(0)',
       }}>
@@ -203,14 +203,14 @@ export default function Home() {
         <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
 
-        <div className="relative z-10 h-full flex flex-col">
-          <div className="flex items-start justify-between mb-auto">
+        <div className="relative z-10 h-full flex flex-col justify-between">
+          <div className="flex items-start justify-between">
             <img src="/logox4.png" alt="デザジュク" className="h-5 brightness-0 invert opacity-90" />
             <div className="text-xs uppercase tracking-widest text-white/70 font-medium">{currentMonth}</div>
           </div>
-          <div className="-mx-1 pb-2">
-            <div className="text-xs uppercase tracking-widest text-white/70 font-medium mb-1 px-1">Total Income</div>
-            <div className="text-4xl sm:text-5xl font-bold tracking-tight overflow-hidden px-1 leading-tight" style={{ fontFamily: "'DIN Next', 'DIN', system-ui, -apple-system, sans-serif", wordBreak: 'break-all' }}>
+          <div className="-mx-1">
+            <div className="text-xs uppercase tracking-widest text-white/70 font-medium mb-2 px-1">Total Income</div>
+            <div className="text-5xl font-bold tracking-tight overflow-hidden px-1" style={{ fontFamily: "'DIN Next', 'DIN', system-ui, -apple-system, sans-serif", wordBreak: 'break-all' }}>
               ¥{totalIncome.toLocaleString()}
             </div>
           </div>
