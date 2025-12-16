@@ -19,12 +19,11 @@ const AVAILABLE_ICONS = [
 ];
 
 const BADGE_INFO = {
-  first_project: { name: '案件デビュー', description: '初めての案件登録', emoji: '🎯' },
-  first_survey: { name: '目標設定マスター', description: '初めてのアンケート回答', emoji: '📝' },
-  first_video: { name: 'はじめの一歩', description: '初めての動画視聴完了', emoji: '🎬', studentOnly: true },
-  seven_days: { name: '継続は力なり', description: '7日連続ログイン', emoji: '🔥' },
-  income_achieved: { name: '月収目標達成', description: '推定月収が目標を超えた', emoji: '💰' },
-  complete_all: { name: 'コンプリート', description: '全動画視聴完了', emoji: '🏆', studentOnly: true },
+  first_project: { name: '0→1カリキュラム修了済', description: '初めてのカリキュラムを完了しました', image: '/0→1カリキュラム修了済.png', studentOnly: true },
+  complete_all: { name: '1→10カリキュラム修了済', description: '全カリキュラムを完了しました', image: '/1→10カリキュラム修了済.png', studentOnly: true },
+  meetup: { name: 'オフ会参加', description: 'オフ会に参加しました', image: '/dezajuku_badge_オフ会_01.png' },
+  camp: { name: '合宿参加', description: '合宿に参加しました', image: '/dezajuku_badge_合宿_01.png' },
+  maximize: { name: '成果最大化', description: '成果を最大化しました', image: '/dezajuku_badge成果最大化.png' },
 };
 
 export default function Profile() {
@@ -253,11 +252,11 @@ export default function Profile() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
           <Award className="text-red-600" size={24} />
           バッジコレクション
         </h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
           {Object.entries(BADGE_INFO).map(([badgeId, info]) => {
             const acquired = hasBadge(badgeId);
             const isLocked = info.studentOnly && profile?.role !== 'student';
@@ -265,22 +264,32 @@ export default function Profile() {
             return (
               <div
                 key={badgeId}
-                className={`p-3 rounded-xl border-2 transition ${
-                  acquired
-                    ? 'border-red-500 bg-red-50'
-                    : isLocked
-                    ? 'border-slate-200 bg-slate-50 opacity-50'
-                    : 'border-slate-200 bg-white'
-                }`}
+                className="flex flex-col items-center gap-3"
               >
-                <div className="text-3xl mb-1">
-                  {isLocked ? '🔒' : acquired ? info.emoji : '⚪'}
+                <div className={`relative w-24 h-24 sm:w-28 sm:h-28 transition-all duration-300 ${
+                  acquired ? 'scale-100' : 'scale-95 opacity-40'
+                }`}>
+                  {isLocked ? (
+                    <div className="w-full h-full rounded-full bg-slate-200 flex items-center justify-center text-4xl">
+                      🔒
+                    </div>
+                  ) : (
+                    <img
+                      src={info.image}
+                      alt={info.name}
+                      className={`w-full h-full object-contain ${
+                        !acquired ? 'grayscale' : ''
+                      }`}
+                    />
+                  )}
                 </div>
-                <div className="font-semibold text-slate-900 text-xs mb-0.5">{info.name}</div>
-                <div className="text-xs text-slate-600">{info.description}</div>
-                {isLocked && (
-                  <div className="text-xs text-slate-500 mt-1">スクール生徒限定</div>
-                )}
+                <div className="text-center">
+                  <div className="font-semibold text-slate-900 text-sm mb-1">{info.name}</div>
+                  <div className="text-xs text-slate-600">{info.description}</div>
+                  {isLocked && (
+                    <div className="text-xs text-slate-500 mt-1">スクール生徒限定</div>
+                  )}
+                </div>
               </div>
             );
           })}
