@@ -1,22 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Award, LogOut, Bell } from 'lucide-react';
+import { LogOut, Bell } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import type { Database } from '../types/database';
 
 type UserBadge = Database['public']['Tables']['user_badges']['Row'];
-
-const AVAILABLE_ICONS = [
-  { id: 'default', emoji: '👤', type: 'emoji' },
-  { id: 'dezajuku_red', type: 'image', src: '/dezahuku_red_1.png' },
-  { id: 'dezajuku_icon', type: 'image', src: '/dezajuku_icon_0531_1-05.png' },
-  { id: 'designer', emoji: '🎨', type: 'emoji' },
-  { id: 'developer', emoji: '💻', type: 'emoji' },
-  { id: 'star', emoji: '⭐', type: 'emoji' },
-  { id: 'rocket', emoji: '🚀', type: 'emoji' },
-  { id: 'lightning', emoji: '⚡', type: 'emoji' },
-];
 
 const BADGE_INFO = {
   first_project: { name: '0→1講義', image: '/0→1カリキュラム修了済.png', tempAcquired: true },
@@ -30,23 +19,12 @@ const BADGE_INFO = {
 export default function Profile() {
   const { profile, user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: profile?.name || '',
-    icon: profile?.icon || 'default',
-    bio: profile?.bio || '',
-  });
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (profile) {
-      setFormData({
-        name: profile.name,
-        icon: profile.icon,
-        bio: profile.bio,
-      });
       loadBadges();
       loadUnreadCount();
     }
@@ -93,26 +71,6 @@ export default function Profile() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({
-          name: formData.name,
-          icon: formData.icon,
-          bio: formData.bio,
-        })
-        .eq('id', user!.id);
-
-      if (error) throw error;
-      setEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    }
-  };
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -122,7 +80,6 @@ export default function Profile() {
     }
   };
 
-  const selectedIcon = AVAILABLE_ICONS.find((i) => i.id === formData.icon);
   const hasBadge = (badgeId: string) => badges.some((b) => b.badge_id === badgeId);
 
   if (loading) {
@@ -151,118 +108,30 @@ export default function Profile() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-        <div className="flex flex-col items-center gap-4 mb-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-4xl overflow-hidden">
-            {selectedIcon?.type === 'image' ? (
-              <img src={selectedIcon.src} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              selectedIcon?.emoji
-            )}
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-red-500 shadow-lg">
+            <img src="/dezajuku_icon_0531_1-05 copy.png" alt="Profile" className="w-full h-full object-cover" />
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-slate-900">{profile?.name}</h1>
           </div>
-          {!editing && (
-            <div className="flex gap-2">
-              <button
-                onClick={() => setEditing(true)}
-                className="px-5 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition"
-              >
-                編集
-              </button>
-              <button
-                onClick={handleSignOut}
-                className="px-5 py-2 bg-slate-600 text-white rounded-xl text-sm font-medium hover:bg-slate-700 transition flex items-center gap-2"
-              >
-                <LogOut size={16} />
-                ログアウト
-              </button>
-            </div>
-          )}
-        </div>
-
-        {editing ? (
-          <form onSubmit={handleSubmit} className="space-y-3 border-t pt-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">名前（ローマ字）</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
-                required
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                placeholder="TARO YAMADA"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">アイコン</label>
-              <div className="grid grid-cols-4 gap-2">
-                {AVAILABLE_ICONS.map((icon) => (
-                  <button
-                    key={icon.id}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, icon: icon.id })}
-                    className={`p-3 rounded-xl border-2 transition ${
-                      formData.icon === icon.id
-                        ? 'border-red-500 bg-red-50'
-                        : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    {icon.type === 'image' ? (
-                      <img src={icon.src} alt={icon.id} className="w-full h-12 object-contain" />
-                    ) : (
-                      <div className="text-3xl">{icon.emoji}</div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">自己紹介</label>
-              <textarea
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                placeholder="自己紹介を入力してください"
-              />
-            </div>
-            <div className="flex gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setEditing(false)}
-                className="flex-1 px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition"
-              >
-                キャンセル
-              </button>
-              <button
-                type="submit"
-                className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition"
-              >
-                保存
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="border-t pt-4">
-            <p className="text-sm text-slate-600 whitespace-pre-wrap">
-              {profile?.bio || '自己紹介がまだ設定されていません'}
-            </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleSignOut}
+              className="px-5 py-2 bg-slate-600 text-white rounded-xl text-sm font-medium hover:bg-slate-700 transition flex items-center gap-2"
+            >
+              <LogOut size={16} />
+              ログアウト
+            </button>
           </div>
-        )}
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Award className="text-red-600" size={28} />
-            バッジコレクション
-          </h2>
-          <div className="text-sm font-medium text-slate-600 bg-slate-50 px-4 py-2 rounded-full">
-            {Object.entries(BADGE_INFO).filter(([id, info]) => info.tempAcquired || hasBadge(id)).length} / {Object.keys(BADGE_INFO).length}
-          </div>
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-slate-900">バッヂ一覧</h2>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 gap-8">
           {Object.entries(BADGE_INFO).map(([badgeId, info]) => {
             const acquired = info.tempAcquired || hasBadge(badgeId);
 
@@ -271,7 +140,7 @@ export default function Profile() {
                 key={badgeId}
                 className="flex flex-col items-center gap-3 transition-transform duration-200 hover:scale-105"
               >
-                <div className="relative w-24 h-24 sm:w-28 sm:h-28">
+                <div className="relative w-32 h-32">
                   <img
                     src={info.image}
                     alt={info.name}
@@ -281,7 +150,7 @@ export default function Profile() {
                   />
                 </div>
                 <div className="text-center">
-                  <div className={`font-semibold text-xs ${acquired ? 'text-slate-900' : 'text-slate-400'}`}>
+                  <div className={`font-semibold text-sm ${acquired ? 'text-slate-900' : 'text-slate-400'}`}>
                     {info.name}
                   </div>
                 </div>
