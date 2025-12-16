@@ -230,18 +230,20 @@ export default function Home() {
         <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide mb-2">
           {projects.length === 0 ? (
             <>
-              <div className="flex-shrink-0 w-64 bg-gradient-to-br from-[#04C8E2] to-[#0398b3] rounded-2xl p-5 text-white">
+              <div className="flex-shrink-0 w-64 bg-gradient-to-br from-[#E075EB] to-[#E54560] rounded-2xl p-5 text-white opacity-40">
                 <div className="mb-2 text-xs font-medium">プロジェクト</div>
-                <div className="text-lg font-bold mb-3">株式会社◯◯ホワイトペーパー制作</div>
+                <div className="text-lg font-bold mb-3 min-h-[3rem]">株式会社〇〇 スライド制作</div>
+                <div className="text-2xl font-bold mb-3">¥70,000</div>
                 <div className="inline-block px-3 py-1 bg-white/30 rounded-full text-xs font-medium">
                   スライド資料
                 </div>
               </div>
-              <div className="flex-shrink-0 w-64 bg-gradient-to-br from-[#04C8E2] to-[#0398b3] rounded-2xl p-5 text-white">
+              <div className="flex-shrink-0 w-64 bg-gradient-to-br from-[#3B9AEE] to-[#00D8EE] rounded-2xl p-5 text-white opacity-40">
                 <div className="mb-2 text-xs font-medium">プロジェクト</div>
-                <div className="text-lg font-bold mb-3">株式会社◯◯ホワイトペーパー制作</div>
+                <div className="text-lg font-bold mb-3 min-h-[3rem]">株式会社〇〇 ホームページ制作</div>
+                <div className="text-2xl font-bold mb-3">¥160,000</div>
                 <div className="inline-block px-3 py-1 bg-white/30 rounded-full text-xs font-medium">
-                  スライド資料
+                  HP
                 </div>
               </div>
             </>
