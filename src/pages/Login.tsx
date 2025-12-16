@@ -26,7 +26,7 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-cover bg-center bg-no-repeat flex items-center justify-center px-4" style={{ backgroundImage: 'url(/login_bg2-1.jpg)' }}>
+    <div className="h-screen overflow-hidden bg-cover bg-center bg-no-repeat flex items-center justify-center px-4" style={{ backgroundImage: 'url(/loginbg.jpg)' }}>
       <div className="max-w-md w-full">
         <div className="bg-white rounded-3xl shadow-sm p-8 sm:p-12">
           <div className="flex justify-center mb-6">
