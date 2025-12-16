@@ -90,92 +90,80 @@ export default function Survey() {
   const nextDate = getNextSubmissionDate();
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-4xl mx-auto">
+      <div className="flex items-center gap-16 mb-8">
         <div>
-          <h1 className="text-3xl font-semibold text-slate-900 mb-1 tracking-tight">
+          <h1 className="text-4xl font-bold text-slate-900 mb-2" style={{ fontFamily: "'LINESeedJP_OTF', sans-serif" }}>
             週報提出
           </h1>
           {nextDate ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-slate-600">
               次の提出は{formatDate(nextDate)}です
             </p>
           ) : (
-            <p className="text-sm text-slate-500">
-              週報を提出してみましょう
+            <p className="text-sm text-slate-600">
+              週報を提出してみましょう！
             </p>
           )}
         </div>
-        <img src="/shuho.png" alt="週報" className="h-20 w-auto opacity-80" />
+        <img src="/shuho.png" alt="週報" className="h-36 w-auto" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <label className="block text-sm font-medium text-slate-900">
-              ボトルネック
-            </label>
-          </div>
-          <div className="px-5 py-4">
-            <textarea
-              value={formData.bottleneck}
-              onChange={(e) => setFormData({ ...formData, bottleneck: e.target.value })}
-              className="w-full px-0 py-0 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-slate-900 placeholder:text-slate-400"
-              rows={4}
-              placeholder="今週直面した課題や困っていることを記入してください"
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-base font-semibold text-slate-900 mb-3">
+            ボトルネック
+          </label>
+          <textarea
+            value={formData.bottleneck}
+            onChange={(e) => setFormData({ ...formData, bottleneck: e.target.value })}
+            className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+            rows={4}
+            placeholder="今週直面した課題や困っていることを記入してください"
+            required
+          />
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <label className="block text-sm font-medium text-slate-900">
-              今週の成果物
-            </label>
-          </div>
-          <div className="px-5 py-4">
-            <input
-              type="url"
-              value={formData.achievement_link}
-              onChange={(e) => setFormData({ ...formData, achievement_link: e.target.value })}
-              className="w-full px-0 py-0 bg-transparent border-0 focus:outline-none focus:ring-0 text-slate-900 placeholder:text-slate-400"
-              placeholder="https://example.com/your-work"
-              required
-            />
-            <p className="text-xs text-slate-400 mt-3">成果物のリンクを入力してください</p>
-          </div>
+        <div>
+          <label className="block text-base font-semibold text-slate-900 mb-3">
+            今週の成果物
+          </label>
+          <input
+            type="url"
+            value={formData.achievement_link}
+            onChange={(e) => setFormData({ ...formData, achievement_link: e.target.value })}
+            className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            placeholder="https://example.com/your-work"
+            required
+          />
+          <p className="text-xs text-slate-500 mt-2">成果物のリンクを入力してください</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <label className="block text-sm font-medium text-slate-900">
-              その他
-            </label>
-          </div>
-          <div className="px-5 py-4">
-            <textarea
-              value={formData.other}
-              onChange={(e) => setFormData({ ...formData, other: e.target.value })}
-              className="w-full px-0 py-0 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-slate-900 placeholder:text-slate-400"
-              rows={4}
-              placeholder="その他、共有したいことがあれば記入してください"
-            />
-          </div>
+        <div>
+          <label className="block text-base font-semibold text-slate-900 mb-3">
+            その他
+          </label>
+          <textarea
+            value={formData.other}
+            onChange={(e) => setFormData({ ...formData, other: e.target.value })}
+            className="w-full px-4 py-3 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+            rows={4}
+            placeholder="その他、共有したいことがあれば記入してください"
+          />
         </div>
 
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-red-600 text-white py-3.5 rounded-2xl font-medium hover:bg-red-700 active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:active:scale-100"
+          className="w-full bg-red-600 text-white py-3 rounded-xl font-medium hover:bg-red-700 transition disabled:opacity-50"
         >
           {saving ? '提出中...' : '提出する'}
         </button>
       </form>
 
       {lastReport && (
-        <div className="mt-6 bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
-          <p className="text-xs text-slate-500">
+        <div className="mt-6 bg-slate-50 rounded-2xl p-4">
+          <p className="text-xs text-slate-600">
             最終提出: {new Date(lastReport.submitted_at).toLocaleString('ja-JP', {
               year: 'numeric',
               month: 'long',

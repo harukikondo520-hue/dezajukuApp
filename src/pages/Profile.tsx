@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LogOut, Bell, Edit2, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,6 +16,11 @@ const BADGE_INFO = {
   maximize: { name: '成果最大化', image: '/dezajuku_badge成果最大化.png' },
 };
 
+const BANNERS = [
+  { id: 1, image: '/newyears.jpg', alt: 'New Years Party 2025' },
+  { id: 2, image: '/kaori.jpg', alt: 'Special Event' },
+];
+
 export default function Profile() {
   const { profile, user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -24,6 +29,8 @@ export default function Profile() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [currentBanner, setCurrentBanner] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -31,6 +38,25 @@ export default function Profile() {
       loadUnreadCount();
     }
   }, [profile]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBanner((prev) => (prev + 1) % BANNERS.length);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const bannerWidth = container.offsetWidth;
+      container.scrollTo({
+        left: bannerWidth * currentBanner,
+        behavior: 'smooth',
+      });
+    }
+  }, [currentBanner]);
 
   const loadBadges = async () => {
     try {
@@ -189,6 +215,40 @@ export default function Profile() {
               <LogOut size={16} />
               ログアウト
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <div className="relative">
+          <div
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+            style={{ scrollSnapType: 'x mandatory' }}
+          >
+            {BANNERS.map((banner) => (
+              <div
+                key={banner.id}
+                className="min-w-full snap-start"
+              >
+                <img
+                  src={banner.image}
+                  alt={banner.alt}
+                  className="w-full h-48 object-cover rounded-2xl shadow-sm"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+            {BANNERS.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentBanner(index)}
+                className={`w-2 h-2 rounded-full transition ${
+                  currentBanner === index ? 'bg-white w-4' : 'bg-white/50'
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
