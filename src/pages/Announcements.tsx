@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Bell, X, AlertCircle, Megaphone, Calendar } from 'lucide-react';
+import { Bell, X, AlertCircle, Megaphone, Calendar, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import type { Database } from '../types/database';
@@ -13,6 +14,7 @@ interface AnnouncementWithRead extends Announcement {
 
 export default function Announcements() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState<AnnouncementWithRead[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementWithRead | null>(null);
@@ -124,6 +126,14 @@ export default function Announcements() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 flex items-center gap-2 text-slate-600 hover:text-red-600 transition"
+      >
+        <ArrowLeft size={20} />
+        <span>戻る</span>
+      </button>
+
       <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 mb-6 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
