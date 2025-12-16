@@ -19,12 +19,12 @@ const AVAILABLE_ICONS = [
 ];
 
 const BADGE_INFO = {
-  first_project: { name: '0→1講義', description: '初めての講義を完了しました', image: '/0→1カリキュラム修了済.png', studentOnly: true },
-  complete_all: { name: '1→10講義', description: '全講義を完了しました', image: '/1→10カリキュラム修了済.png', studentOnly: true },
-  sales: { name: '営業バッヂ', description: '営業活動を達成しました', image: '/dezajuku_badge_営業 copy.png' },
-  meetup: { name: 'オフ会参加', description: 'オフ会に参加しました', image: '/dezajuku_badge_オフ会_01.png' },
-  camp: { name: '合宿参加', description: '合宿に参加しました', image: '/dezajuku_badge_合宿_01.png' },
-  maximize: { name: '成果最大化', description: '成果を最大化しました', image: '/dezajuku_badge成果最大化.png' },
+  first_project: { name: '0→1講義', image: '/0→1カリキュラム修了済.png', tempAcquired: true },
+  complete_all: { name: '1→10講義', image: '/1→10カリキュラム修了済.png', tempAcquired: true },
+  sales: { name: '営業バッヂ', image: '/dezajuku_badge_営業 copy.png' },
+  meetup: { name: 'オフ会参加', image: '/dezajuku_badge_オフ会_01.png' },
+  camp: { name: '合宿参加', image: '/dezajuku_badge_合宿_01.png' },
+  maximize: { name: '成果最大化', image: '/dezajuku_badge成果最大化.png' },
 };
 
 export default function Profile() {
@@ -252,80 +252,38 @@ export default function Profile() {
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-lg p-6 border border-slate-200">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-white rounded-2xl shadow-sm p-8">
+        <div className="flex items-center justify-between mb-8">
           <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <Award className="text-red-600" size={28} />
             バッジコレクション
           </h2>
-          <div className="text-sm font-medium text-slate-600 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
-            {badges.length} / {Object.keys(BADGE_INFO).length} 獲得
+          <div className="text-sm font-medium text-slate-600 bg-slate-50 px-4 py-2 rounded-full">
+            {Object.entries(BADGE_INFO).filter(([id, info]) => info.tempAcquired || hasBadge(id)).length} / {Object.keys(BADGE_INFO).length}
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-6">
           {Object.entries(BADGE_INFO).map(([badgeId, info]) => {
-            const acquired = hasBadge(badgeId);
-            const isLocked = info.studentOnly && profile?.role !== 'student';
-            const badge = badges.find(b => b.badge_id === badgeId);
+            const acquired = info.tempAcquired || hasBadge(badgeId);
 
             return (
               <div
                 key={badgeId}
-                className={`relative group flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 ${
-                  acquired
-                    ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-50 border-amber-300 shadow-lg hover:shadow-xl hover:-translate-y-1'
-                    : isLocked
-                    ? 'bg-slate-50 border-slate-200 opacity-60'
-                    : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-md'
-                }`}
+                className="flex flex-col items-center gap-3 transition-transform duration-200 hover:scale-105"
               >
-                {acquired && (
-                  <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/20 via-transparent to-amber-200/20 animate-pulse" />
-                  </div>
-                )}
-                <div className={`relative w-20 h-20 sm:w-24 sm:h-24 transition-all duration-300 ${
-                  acquired ? 'scale-100' : 'scale-95'
-                }`}>
-                  {isLocked ? (
-                    <div className="w-full h-full rounded-full bg-slate-200 flex items-center justify-center text-3xl">
-                      🔒
-                    </div>
-                  ) : (
-                    <>
-                      <img
-                        src={info.image}
-                        alt={info.name}
-                        className={`w-full h-full object-contain transition-all duration-300 ${
-                          !acquired ? 'grayscale brightness-75' : 'drop-shadow-lg'
-                        }`}
-                      />
-                      {acquired && (
-                        <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg">
-                          <span className="text-white text-xs font-bold">✓</span>
-                        </div>
-                      )}
-                    </>
-                  )}
+                <div className="relative w-24 h-24 sm:w-28 sm:h-28">
+                  <img
+                    src={info.image}
+                    alt={info.name}
+                    className={`w-full h-full object-contain transition-all duration-300 ${
+                      !acquired ? 'grayscale opacity-30' : 'drop-shadow-lg'
+                    }`}
+                  />
                 </div>
-                <div className="text-center space-y-1 relative z-10">
-                  <div className={`font-bold text-sm ${acquired ? 'text-amber-900' : 'text-slate-700'}`}>
+                <div className="text-center">
+                  <div className={`font-semibold text-xs ${acquired ? 'text-slate-900' : 'text-slate-400'}`}>
                     {info.name}
                   </div>
-                  <div className={`text-xs ${acquired ? 'text-amber-700' : 'text-slate-500'}`}>
-                    {info.description}
-                  </div>
-                  {acquired && badge && (
-                    <div className="text-xs text-amber-600 font-medium mt-2">
-                      {new Date(badge.acquired_at).toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' })}
-                    </div>
-                  )}
-                  {isLocked && (
-                    <div className="text-xs text-slate-500 mt-1">スクール生徒限定</div>
-                  )}
-                  {!acquired && !isLocked && (
-                    <div className="text-xs text-slate-400 mt-1">未獲得</div>
-                  )}
                 </div>
               </div>
             );
