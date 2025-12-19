@@ -360,83 +360,89 @@ export default function Home() {
           <h2 className="text-lg font-bold text-slate-900">月収推移</h2>
         </div>
 
-        <div className="relative h-48 mb-4">
-          <svg className="w-full h-full" viewBox="0 0 400 160" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#ef4444" />
-                <stop offset="100%" stopColor="#f97316" />
-              </linearGradient>
-              <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-              </linearGradient>
-            </defs>
+        <div className="relative mb-4">
+          <div className="h-40 sm:h-48">
+            <svg className="w-full h-full" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                </linearGradient>
+              </defs>
 
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-              <line
-                key={i}
-                x1="0"
-                y1={140 - ratio * 120}
-                x2="400"
-                y2={140 - ratio * 120}
-                stroke="#e2e8f0"
-                strokeWidth="1"
-              />
-            ))}
-
-            {monthlyIncomeData.length > 0 && (
-              <>
-                <path
-                  d={`M ${monthlyIncomeData.map((d, i) => {
-                    const x = (i / (monthlyIncomeData.length - 1)) * 380 + 10;
-                    const y = 140 - (d.amount / chartMax) * 120;
-                    return `${x},${y}`;
-                  }).join(' L ')} L ${380 + 10},140 L 10,140 Z`}
-                  fill="url(#areaGradient)"
+              {[0, 0.5, 1].map((ratio, i) => (
+                <line
+                  key={i}
+                  x1="30"
+                  y1={115 - ratio * 85}
+                  x2="310"
+                  y2={115 - ratio * 85}
+                  stroke="#f1f5f9"
+                  strokeWidth="1"
+                  strokeDasharray={ratio === 0 ? "0" : "4,4"}
                 />
+              ))}
 
-                <path
-                  d={`M ${monthlyIncomeData.map((d, i) => {
-                    const x = (i / (monthlyIncomeData.length - 1)) * 380 + 10;
-                    const y = 140 - (d.amount / chartMax) * 120;
-                    return `${x},${y}`;
-                  }).join(' L ')}`}
-                  fill="none"
-                  stroke="url(#lineGradient)"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+              {monthlyIncomeData.length > 0 && (
+                <>
+                  <path
+                    d={`M ${monthlyIncomeData.map((d, i) => {
+                      const x = 30 + (i / (monthlyIncomeData.length - 1)) * 280;
+                      const y = 115 - (d.amount / chartMax) * 85;
+                      return `${x},${y}`;
+                    }).join(' L ')} L ${310},115 L 30,115 Z`}
+                    fill="url(#areaGradient)"
+                  />
 
-                {monthlyIncomeData.map((d, i) => {
-                  const x = (i / (monthlyIncomeData.length - 1)) * 380 + 10;
-                  const y = 140 - (d.amount / chartMax) * 120;
-                  return (
-                    <g key={i}>
-                      <circle cx={x} cy={y} r="6" fill="white" stroke="#ef4444" strokeWidth="3" />
-                      {d.amount > 0 && (
+                  <path
+                    d={`M ${monthlyIncomeData.map((d, i) => {
+                      const x = 30 + (i / (monthlyIncomeData.length - 1)) * 280;
+                      const y = 115 - (d.amount / chartMax) * 85;
+                      return `${x},${y}`;
+                    }).join(' L ')}`}
+                    fill="none"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {monthlyIncomeData.map((d, i) => {
+                    const x = 30 + (i / (monthlyIncomeData.length - 1)) * 280;
+                    const y = 115 - (d.amount / chartMax) * 85;
+                    return (
+                      <g key={i}>
+                        <circle cx={x} cy={y} r="5" fill="white" stroke="#ef4444" strokeWidth="2.5" />
+                        {d.amount > 0 && (
+                          <text
+                            x={x}
+                            y={y - 10}
+                            textAnchor="middle"
+                            fill="#475569"
+                            style={{ fontSize: '9px', fontWeight: 500 }}
+                          >
+                            {(d.amount / 10000).toFixed(0)}万
+                          </text>
+                        )}
                         <text
                           x={x}
-                          y={y - 12}
+                          y={130}
                           textAnchor="middle"
-                          className="text-xs fill-slate-600"
-                          style={{ fontSize: '10px' }}
+                          fill="#94a3b8"
+                          style={{ fontSize: '9px' }}
                         >
-                          {(d.amount / 10000).toFixed(0)}万
+                          {d.month}
                         </text>
-                      )}
-                    </g>
-                  );
-                })}
-              </>
-            )}
-          </svg>
-
-          <div className="flex justify-between px-2 mt-2">
-            {monthlyIncomeData.map((d, i) => (
-              <span key={i} className="text-xs text-slate-500">{d.month}</span>
-            ))}
+                      </g>
+                    );
+                  })}
+                </>
+              )}
+            </svg>
           </div>
         </div>
 
