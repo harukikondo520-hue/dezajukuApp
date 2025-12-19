@@ -6,7 +6,6 @@ import Opening from './components/Opening';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
-import Profile from './pages/Profile';
 import AIChat from './pages/AIChat';
 import VideoLectures from './pages/VideoLectures';
 import Onboarding from './pages/Onboarding';
@@ -117,14 +116,6 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <VideoLectures />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/profile"
-        element={
-          <PrivateRoute>
-            <Profile />
           </PrivateRoute>
         }
       />

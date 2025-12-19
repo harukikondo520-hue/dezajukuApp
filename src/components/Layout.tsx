@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MessageCircle, PlayCircle, User } from 'lucide-react';
+import { Home, MessageCircle, PlayCircle } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,13 +13,12 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/', label: 'ホーム', icon: Home },
     { path: '/chat', label: 'AIチャット', icon: MessageCircle },
     { path: '/videos', label: '動画講義', icon: PlayCircle },
-    { path: '/profile', label: 'マイページ', icon: User },
   ];
 
   return (
     <div className="min-h-screen bg-white">
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50">
-        <div className="grid grid-cols-4 gap-0.5 p-1.5">
+        <div className="grid grid-cols-3 gap-0.5 p-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;

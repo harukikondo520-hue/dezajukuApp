@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, TrendingUp, PlayCircle, Target } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, LogOut, TrendingUp, Award, Calculator, Wallet } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import type { Database } from '../types/database';
 
 type Project = Database['public']['Tables']['projects']['Row'];
@@ -14,8 +15,10 @@ interface MonthlyData {
 }
 
 export default function Home() {
-  const { profile, user } = useAuth();
+  const { profile, user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -29,8 +32,6 @@ export default function Home() {
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
 
-  const currentMonth = new Date().toLocaleDateString('ja-JP', { month: 'long', year: 'numeric' });
-
   useEffect(() => {
     if (user) {
       loadAllData();
@@ -40,6 +41,7 @@ export default function Home() {
   const loadAllData = async () => {
     await Promise.all([
       loadProjects(),
+      loadAllProjects(),
       loadMonthlyIncome(),
       loadTasks(),
       loadVideoProgress(),
@@ -68,6 +70,20 @@ export default function Home() {
     }
   };
 
+  const loadAllProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+      setAllProjects(data || []);
+    } catch (error) {
+      console.error('Error loading all projects:', error);
+    }
+  };
+
   const loadMonthlyIncome = async () => {
     try {
       const months: MonthlyData[] = [];
@@ -75,7 +91,6 @@ export default function Home() {
 
       for (let i = 5; i >= 0; i--) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const monthLabel = date.toLocaleDateString('ja-JP', { month: 'short' });
 
         const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
@@ -144,9 +159,25 @@ export default function Home() {
     }
   };
 
-  const totalIncome = useMemo(() =>
+  const thisMonthIncome = useMemo(() =>
     projects.reduce((sum, p) => sum + p.reward, 0),
     [projects]
+  );
+
+  const maxMonthlyIncome = useMemo(() =>
+    Math.max(...monthlyIncomeData.map(d => d.amount), 0),
+    [monthlyIncomeData]
+  );
+
+  const avgMonthlyIncome = useMemo(() => {
+    const nonZeroMonths = monthlyIncomeData.filter(d => d.amount > 0);
+    if (nonZeroMonths.length === 0) return 0;
+    return Math.round(nonZeroMonths.reduce((sum, d) => sum + d.amount, 0) / nonZeroMonths.length);
+  }, [monthlyIncomeData]);
+
+  const totalIncome = useMemo(() =>
+    allProjects.reduce((sum, p) => sum + p.reward, 0),
+    [allProjects]
   );
 
   const progressPercent = useMemo(() => {
@@ -197,6 +228,7 @@ export default function Home() {
       setEditingProject(null);
       setFormData({ name: '', reward: '', status: 'in_progress' });
       loadProjects();
+      loadAllProjects();
       loadMonthlyIncome();
     } catch (error) {
       console.error('Error saving project:', error);
@@ -210,6 +242,7 @@ export default function Home() {
       const { error } = await supabase.from('projects').delete().eq('id', id);
       if (error) throw error;
       loadProjects();
+      loadAllProjects();
       loadMonthlyIncome();
     } catch (error) {
       console.error('Error deleting project:', error);
@@ -259,6 +292,15 @@ export default function Home() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   const openEditModal = (project: Project) => {
     setEditingProject(project);
     setFormData({
@@ -275,19 +317,13 @@ export default function Home() {
     setShowModal(true);
   };
 
-  const statusLabels = {
-    in_progress: '進行中',
-    completed: '完了',
-    paid: '入金済み',
-  };
-
   const statusColors = {
     in_progress: 'bg-blue-100 text-blue-800',
     completed: 'bg-amber-100 text-amber-800',
     paid: 'bg-green-100 text-green-800',
   };
 
-  const maxIncome = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
+  const chartMax = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
 
   if (loading) {
     return (
@@ -299,58 +335,140 @@ export default function Home() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-0 mt-8 text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <h1 className="text-5xl font-bold text-slate-900">Hello,</h1>
-          <img src="/logox4.png" alt="デザジュク" className="h-9" />
-        </div>
-        <p className="text-sm text-slate-700">ようこそ、{profile?.name}さん</p>
-      </div>
-
-      <div className="mb-0 -mx-4">
-        <img src="/bg.png" alt="デザジュク" className="w-full" />
-      </div>
-
-      <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-black rounded-2xl p-6 mb-8 -mt-12 text-white overflow-hidden min-h-[240px]" style={{
-        boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)',
-      }}>
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/5"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent"></div>
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/10 to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/20"></div>
-
-        <div className="relative z-10 h-full flex flex-col justify-between min-h-[200px]">
-          <div className="flex items-start justify-between">
-            <img src="/logox4.png" alt="デザジュク" className="h-5 brightness-0 invert opacity-90" />
-            <div className="text-xs uppercase tracking-widest text-white/70 font-medium">{currentMonth}</div>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500">
+            <img src="/dezajuku_icon_0531_1-05 copy.png" alt="Profile" className="w-full h-full object-cover" />
           </div>
           <div>
-            <div className="text-xs uppercase tracking-widest text-white/70 font-medium mb-2">Total Income</div>
-            <div className="text-5xl font-bold tracking-tight" style={{ fontFamily: "'DIN Next', 'DIN', system-ui, sans-serif" }}>
-              ¥{totalIncome.toLocaleString()}
-            </div>
+            <p className="text-sm text-slate-500">おかえりなさい</p>
+            <p className="font-bold text-slate-900">{profile?.name || 'ゲスト'}さん</p>
           </div>
         </div>
-        <img src="/frame_24.png" alt="" className="absolute bottom-0 right-0 h-[80%] opacity-30" />
+        <button
+          onClick={handleSignOut}
+          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+          title="ログアウト"
+        >
+          <LogOut size={20} />
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-200">
-        <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={20} className="text-slate-600" />
+        <div className="flex items-center gap-2 mb-6">
+          <TrendingUp size={20} className="text-red-500" />
           <h2 className="text-lg font-bold text-slate-900">月収推移</h2>
         </div>
-        <div className="flex items-end gap-2 h-32">
-          {monthlyIncomeData.map((data, index) => (
-            <div key={index} className="flex-1 flex flex-col items-center gap-1">
-              <div className="w-full bg-slate-100 rounded-t-lg relative" style={{ height: '100px' }}>
-                <div
-                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-red-500 to-red-400 rounded-t-lg transition-all duration-500"
-                  style={{ height: `${(data.amount / maxIncome) * 100}%`, minHeight: data.amount > 0 ? '4px' : '0' }}
+
+        <div className="relative h-48 mb-4">
+          <svg className="w-full h-full" viewBox="0 0 400 160" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#f97316" />
+              </linearGradient>
+              <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+              <line
+                key={i}
+                x1="0"
+                y1={140 - ratio * 120}
+                x2="400"
+                y2={140 - ratio * 120}
+                stroke="#e2e8f0"
+                strokeWidth="1"
+              />
+            ))}
+
+            {monthlyIncomeData.length > 0 && (
+              <>
+                <path
+                  d={`M ${monthlyIncomeData.map((d, i) => {
+                    const x = (i / (monthlyIncomeData.length - 1)) * 380 + 10;
+                    const y = 140 - (d.amount / chartMax) * 120;
+                    return `${x},${y}`;
+                  }).join(' L ')} L ${380 + 10},140 L 10,140 Z`}
+                  fill="url(#areaGradient)"
                 />
-              </div>
-              <span className="text-xs text-slate-500">{data.month}</span>
+
+                <path
+                  d={`M ${monthlyIncomeData.map((d, i) => {
+                    const x = (i / (monthlyIncomeData.length - 1)) * 380 + 10;
+                    const y = 140 - (d.amount / chartMax) * 120;
+                    return `${x},${y}`;
+                  }).join(' L ')}`}
+                  fill="none"
+                  stroke="url(#lineGradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {monthlyIncomeData.map((d, i) => {
+                  const x = (i / (monthlyIncomeData.length - 1)) * 380 + 10;
+                  const y = 140 - (d.amount / chartMax) * 120;
+                  return (
+                    <g key={i}>
+                      <circle cx={x} cy={y} r="6" fill="white" stroke="#ef4444" strokeWidth="3" />
+                      {d.amount > 0 && (
+                        <text
+                          x={x}
+                          y={y - 12}
+                          textAnchor="middle"
+                          className="text-xs fill-slate-600"
+                          style={{ fontSize: '10px' }}
+                        >
+                          {(d.amount / 10000).toFixed(0)}万
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </>
+            )}
+          </svg>
+
+          <div className="flex justify-between px-2 mt-2">
+            {monthlyIncomeData.map((d, i) => (
+              <span key={i} className="text-xs text-slate-500">{d.month}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Wallet size={16} className="text-blue-500" />
+              <span className="text-xs text-slate-500">今月月収</span>
             </div>
-          ))}
+            <p className="text-lg font-bold text-slate-900">¥{thisMonthIncome.toLocaleString()}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Award size={16} className="text-amber-500" />
+              <span className="text-xs text-slate-500">最高月収</span>
+            </div>
+            <p className="text-lg font-bold text-slate-900">¥{maxMonthlyIncome.toLocaleString()}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Calculator size={16} className="text-green-500" />
+              <span className="text-xs text-slate-500">平均月収</span>
+            </div>
+            <p className="text-lg font-bold text-slate-900">¥{avgMonthlyIncome.toLocaleString()}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp size={16} className="text-red-500" />
+              <span className="text-xs text-slate-500">累計収益</span>
+            </div>
+            <p className="text-lg font-bold text-slate-900">¥{totalIncome.toLocaleString()}</p>
+          </div>
         </div>
       </div>
 
