@@ -16,6 +16,9 @@ export interface Database {
           icon: string;
           bio: string;
           role: 'free' | 'student';
+          roadmap_id: string | null;
+          onboarding_completed: boolean;
+          is_admin: boolean;
           last_login_at: string;
           created_at: string;
           updated_at: string;
@@ -26,6 +29,9 @@ export interface Database {
           icon?: string;
           bio?: string;
           role?: 'free' | 'student';
+          roadmap_id?: string | null;
+          onboarding_completed?: boolean;
+          is_admin?: boolean;
           last_login_at?: string;
           created_at?: string;
           updated_at?: string;
@@ -36,6 +42,9 @@ export interface Database {
           icon?: string;
           bio?: string;
           role?: 'free' | 'student';
+          roadmap_id?: string | null;
+          onboarding_completed?: boolean;
+          is_admin?: boolean;
           last_login_at?: string;
           created_at?: string;
           updated_at?: string;
@@ -48,6 +57,7 @@ export interface Database {
           name: string;
           reward: number;
           category: 'thumbnail' | 'slide' | 'hp' | 'lp' | 'banner' | 'logo' | 'flyer' | 'other';
+          status: 'in_progress' | 'completed' | 'paid';
           completed_at: string | null;
           created_at: string;
           updated_at: string;
@@ -58,6 +68,7 @@ export interface Database {
           name: string;
           reward?: number;
           category?: 'thumbnail' | 'slide' | 'hp' | 'lp' | 'banner' | 'logo' | 'flyer' | 'other';
+          status?: 'in_progress' | 'completed' | 'paid';
           completed_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -68,7 +79,121 @@ export interface Database {
           name?: string;
           reward?: number;
           category?: 'thumbnail' | 'slide' | 'hp' | 'lp' | 'banner' | 'logo' | 'flyer' | 'other';
+          status?: 'in_progress' | 'completed' | 'paid';
           completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      roadmaps: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          target_audience: string;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string;
+          target_audience?: string;
+          order_index?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string;
+          target_audience?: string;
+          order_index?: number;
+          created_at?: string;
+        };
+      };
+      tasks: {
+        Row: {
+          id: string;
+          roadmap_id: string;
+          title: string;
+          description: string;
+          task_type: 'video' | 'action';
+          video_id: string | null;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          roadmap_id: string;
+          title: string;
+          description?: string;
+          task_type?: 'video' | 'action';
+          video_id?: string | null;
+          order_index?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          roadmap_id?: string;
+          title?: string;
+          description?: string;
+          task_type?: 'video' | 'action';
+          video_id?: string | null;
+          order_index?: number;
+          created_at?: string;
+        };
+      };
+      user_tasks: {
+        Row: {
+          id: string;
+          user_id: string;
+          task_id: string;
+          completed: boolean;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          task_id: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          task_id?: string;
+          completed?: boolean;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      monthly_income: {
+        Row: {
+          id: string;
+          user_id: string;
+          year_month: string;
+          total_amount: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          year_month: string;
+          total_amount?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          year_month?: string;
+          total_amount?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -158,226 +283,6 @@ export interface Database {
           last_watched_at?: string;
           created_at?: string;
           updated_at?: string;
-        };
-      };
-      surveys: {
-        Row: {
-          id: string;
-          user_id: string;
-          month: string;
-          target_income: number;
-          goals: string;
-          bottleneck: string;
-          free_text: string;
-          submitted_at: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          month: string;
-          target_income?: number;
-          goals?: string;
-          bottleneck?: string;
-          free_text?: string;
-          submitted_at?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          month?: string;
-          target_income?: number;
-          goals?: string;
-          bottleneck?: string;
-          free_text?: string;
-          submitted_at?: string;
-          created_at?: string;
-        };
-      };
-      user_badges: {
-        Row: {
-          id: string;
-          user_id: string;
-          badge_id: string;
-          acquired_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          badge_id: string;
-          acquired_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          badge_id?: string;
-          acquired_at?: string;
-        };
-      };
-      monthly_surveys: {
-        Row: {
-          id: string;
-          user_id: string;
-          target_month: string;
-          target_income: number;
-          expected_projects: number;
-          study_hours_goal: number;
-          motivation: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          target_month: string;
-          target_income?: number;
-          expected_projects?: number;
-          study_hours_goal?: number;
-          motivation?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          target_month?: string;
-          target_income?: number;
-          expected_projects?: number;
-          study_hours_goal?: number;
-          motivation?: string;
-          created_at?: string;
-        };
-      };
-      learning_tracks: {
-        Row: {
-          id: string;
-          title: string;
-          description: string;
-          category: string;
-          total_lessons: number;
-          order_index: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          description?: string;
-          category: string;
-          total_lessons?: number;
-          order_index?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          description?: string;
-          category?: string;
-          total_lessons?: number;
-          order_index?: number;
-          created_at?: string;
-        };
-      };
-      user_progress: {
-        Row: {
-          id: string;
-          user_id: string;
-          track_id: string;
-          completed_lessons: number;
-          last_studied_at: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          track_id: string;
-          completed_lessons?: number;
-          last_studied_at?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          track_id?: string;
-          completed_lessons?: number;
-          last_studied_at?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      announcements: {
-        Row: {
-          id: string;
-          title: string;
-          content: string;
-          category: string;
-          published_at: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          content: string;
-          category?: string;
-          published_at?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          content?: string;
-          category?: string;
-          published_at?: string;
-          created_at?: string;
-        };
-      };
-      announcement_reads: {
-        Row: {
-          id: string;
-          user_id: string;
-          announcement_id: string;
-          read_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          announcement_id: string;
-          read_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          announcement_id?: string;
-          read_at?: string;
-        };
-      };
-      weekly_reports: {
-        Row: {
-          id: string;
-          user_id: string;
-          bottleneck: string;
-          achievement_link: string;
-          other: string;
-          submitted_at: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          bottleneck?: string;
-          achievement_link?: string;
-          other?: string;
-          submitted_at?: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          bottleneck?: string;
-          achievement_link?: string;
-          other?: string;
-          submitted_at?: string;
-          created_at?: string;
         };
       };
     };

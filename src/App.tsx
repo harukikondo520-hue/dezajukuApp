@@ -7,12 +7,12 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
-import Survey from './pages/Survey';
-import Learning from './pages/Learning';
-import Announcements from './pages/Announcements';
+import AIChat from './pages/AIChat';
+import VideoLectures from './pages/VideoLectures';
+import Onboarding from './pages/Onboarding';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -22,7 +22,37 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return user ? <Layout>{children}</Layout> : <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (profile && !profile.onboarding_completed) {
+    return <Navigate to="/onboarding" />;
+  }
+
+  return <Layout>{children}</Layout>;
+}
+
+function OnboardingRoute({ children }: { children: React.ReactNode }) {
+  const { user, profile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-slate-600">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  if (profile?.onboarding_completed) {
+    return <Navigate to="/" />;
+  }
+
+  return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
@@ -59,6 +89,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/onboarding"
+        element={
+          <OnboardingRoute>
+            <Onboarding />
+          </OnboardingRoute>
+        }
+      />
+      <Route
         path="/"
         element={
           <PrivateRoute>
@@ -67,34 +105,26 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/chat"
+        element={
+          <PrivateRoute>
+            <AIChat />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/videos"
+        element={
+          <PrivateRoute>
+            <VideoLectures />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/profile"
         element={
           <PrivateRoute>
             <Profile />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/survey"
-        element={
-          <PrivateRoute>
-            <Survey />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/learning"
-        element={
-          <PrivateRoute>
-            <Learning />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/announcements"
-        element={
-          <PrivateRoute>
-            <Announcements />
           </PrivateRoute>
         }
       />
