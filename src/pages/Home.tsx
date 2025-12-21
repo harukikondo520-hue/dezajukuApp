@@ -249,23 +249,6 @@ export default function Home() {
     }
   };
 
-  const handleStatusChange = async (id: string, newStatus: 'in_progress' | 'completed' | 'paid') => {
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .update({
-          status: newStatus,
-          completed_at: newStatus !== 'in_progress' ? new Date().toISOString() : null,
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-      loadProjects();
-    } catch (error) {
-      console.error('Error updating status:', error);
-    }
-  };
-
   const handleTaskComplete = async (taskId: string) => {
     try {
       const existingTask = userTasks.find(ut => ut.task_id === taskId);
@@ -315,12 +298,6 @@ export default function Home() {
     setEditingProject(null);
     setFormData({ name: '', reward: '', status: 'in_progress' });
     setShowModal(true);
-  };
-
-  const statusColors = {
-    in_progress: 'bg-blue-100 text-blue-800',
-    completed: 'bg-amber-100 text-amber-800',
-    paid: 'bg-green-100 text-green-800',
   };
 
   const chartMax = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
@@ -555,11 +532,11 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="space-y-3 mb-4">
+            <div className="space-y-2 mb-4">
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-white rounded-xl p-4 border border-slate-200 hover:shadow-md transition"
+                  className="bg-white rounded-xl p-3 border border-slate-200 hover:shadow-md transition"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -567,15 +544,6 @@ export default function Home() {
                       <div className="text-lg font-bold text-slate-700">¥{project.reward.toLocaleString()}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <select
-                        value={project.status || 'in_progress'}
-                        onChange={(e) => handleStatusChange(project.id, e.target.value as 'in_progress' | 'completed' | 'paid')}
-                        className={`text-xs font-medium px-3 py-1.5 rounded-full border-0 cursor-pointer ${statusColors[project.status || 'in_progress']}`}
-                      >
-                        <option value="in_progress">進行中</option>
-                        <option value="completed">完了</option>
-                        <option value="paid">入金済み</option>
-                      </select>
                       <button
                         onClick={() => openEditModal(project)}
                         className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
