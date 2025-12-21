@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, LogOut, TrendingUp, Award, Calculator, Wallet } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, LogOut, TrendingUp, Award, Calculator, Wallet, RefreshCw, Sparkles } from 'lucide-react';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { Database } from '../types/database';
+import { DiagnosisResult } from '../types/diagnosis';
+import { designerTypes } from '../data/questions';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -31,6 +34,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
+  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -45,8 +49,25 @@ export default function Home() {
       loadMonthlyIncome(),
       loadTasks(),
       loadVideoProgress(),
+      loadDiagnosis(),
     ]);
     setLoading(false);
+  };
+
+  const loadDiagnosis = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('skill_diagnosis')
+        .select('*')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+
+      if (data && !error) {
+        setDiagnosis(data);
+      }
+    } catch (error) {
+      console.error('診断データの取得に失敗:', error);
+    }
   };
 
   const loadProjects = async () => {
@@ -302,6 +323,18 @@ export default function Home() {
 
   const chartMax = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
 
+  const typeInfo = diagnosis ? designerTypes[diagnosis.designer_type] : null;
+
+  const chartData = diagnosis
+    ? [
+        { skill: '造形力', value: diagnosis.design_skill },
+        { skill: '設計力', value: diagnosis.planning_skill },
+        { skill: 'CW力', value: diagnosis.client_skill },
+        { skill: 'ビジネス力', value: diagnosis.business_skill },
+        { skill: 'マインド力', value: diagnosis.mindset_skill },
+      ]
+    : [];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -330,6 +363,89 @@ export default function Home() {
           <LogOut size={20} />
         </button>
       </div>
+
+      {typeInfo ? (
+        <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-6 border border-slate-200 relative overflow-hidden">
+          <div className="absolute right-0 bottom-0 w-64 h-64 opacity-5 pointer-events-none">
+            <img src="/mbti.png" alt="" className="w-full h-full object-contain" />
+          </div>
+
+          <div className="flex items-center justify-between mb-6 relative z-10">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="text-red-500" size={24} />
+              デザイナータイプ
+            </h2>
+            <button
+              onClick={() => navigate('/diagnosis')}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              title="再診断する"
+            >
+              <RefreshCw className="w-5 h-5 text-slate-400" />
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 relative z-10">
+            <div
+              className="p-6 rounded-2xl text-white relative overflow-hidden"
+              style={{ backgroundColor: typeInfo.color }}
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12" />
+              <div className="absolute bottom-0 left-0 w-20 h-20 bg-white opacity-10 rounded-full -ml-10 -mb-10" />
+              <div className="relative z-10">
+                <div className="inline-block px-4 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium mb-2 backdrop-blur-sm">
+                  あなたのタイプ
+                </div>
+                <h3 className="text-3xl font-black mb-2 tracking-wide">
+                  {typeInfo.name}
+                </h3>
+                <p className="text-white text-opacity-90 text-sm leading-relaxed">
+                  {typeInfo.description}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-slate-900 mb-3 text-sm">スキルバランス</h3>
+              <div className="h-56 flex items-center justify-center bg-white rounded-xl border border-slate-200 p-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={chartData}>
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis
+                      dataKey="skill"
+                      tick={{ fontSize: 11, fill: '#475569' }}
+                    />
+                    <Radar
+                      dataKey="value"
+                      stroke={typeInfo.color}
+                      fill={typeInfo.color}
+                      fillOpacity={0.4}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-sm p-8 mb-6 text-center border border-slate-200">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+            <Sparkles className="text-slate-400" size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">
+            まだ診断を受けていません
+          </h3>
+          <p className="text-slate-600 mb-6">
+            あなたのデザイナータイプを知るために、スキル診断を受けてみましょう
+          </p>
+          <button
+            onClick={() => navigate('/diagnosis')}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-medium rounded-xl hover:from-red-600 hover:to-orange-600 transition-all"
+          >
+            診断を受ける
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-200">
         <div className="flex items-center gap-2 mb-6">

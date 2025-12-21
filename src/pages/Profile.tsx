@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { LogOut, Bell, Edit2, Check, X, RefreshCw, Sparkles } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
@@ -6,35 +6,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { DiagnosisResult } from '../types/diagnosis';
 import { designerTypes } from '../data/questions';
-import type { Database } from '../types/database';
-
-type UserBadge = Database['public']['Tables']['user_badges']['Row'];
-
-const BADGE_INFO = {
-  first_project: { name: '0→1講義', image: '/0→1カリキュラム修了済.png', tempAcquired: true },
-  complete_all: { name: '1→10講義', image: '/1→10カリキュラム修了済.png', tempAcquired: true },
-  sales: { name: '営業バッヂ', image: '/dezajuku_badge_営業 copy.png' },
-  meetup: { name: 'オフ会参加', image: '/dezajuku_badge_オフ会_01.png' },
-  camp: { name: '合宿参加', image: '/dezajuku_badge_合宿_01.png' },
-  maximize: { name: '成果最大化', image: '/dezajuku_badge成果最大化.png' },
-};
-
-const BANNERS = [
-  { id: 1, image: '/newyears.jpg', alt: 'New Years Party 2025' },
-  { id: 2, image: '/kaori.jpg', alt: 'Special Event' },
-];
 
 export default function Profile() {
   const { profile, user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [badges, setBadges] = useState<UserBadge[]>([]);
   const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
-  const [currentBanner, setCurrentBanner] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -42,33 +22,9 @@ export default function Profile() {
     }
   }, [profile]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % BANNERS.length);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      const container = scrollContainerRef.current;
-      const banners = container.children;
-      if (banners[currentBanner]) {
-        const banner = banners[currentBanner] as HTMLElement;
-        const containerPadding = parseInt(getComputedStyle(container).paddingLeft) || 0;
-        container.scrollTo({
-          left: banner.offsetLeft - containerPadding,
-          behavior: 'smooth',
-        });
-      }
-    }
-  }, [currentBanner]);
-
   const loadData = async () => {
     try {
       await Promise.all([
-        loadBadges(),
         loadUnreadCount(),
         loadDiagnosis(),
       ]);
@@ -92,21 +48,6 @@ export default function Profile() {
       }
     } catch (error) {
       console.error('診断データの取得に失敗:', error);
-    }
-  };
-
-  const loadBadges = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('user_badges')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('acquired_at', { ascending: false });
-
-      if (error) throw error;
-      setBadges(data || []);
-    } catch (error) {
-      console.error('バッジデータの取得に失敗:', error);
     }
   };
 
@@ -170,8 +111,6 @@ export default function Profile() {
     setIsEditingName(false);
     setEditedName('');
   };
-
-  const hasBadge = (badgeId: string) => badges.some((b) => b.badge_id === badgeId);
 
   if (loading) {
     return (
@@ -344,73 +283,6 @@ export default function Profile() {
           </button>
         </div>
       )}
-
-      <div className="mb-4 -mx-4 sm:mx-0">
-        <div className="relative">
-          <div
-            ref={scrollContainerRef}
-            className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-4 sm:px-0"
-            style={{ scrollSnapType: 'x mandatory' }}
-          >
-            {BANNERS.map((banner) => (
-              <div
-                key={banner.id}
-                className="flex-shrink-0 w-[82%] sm:w-[85%] snap-start"
-              >
-                <img
-                  src={banner.image}
-                  alt={banner.alt}
-                  className="w-full h-48 object-cover rounded-2xl shadow-sm"
-                />
-              </div>
-            ))}
-          </div>
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-            {BANNERS.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentBanner(index)}
-                className={`w-2 h-2 rounded-full transition ${
-                  currentBanner === index ? 'bg-white w-4' : 'bg-white/50'
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm p-8">
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-slate-900">バッヂ一覧</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-8">
-          {Object.entries(BADGE_INFO).map(([badgeId, info]) => {
-            const acquired = info.tempAcquired || hasBadge(badgeId);
-
-            return (
-              <div
-                key={badgeId}
-                className="flex flex-col items-center gap-3 transition-transform duration-200 hover:scale-105"
-              >
-                <div className="relative w-32 h-32">
-                  <img
-                    src={info.image}
-                    alt={info.name}
-                    className={`w-full h-full object-contain transition-all duration-300 ${
-                      !acquired ? 'grayscale opacity-30' : 'drop-shadow-lg'
-                    }`}
-                  />
-                </div>
-                <div className="text-center">
-                  <div className={`font-semibold text-sm ${acquired ? 'text-slate-900' : 'text-slate-400'}`}>
-                    {info.name}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </div>
   );
 }
