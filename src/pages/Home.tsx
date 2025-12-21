@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { Database } from '../types/database';
+import SkillCard from '../components/home/SkillCard';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -453,6 +454,10 @@ export default function Home() {
             <p className="text-lg font-bold text-slate-900">¥{totalIncome.toLocaleString()}</p>
           </div>
         </div>
+      </div>
+
+      <div className="mb-6">
+        <SkillCard />
       </div>
 
       {videoProgress.total > 0 && (

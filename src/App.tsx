@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import AIChat from './pages/AIChat';
 import VideoLectures from './pages/VideoLectures';
 import Onboarding from './pages/Onboarding';
+import DiagnosisPage from './pages/DiagnosisPage';
+import DiagnosisResultPage from './pages/DiagnosisResultPage';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
@@ -92,6 +94,22 @@ function AppRoutes() {
         element={
           <OnboardingRoute>
             <Onboarding />
+          </OnboardingRoute>
+        }
+      />
+      <Route
+        path="/onboarding/diagnosis"
+        element={
+          <OnboardingRoute>
+            <DiagnosisPage />
+          </OnboardingRoute>
+        }
+      />
+      <Route
+        path="/onboarding/result"
+        element={
+          <OnboardingRoute>
+            <DiagnosisResultPage />
           </OnboardingRoute>
         }
       />
