@@ -427,7 +427,7 @@ export default function Home() {
                 background: getTypeGradient(typeInfo.type)
               }}
             >
-              <div className="absolute -right-30 -top-30 opacity-15 pointer-events-none">
+              <div className="absolute -right-10 -top-16 opacity-15 pointer-events-none">
                 <div style={{ transform: 'scale(1.2)' }}>
                   {getDesignerTypeIcon(typeInfo.type)}
                 </div>
