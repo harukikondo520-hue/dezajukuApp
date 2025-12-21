@@ -268,10 +268,8 @@ export default function Profile() {
                 background: getTypeGradient(typeInfo.type)
               }}
             >
-              <div className="absolute -right10 -top16 opacity-15 pointer-events-none">
-                <div style={{ transform: 'scale(1.2)' }}>
-                  {getDesignerTypeIcon(typeInfo.type)}
-                </div>
+              <div className="absolute right-[10px] top-[10px] opacity-15 pointer-events-none">
+                {getDesignerTypeIcon(typeInfo.type)}
               </div>
               <div className="relative z-10">
                 <div className="inline-block px-4 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium mb-2 backdrop-blur-sm">
