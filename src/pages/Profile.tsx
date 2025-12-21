@@ -263,13 +263,13 @@ export default function Profile() {
 
           <div className="grid md:grid-cols-2 gap-6">
             <div
-              className="p-6 text-white relative overflow-hidden"
+              className="p-6 rounded-2xl text-white relative overflow-hidden"
               style={{
                 background: getTypeGradient(typeInfo.type)
               }}
             >
-              <div className="absolute -left-4 -bottom-4 opacity-15 pointer-events-none">
-                <div style={{ transform: 'scale(1.2)' }}>
+              <div className="absolute -right-4 -top-4 opacity-15 pointer-events-none">
+                <div style={{ transform: 'scale(1.0)' }}>
                   {getDesignerTypeIcon(typeInfo.type)}
                 </div>
               </div>
