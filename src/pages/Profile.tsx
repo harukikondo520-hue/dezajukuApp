@@ -1,11 +1,32 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Bell, Edit2, Check, X, RefreshCw, Sparkles } from 'lucide-react';
+import { LogOut, Bell, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { DiagnosisResult } from '../types/diagnosis';
+import { DiagnosisResult, DesignerType } from '../types/diagnosis';
 import { designerTypes } from '../data/questions';
+
+const getDesignerTypeIcon = (type: DesignerType) => {
+  const iconProps = { size: 120, strokeWidth: 1.5 };
+
+  switch (type) {
+    case 'artist':
+      return <Palette {...iconProps} />;
+    case 'strategist':
+      return <Lightbulb {...iconProps} />;
+    case 'partner':
+      return <Handshake {...iconProps} />;
+    case 'business_designer':
+      return <TrendingUp {...iconProps} />;
+    case 'growth':
+      return <Rocket {...iconProps} />;
+    case 'all_rounder':
+      return <Star {...iconProps} />;
+    default:
+      return <Star {...iconProps} />;
+  }
+};
 
 export default function Profile() {
   const { profile, user, signOut } = useAuth();
@@ -226,8 +247,8 @@ export default function Profile() {
               className="p-6 rounded-2xl text-white relative overflow-hidden"
               style={{ backgroundColor: typeInfo.color }}
             >
-              <div className="absolute right-0 bottom-0 w-48 h-48 opacity-10 pointer-events-none">
-                <img src="/mbti.png" alt="" className="w-full h-full object-contain" />
+              <div className="absolute right-4 bottom-4 opacity-15 pointer-events-none">
+                {getDesignerTypeIcon(typeInfo.type)}
               </div>
               <div className="relative z-10">
                 <div className="inline-block px-4 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium mb-2 backdrop-blur-sm">
