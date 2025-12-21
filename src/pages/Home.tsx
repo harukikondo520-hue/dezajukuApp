@@ -404,16 +404,14 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-6">
             <div
               className="p-6 rounded-2xl text-white relative overflow-hidden"
-              style={{ backgroundColor: typeInfo.color }}
+              style={{
+                background: `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}dd 100%)`
+              }}
             >
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute w-32 h-32 bg-white opacity-10 rounded-full -top-10 -left-10"></div>
-                <div className="absolute w-20 h-20 bg-white opacity-10 rounded-full top-2/3 -left-8"></div>
-                <div className="absolute w-24 h-24 bg-white opacity-10 rounded-full -bottom-8 left-1/3"></div>
-                <div className="absolute w-16 h-16 bg-white opacity-10 rounded-full bottom-1/3 left-1/2"></div>
-              </div>
-              <div className="absolute right-4 top-4 opacity-20 pointer-events-none">
-                {getDesignerTypeIcon(typeInfo.type)}
+              <div className="absolute -right-8 -top-8 opacity-15 pointer-events-none">
+                <div style={{ transform: 'scale(2.5)' }}>
+                  {getDesignerTypeIcon(typeInfo.type)}
+                </div>
               </div>
               <div className="relative z-10">
                 <div className="inline-block px-4 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium mb-2 backdrop-blur-sm">
