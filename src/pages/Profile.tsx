@@ -263,13 +263,13 @@ export default function Profile() {
 
           <div className="grid md:grid-cols-2 gap-6">
             <div
-              className="p-6 rounded-2xl text-white relative overflow-hidden"
+              className="p-6 text-white relative overflow-hidden"
               style={{
                 background: getTypeGradient(typeInfo.type)
               }}
             >
-              <div className="absolute -right-8 -top-8 opacity-15 pointer-events-none">
-                <div style={{ transform: 'scale(1.6)' }}>
+              <div className="absolute -left-4 -bottom-4 opacity-15 pointer-events-none">
+                <div style={{ transform: 'scale(1.2)' }}>
                   {getDesignerTypeIcon(typeInfo.type)}
                 </div>
               </div>
@@ -287,8 +287,7 @@ export default function Profile() {
             </div>
 
             <div>
-              <h3 className="font-bold text-slate-900 mb-3 text-sm">スキルバランス</h3>
-              <div className="h-56 flex items-center justify-center bg-white rounded-xl border border-slate-200 p-2">
+              <div className="h-56 flex items-center justify-center bg-white p-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={chartData}>
                     <PolarGrid stroke="#e5e7eb" />
