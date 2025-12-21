@@ -1,42 +1,33 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit2, Trash2, LogOut, TrendingUp, RefreshCw, Sparkles, Target, CheckCircle, PlayCircle } from 'lucide-react';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, LogOut, TrendingUp, Award, Calculator, Wallet } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { Database } from '../types/database';
-import { DiagnosisResult } from '../types/diagnosis';
-import { designerTypes } from '../data/questions';
 
 type Project = Database['public']['Tables']['projects']['Row'];
-type MonthlyIncome = Database['public']['Tables']['monthly_income']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
 type UserTask = Database['public']['Tables']['user_tasks']['Row'];
 
-const PROJECT_CATEGORIES = [
-  { value: 'thumbnail', label: 'サムネイル' },
-  { value: 'slide', label: 'スライド' },
-  { value: 'hp', label: 'HP制作' },
-  { value: 'lp', label: 'LP制作' },
-  { value: 'banner', label: 'バナー' },
-  { value: 'logo', label: 'ロゴ' },
-  { value: 'flyer', label: 'チラシ' },
-  { value: 'other', label: 'その他' },
-];
+interface MonthlyData {
+  month: string;
+  amount: number;
+}
 
 export default function Home() {
   const { profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [monthlyIncome, setMonthlyIncome] = useState<MonthlyIncome[]>([]);
-  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
+  const [allProjects, setAllProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showProjectForm, setShowProjectForm] = useState(false);
-  const [newProject, setNewProject] = useState({
+  const [showModal, setShowModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [formData, setFormData] = useState({
     name: '',
     reward: '',
-    category: 'other' as const,
+    status: 'in_progress' as 'in_progress' | 'completed' | 'paid',
   });
+  const [monthlyIncomeData, setMonthlyIncomeData] = useState<MonthlyData[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
@@ -49,8 +40,8 @@ export default function Home() {
 
   const loadAllData = async () => {
     await Promise.all([
-      loadDiagnosis(),
       loadProjects(),
+      loadAllProjects(),
       loadMonthlyIncome(),
       loadTasks(),
       loadVideoProgress(),
@@ -58,49 +49,67 @@ export default function Home() {
     setLoading(false);
   };
 
-  const loadDiagnosis = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('skill_diagnosis')
-        .select('*')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-
-      if (data && !error) {
-        setDiagnosis(data);
-      }
-    } catch (error) {
-      console.error('診断データの取得に失敗:', error);
-    }
-  };
-
   const loadProjects = async () => {
     try {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
       const { data, error } = await supabase
         .from('projects')
         .select('*')
         .eq('user_id', user!.id)
+        .gte('created_at', startOfMonth)
+        .lte('created_at', endOfMonth)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setProjects(data || []);
     } catch (error) {
-      console.error('案件データの取得に失敗:', error);
+      console.error('Error loading projects:', error);
+    }
+  };
+
+  const loadAllProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user!.id);
+
+      if (error) throw error;
+      setAllProjects(data || []);
+    } catch (error) {
+      console.error('Error loading all projects:', error);
     }
   };
 
   const loadMonthlyIncome = async () => {
     try {
-      const { data, error } = await supabase
-        .from('monthly_income')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('year_month', { ascending: true });
+      const months: MonthlyData[] = [];
+      const now = new Date();
 
-      if (error) throw error;
-      setMonthlyIncome(data || []);
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthLabel = date.toLocaleDateString('ja-JP', { month: 'short' });
+
+        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
+        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59).toISOString();
+
+        const { data } = await supabase
+          .from('projects')
+          .select('reward')
+          .eq('user_id', user!.id)
+          .gte('created_at', startOfMonth)
+          .lte('created_at', endOfMonth);
+
+        const total = data?.reduce((sum, p) => sum + p.reward, 0) || 0;
+        months.push({ month: monthLabel, amount: total });
+      }
+
+      setMonthlyIncomeData(months);
     } catch (error) {
-      console.error('月収データの取得に失敗:', error);
+      console.error('Error loading monthly income:', error);
     }
   };
 
@@ -150,73 +159,79 @@ export default function Home() {
     }
   };
 
-  const handleAddProject = async () => {
-    if (!user || !newProject.name || !newProject.reward) {
-      alert('案件名と報酬を入力してください');
-      return;
-    }
+  const thisMonthIncome = useMemo(() =>
+    projects.reduce((sum, p) => sum + p.reward, 0),
+    [projects]
+  );
+
+  const maxMonthlyIncome = useMemo(() =>
+    Math.max(...monthlyIncomeData.map(d => d.amount), 0),
+    [monthlyIncomeData]
+  );
+
+  const avgMonthlyIncome = useMemo(() => {
+    const nonZeroMonths = monthlyIncomeData.filter(d => d.amount > 0);
+    if (nonZeroMonths.length === 0) return 0;
+    return Math.round(nonZeroMonths.reduce((sum, d) => sum + d.amount, 0) / nonZeroMonths.length);
+  }, [monthlyIncomeData]);
+
+  const totalIncome = useMemo(() =>
+    allProjects.reduce((sum, p) => sum + p.reward, 0),
+    [allProjects]
+  );
+
+  const progressPercent = useMemo(() => {
+    if (videoProgress.total === 0) return 0;
+    return Math.round((videoProgress.completed / videoProgress.total) * 100);
+  }, [videoProgress]);
+
+  const currentTask = useMemo(() => {
+    const completedTaskIds = new Set(userTasks.filter(ut => ut.completed).map(ut => ut.task_id));
+    return tasks.find(t => !completedTaskIds.has(t.id));
+  }, [tasks, userTasks]);
+
+  const nextTask = useMemo(() => {
+    if (!currentTask) return null;
+    const currentIndex = tasks.findIndex(t => t.id === currentTask.id);
+    return tasks[currentIndex + 1] || null;
+  }, [tasks, currentTask]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     try {
-      const { error } = await supabase.from('projects').insert({
-        user_id: user.id,
-        name: newProject.name,
-        reward: parseInt(newProject.reward),
-        category: newProject.category,
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-      });
+      if (editingProject) {
+        const { error } = await supabase
+          .from('projects')
+          .update({
+            name: formData.name,
+            reward: parseInt(formData.reward),
+            status: formData.status,
+            completed_at: formData.status !== 'in_progress' ? new Date().toISOString() : null,
+          })
+          .eq('id', editingProject.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('projects').insert({
+          user_id: user!.id,
+          name: formData.name,
+          reward: parseInt(formData.reward),
+          status: formData.status,
+          completed_at: formData.status !== 'in_progress' ? new Date().toISOString() : null,
+        });
 
-      setNewProject({ name: '', reward: '', category: 'other' });
-      setShowProjectForm(false);
-      await loadProjects();
-      await updateMonthlyIncome();
-    } catch (error) {
-      console.error('案件の追加に失敗:', error);
-      alert('案件の追加に失敗しました');
-    }
-  };
-
-  const updateMonthlyIncome = async () => {
-    if (!user) return;
-
-    try {
-      const { data: completedProjects, error: projectError } = await supabase
-        .from('projects')
-        .select('reward, completed_at')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .not('completed_at', 'is', null);
-
-      if (projectError) throw projectError;
-
-      const incomeByMonth = completedProjects.reduce((acc: Record<string, number>, project) => {
-        if (project.completed_at) {
-          const date = new Date(project.completed_at);
-          const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          acc[yearMonth] = (acc[yearMonth] || 0) + project.reward;
-        }
-        return acc;
-      }, {});
-
-      for (const [yearMonth, totalAmount] of Object.entries(incomeByMonth)) {
-        await supabase
-          .from('monthly_income')
-          .upsert(
-            {
-              user_id: user.id,
-              year_month: yearMonth,
-              total_amount: totalAmount,
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: 'user_id,year_month' }
-          );
+        if (error) throw error;
       }
 
-      await loadMonthlyIncome();
+      setShowModal(false);
+      setEditingProject(null);
+      setFormData({ name: '', reward: '', status: 'in_progress' });
+      loadProjects();
+      loadAllProjects();
+      loadMonthlyIncome();
     } catch (error) {
-      console.error('月収の更新に失敗:', error);
+      console.error('Error saving project:', error);
     }
   };
 
@@ -226,8 +241,9 @@ export default function Home() {
     try {
       const { error } = await supabase.from('projects').delete().eq('id', id);
       if (error) throw error;
-      await loadProjects();
-      await updateMonthlyIncome();
+      loadProjects();
+      loadAllProjects();
+      loadMonthlyIncome();
     } catch (error) {
       console.error('Error deleting project:', error);
     }
@@ -268,42 +284,23 @@ export default function Home() {
     }
   };
 
-  const currentTask = useMemo(() => {
-    const completedTaskIds = new Set(userTasks.filter(ut => ut.completed).map(ut => ut.task_id));
-    return tasks.find(t => !completedTaskIds.has(t.id));
-  }, [tasks, userTasks]);
+  const openEditModal = (project: Project) => {
+    setEditingProject(project);
+    setFormData({
+      name: project.name,
+      reward: project.reward.toString(),
+      status: project.status || 'in_progress',
+    });
+    setShowModal(true);
+  };
 
-  const nextTask = useMemo(() => {
-    if (!currentTask) return null;
-    const currentIndex = tasks.findIndex(t => t.id === currentTask.id);
-    return tasks[currentIndex + 1] || null;
-  }, [tasks, currentTask]);
+  const openNewModal = () => {
+    setEditingProject(null);
+    setFormData({ name: '', reward: '', status: 'in_progress' });
+    setShowModal(true);
+  };
 
-  const progressPercent = useMemo(() => {
-    if (videoProgress.total === 0) return 0;
-    return Math.round((videoProgress.completed / videoProgress.total) * 100);
-  }, [videoProgress]);
-
-  const totalIncome = projects
-    .filter((p) => p.status === 'completed')
-    .reduce((sum, p) => sum + p.reward, 0);
-
-  const typeInfo = diagnosis ? designerTypes[diagnosis.designer_type] : null;
-
-  const chartData = diagnosis
-    ? [
-        { skill: '造形力', value: diagnosis.design_skill },
-        { skill: '設計力', value: diagnosis.planning_skill },
-        { skill: 'CW力', value: diagnosis.client_skill },
-        { skill: 'ビジネス力', value: diagnosis.business_skill },
-        { skill: 'マインド力', value: diagnosis.mindset_skill },
-      ]
-    : [];
-
-  const incomeChartData = monthlyIncome.map((item) => ({
-    month: item.year_month.substring(5),
-    amount: item.total_amount,
-  }));
+  const chartMax = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
 
   if (loading) {
     return (
@@ -314,7 +311,7 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500">
@@ -334,260 +331,128 @@ export default function Home() {
         </button>
       </div>
 
-      {typeInfo ? (
-        <div className="relative bg-white rounded-3xl shadow-sm overflow-hidden mb-6 border border-slate-200">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-50" />
-          <div className="absolute right-0 bottom-0 w-64 h-64 opacity-30">
-            <img src="/mbti.png" alt="Designer" className="w-full h-full object-contain" />
-          </div>
-
-          <div className="relative p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <Sparkles className="text-red-500" size={28} />
-                デザイナータイプ
-              </h2>
-              <button
-                onClick={() => navigate('/diagnosis')}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                title="再診断する"
-              >
-                <RefreshCw className="w-5 h-5 text-slate-400" />
-              </button>
-            </div>
-
-            <div className="relative z-10 mb-4">
-              <div
-                className="inline-block px-8 py-4 rounded-2xl text-white shadow-lg"
-                style={{ backgroundColor: typeInfo.color }}
-              >
-                <div className="text-sm font-medium opacity-90 mb-1">あなたのタイプ</div>
-                <h3 className="text-4xl font-black tracking-wide">
-                  {typeInfo.name}
-                </h3>
-              </div>
-            </div>
-
-            <p className="text-slate-600 text-lg leading-relaxed max-w-md relative z-10">
-              {typeInfo.description}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl shadow-sm p-8 mb-6 text-center border border-slate-200">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-slate-100 rounded-full mb-4">
-            <Sparkles className="text-slate-400" size={40} />
-          </div>
-          <h3 className="text-xl font-bold text-slate-900 mb-2">
-            まだ診断を受けていません
-          </h3>
-          <p className="text-slate-600 mb-6">
-            あなたのデザイナータイプを知るために、スキル診断を受けてみましょう
-          </p>
-          <button
-            onClick={() => navigate('/diagnosis')}
-            className="px-8 py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-medium rounded-xl hover:from-red-600 hover:to-orange-600 transition-all text-lg"
-          >
-            診断を受ける
-          </button>
-        </div>
-      )}
-
-      {diagnosis && (
-        <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-6 border border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">スキルバランス</h2>
-          <div className="h-80 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={chartData}>
-                <PolarGrid stroke="#e5e7eb" />
-                <PolarAngleAxis
-                  dataKey="skill"
-                  tick={{ fontSize: 13, fill: '#475569', fontWeight: 500 }}
-                />
-                <Radar
-                  dataKey="value"
-                  stroke={typeInfo?.color || '#ef4444'}
-                  fill={typeInfo?.color || '#ef4444'}
-                  fillOpacity={0.4}
-                  strokeWidth={2}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-6 border border-slate-200">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <TrendingUp className="text-green-600" size={24} />
-            月収推移
-          </h2>
-          <div className="text-right">
-            <div className="text-sm text-slate-600">累計収入</div>
-            <div className="text-2xl font-bold text-slate-900">
-              ¥{totalIncome.toLocaleString()}
-            </div>
-          </div>
+      <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-200">
+        <div className="flex items-center gap-2 mb-6">
+          <TrendingUp size={20} className="text-red-500" />
+          <h2 className="text-lg font-bold text-slate-900">月収推移</h2>
         </div>
 
-        {incomeChartData.length > 0 ? (
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={incomeChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 12, fill: '#64748b' }}
-                  label={{ value: '月', position: 'insideBottomRight', offset: -5 }}
-                />
-                <YAxis
-                  tick={{ fontSize: 12, fill: '#64748b' }}
-                  label={{ value: '円', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip
-                  formatter={(value: number) => `¥${value.toLocaleString()}`}
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#ef4444"
-                  strokeWidth={3}
-                  dot={{ fill: '#ef4444', r: 5 }}
-                  activeDot={{ r: 7 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-64 flex items-center justify-center bg-slate-50 rounded-xl">
-            <p className="text-slate-500">まだ収入データがありません</p>
-          </div>
-        )}
-      </div>
+        <div className="relative mb-4">
+          <div className="h-40 sm:h-48">
+            <svg className="w-full h-full" viewBox="0 0 320 140" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#f97316" />
+                </linearGradient>
+                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                </linearGradient>
+              </defs>
 
-      <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-6 border border-slate-200">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900">案件管理</h2>
-          <button
-            onClick={() => setShowProjectForm(!showProjectForm)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition font-medium text-sm"
-          >
-            <Plus size={18} />
-            案件追加
-          </button>
-        </div>
-
-        {showProjectForm && (
-          <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <div className="grid gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  案件名
-                </label>
-                <input
-                  type="text"
-                  value={newProject.name}
-                  onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                  placeholder="例: サムネイルデザイン"
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              {[0, 0.5, 1].map((ratio, i) => (
+                <line
+                  key={i}
+                  x1="30"
+                  y1={115 - ratio * 85}
+                  x2="310"
+                  y2={115 - ratio * 85}
+                  stroke="#f1f5f9"
+                  strokeWidth="1"
+                  strokeDasharray={ratio === 0 ? "0" : "4,4"}
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    カテゴリ
-                  </label>
-                  <select
-                    value={newProject.category}
-                    onChange={(e) =>
-                      setNewProject({ ...newProject, category: e.target.value as any })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  >
-                    {PROJECT_CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    報酬 (円)
-                  </label>
-                  <input
-                    type="number"
-                    value={newProject.reward}
-                    onChange={(e) => setNewProject({ ...newProject, reward: e.target.value })}
-                    placeholder="10000"
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              ))}
+
+              {monthlyIncomeData.length > 0 && (
+                <>
+                  <path
+                    d={`M ${monthlyIncomeData.map((d, i) => {
+                      const x = 30 + (i / (monthlyIncomeData.length - 1)) * 280;
+                      const y = 115 - (d.amount / chartMax) * 85;
+                      return `${x},${y}`;
+                    }).join(' L ')} L ${310},115 L 30,115 Z`}
+                    fill="url(#areaGradient)"
                   />
-                </div>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => setShowProjectForm(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition"
-                >
-                  キャンセル
-                </button>
-                <button
-                  onClick={handleAddProject}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium"
-                >
-                  追加
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {projects.length > 0 ? (
-          <div className="space-y-3">
-            {projects.slice(0, 10).map((project) => (
-              <div
-                key={project.id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition"
-              >
-                <div className="flex-1">
-                  <div className="font-medium text-slate-900">{project.name}</div>
-                  <div className="text-sm text-slate-600">
-                    {PROJECT_CATEGORIES.find((c) => c.value === project.category)?.label ||
-                      'その他'}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="font-bold text-slate-900">
-                      ¥{project.reward.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {project.completed_at
-                        ? new Date(project.completed_at).toLocaleDateString('ja-JP')
-                        : '進行中'}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDelete(project.id)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
+                  <path
+                    d={`M ${monthlyIncomeData.map((d, i) => {
+                      const x = 30 + (i / (monthlyIncomeData.length - 1)) * 280;
+                      const y = 115 - (d.amount / chartMax) * 85;
+                      return `${x},${y}`;
+                    }).join(' L ')}`}
+                    fill="none"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {monthlyIncomeData.map((d, i) => {
+                    const x = 30 + (i / (monthlyIncomeData.length - 1)) * 280;
+                    const y = 115 - (d.amount / chartMax) * 85;
+                    return (
+                      <g key={i}>
+                        <circle cx={x} cy={y} r="5" fill="white" stroke="#ef4444" strokeWidth="2.5" />
+                        {d.amount > 0 && (
+                          <text
+                            x={x}
+                            y={y - 10}
+                            textAnchor="middle"
+                            fill="#475569"
+                            style={{ fontSize: '9px', fontWeight: 500 }}
+                          >
+                            {(d.amount / 10000).toFixed(0)}万
+                          </text>
+                        )}
+                        <text
+                          x={x}
+                          y={130}
+                          textAnchor="middle"
+                          fill="#94a3b8"
+                          style={{ fontSize: '9px' }}
+                        >
+                          {d.month}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </>
+              )}
+            </svg>
           </div>
-        ) : (
-          <div className="text-center py-12 bg-slate-50 rounded-xl">
-            <p className="text-slate-500">まだ案件がありません</p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Wallet size={16} className="text-blue-500" />
+              <span className="text-xs text-slate-500">今月月収</span>
+            </div>
+            <p className="text-lg font-bold text-slate-900">¥{thisMonthIncome.toLocaleString()}</p>
           </div>
-        )}
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Award size={16} className="text-amber-500" />
+              <span className="text-xs text-slate-500">最高月収</span>
+            </div>
+            <p className="text-lg font-bold text-slate-900">¥{maxMonthlyIncome.toLocaleString()}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Calculator size={16} className="text-green-500" />
+              <span className="text-xs text-slate-500">平均月収</span>
+            </div>
+            <p className="text-lg font-bold text-slate-900">¥{avgMonthlyIncome.toLocaleString()}</p>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp size={16} className="text-red-500" />
+              <span className="text-xs text-slate-500">累計収益</span>
+            </div>
+            <p className="text-lg font-bold text-slate-900">¥{totalIncome.toLocaleString()}</p>
+          </div>
+        </div>
       </div>
 
       {videoProgress.total > 0 && (
@@ -612,7 +477,7 @@ export default function Home() {
       )}
 
       {profile?.roadmap_id && (currentTask || nextTask) && (
-        <div className="bg-white rounded-2xl p-6 border border-slate-200">
+        <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-200">
           <div className="flex items-center gap-2 mb-4">
             <Target size={20} className="text-slate-600" />
             <h2 className="text-lg font-bold text-slate-900">ロードマップ</h2>
@@ -645,6 +510,136 @@ export default function Home() {
                 <div className="font-medium text-slate-700">{nextTask.title}</div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-slate-900">今月の案件</h2>
+        </div>
+
+        {projects.length === 0 ? (
+          <div className="text-center py-12 bg-slate-50 rounded-2xl">
+            <p className="text-slate-500 mb-4">まだ案件がありません</p>
+            <button
+              onClick={openNewModal}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition"
+            >
+              <Plus size={20} />
+              案件を追加
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-2 mb-4">
+              {projects.map((project) => (
+                <div
+                  key={project.id}
+                  className="bg-white rounded-xl p-3 border border-slate-200 hover:shadow-md transition"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900">{project.name}</div>
+                      <div className="text-lg font-bold text-slate-700">¥{project.reward.toLocaleString()}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEditModal(project)}
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(project.id)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={openNewModal}
+              className="w-full py-4 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition flex items-center justify-center gap-2"
+            >
+              <Plus size={20} />
+              案件を追加
+            </button>
+          </>
+        )}
+      </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6">
+              {editingProject ? '案件を編集' : '案件を追加'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  案件名
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="例: LP制作"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  金額（円）
+                </label>
+                <input
+                  type="number"
+                  value={formData.reward}
+                  onChange={(e) => setFormData({ ...formData, reward: e.target.value })}
+                  required
+                  min="0"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  placeholder="150000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  ステータス
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as 'in_progress' | 'completed' | 'paid' })}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                >
+                  <option value="in_progress">進行中</option>
+                  <option value="completed">完了</option>
+                  <option value="paid">入金済み</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingProject(null);
+                  }}
+                  className="flex-1 px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition"
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white font-medium hover:bg-red-700 transition"
+                >
+                  {editingProject ? '更新' : '追加'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
