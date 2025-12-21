@@ -28,6 +28,25 @@ const getDesignerTypeIcon = (type: DesignerType) => {
   }
 };
 
+const getTypeGradient = (type: DesignerType) => {
+  switch (type) {
+    case 'artist':
+      return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+    case 'strategist':
+      return 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+    case 'partner':
+      return 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+    case 'business_designer':
+      return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+    case 'growth':
+      return 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+    case 'all_rounder':
+      return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+    default:
+      return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+  }
+};
+
 export default function Profile() {
   const { profile, user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -246,11 +265,11 @@ export default function Profile() {
             <div
               className="p-6 rounded-2xl text-white relative overflow-hidden"
               style={{
-                background: `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}dd 100%)`
+                background: getTypeGradient(typeInfo.type)
               }}
             >
               <div className="absolute -right-8 -top-8 opacity-15 pointer-events-none">
-                <div style={{ transform: 'scale(2.5)' }}>
+                <div style={{ transform: 'scale(1.6)' }}>
                   {getDesignerTypeIcon(typeInfo.type)}
                 </div>
               </div>
