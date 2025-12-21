@@ -247,7 +247,13 @@ export default function Profile() {
               className="p-6 rounded-2xl text-white relative overflow-hidden"
               style={{ backgroundColor: typeInfo.color }}
             >
-              <div className="absolute right-4 bottom-4 opacity-15 pointer-events-none">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute w-32 h-32 bg-white opacity-10 rounded-full -top-10 -left-10"></div>
+                <div className="absolute w-20 h-20 bg-white opacity-10 rounded-full top-1/3 -right-6"></div>
+                <div className="absolute w-24 h-24 bg-white opacity-10 rounded-full -bottom-8 left-1/4"></div>
+                <div className="absolute w-16 h-16 bg-white opacity-10 rounded-full bottom-1/4 right-1/4"></div>
+              </div>
+              <div className="absolute right-4 top-4 opacity-20 pointer-events-none">
                 {getDesignerTypeIcon(typeInfo.type)}
               </div>
               <div className="relative z-10">
