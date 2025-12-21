@@ -365,12 +365,8 @@ export default function Home() {
       </div>
 
       {typeInfo ? (
-        <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-6 border border-slate-200 relative overflow-hidden">
-          <div className="absolute right-0 bottom-0 w-64 h-64 opacity-5 pointer-events-none">
-            <img src="/mbti.png" alt="" className="w-full h-full object-contain" />
-          </div>
-
-          <div className="flex items-center justify-between mb-6 relative z-10">
+        <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-6 border border-slate-200">
+          <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <Sparkles className="text-red-500" size={24} />
               デザイナータイプ
@@ -384,13 +380,14 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 relative z-10">
+          <div className="grid md:grid-cols-2 gap-6">
             <div
               className="p-6 rounded-2xl text-white relative overflow-hidden"
               style={{ backgroundColor: typeInfo.color }}
             >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12" />
-              <div className="absolute bottom-0 left-0 w-20 h-20 bg-white opacity-10 rounded-full -ml-10 -mb-10" />
+              <div className="absolute right-0 bottom-0 w-48 h-48 opacity-10 pointer-events-none">
+                <img src="/mbti.png" alt="" className="w-full h-full object-contain" />
+              </div>
               <div className="relative z-10">
                 <div className="inline-block px-4 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium mb-2 backdrop-blur-sm">
                   あなたのタイプ

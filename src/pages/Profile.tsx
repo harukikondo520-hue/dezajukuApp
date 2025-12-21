@@ -226,8 +226,9 @@ export default function Profile() {
               className="p-6 rounded-2xl text-white relative overflow-hidden"
               style={{ backgroundColor: typeInfo.color }}
             >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-10 rounded-full -mr-12 -mt-12" />
-              <div className="absolute bottom-0 left-0 w-20 h-20 bg-white opacity-10 rounded-full -ml-10 -mb-10" />
+              <div className="absolute right-0 bottom-0 w-48 h-48 opacity-10 pointer-events-none">
+                <img src="/mbti.png" alt="" className="w-full h-full object-contain" />
+              </div>
               <div className="relative z-10">
                 <div className="inline-block px-4 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium mb-2 backdrop-blur-sm">
                   あなたのタイプ
