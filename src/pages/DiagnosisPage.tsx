@@ -18,7 +18,7 @@ export default function DiagnosisPage() {
     if (currentIndex < diagnosisQuestions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      navigate('/onboarding/result', { state: { answers: newAnswers } });
+      navigate('/diagnosis/result', { state: { answers: newAnswers } });
     }
   };
 

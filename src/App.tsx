@@ -34,6 +34,24 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   return <Layout>{children}</Layout>;
 }
 
+function AuthenticatedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-slate-600">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
+}
+
 function OnboardingRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
 
@@ -135,6 +153,22 @@ function AppRoutes() {
           <PrivateRoute>
             <VideoLectures />
           </PrivateRoute>
+        }
+      />
+      <Route
+        path="/diagnosis"
+        element={
+          <AuthenticatedRoute>
+            <DiagnosisPage />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/diagnosis/result"
+        element={
+          <AuthenticatedRoute>
+            <DiagnosisResultPage />
+          </AuthenticatedRoute>
         }
       />
     </Routes>

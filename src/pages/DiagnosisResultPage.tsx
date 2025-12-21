@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function DiagnosisResultPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [scores, setScores] = useState<SkillScores | null>(null);
   const [designerType, setDesignerType] = useState<DesignerType | null>(null);
   const [saving, setSaving] = useState(false);
@@ -19,7 +19,7 @@ export default function DiagnosisResultPage() {
   useEffect(() => {
     const answers = location.state?.answers;
     if (!answers) {
-      navigate('/onboarding/diagnosis');
+      navigate('/diagnosis');
       return;
     }
 
@@ -33,6 +33,14 @@ export default function DiagnosisResultPage() {
       saveDiagnosis(calculatedScores, type, answers);
     }
   }, [location.state, user]);
+
+  const handleNext = () => {
+    if (profile?.onboarding_completed) {
+      navigate('/');
+    } else {
+      navigate('/onboarding');
+    }
+  };
 
   const saveDiagnosis = async (
     scores: SkillScores,
@@ -152,7 +160,7 @@ export default function DiagnosisResultPage() {
         </div>
 
         <button
-          onClick={() => navigate('/onboarding')}
+          onClick={handleNext}
           disabled={saving}
           className="w-full py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-2xl
             hover:from-red-600 hover:to-orange-600 transition-all duration-200 shadow-lg
