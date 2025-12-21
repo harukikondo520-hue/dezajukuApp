@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, Bell, Edit2, Check, X } from 'lucide-react';
+import { LogOut, Bell, Edit2, Check, X, RefreshCw, Sparkles } from 'lucide-react';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
+import { DiagnosisResult } from '../types/diagnosis';
+import { designerTypes } from '../data/questions';
 import type { Database } from '../types/database';
 
 type UserBadge = Database['public']['Tables']['user_badges']['Row'];
@@ -25,6 +28,7 @@ export default function Profile() {
   const { profile, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [badges, setBadges] = useState<UserBadge[]>([]);
+  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -36,6 +40,7 @@ export default function Profile() {
     if (profile) {
       loadBadges();
       loadUnreadCount();
+      loadDiagnosis();
     }
   }, [profile]);
 
@@ -61,6 +66,22 @@ export default function Profile() {
       }
     }
   }, [currentBanner]);
+
+  const loadDiagnosis = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('skill_diagnosis')
+        .select('*')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+
+      if (data && !error) {
+        setDiagnosis(data);
+      }
+    } catch (error) {
+      console.error('診断データの取得に失敗:', error);
+    }
+  };
 
   const loadBadges = async () => {
     try {
@@ -150,6 +171,28 @@ export default function Profile() {
     );
   }
 
+  const typeInfo = diagnosis ? designerTypes[diagnosis.designer_type] : null;
+
+  const chartData = diagnosis
+    ? [
+        { skill: '造形力', value: diagnosis.design_skill },
+        { skill: '設計力', value: diagnosis.planning_skill },
+        { skill: 'CW力', value: diagnosis.client_skill },
+        { skill: 'ビジネス力', value: diagnosis.business_skill },
+        { skill: 'マインド力', value: diagnosis.mindset_skill },
+      ]
+    : [];
+
+  const skillDetails = diagnosis
+    ? [
+        { label: '造形力', value: diagnosis.design_skill, color: 'bg-red-500' },
+        { label: '設計力', value: diagnosis.planning_skill, color: 'bg-orange-500' },
+        { label: 'CW力', value: diagnosis.client_skill, color: 'bg-yellow-500' },
+        { label: 'ビジネス力', value: diagnosis.business_skill, color: 'bg-green-500' },
+        { label: 'マインド力', value: diagnosis.mindset_skill, color: 'bg-blue-500' },
+      ]
+    : [];
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-end mb-2">
@@ -222,6 +265,114 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {typeInfo ? (
+        <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-8 mb-4 border border-slate-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="text-red-500" size={24} />
+              あなたのデザイナータイプ
+            </h2>
+            <button
+              onClick={() => navigate('/diagnosis')}
+              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              title="再診断する"
+            >
+              <RefreshCw className="w-5 h-5 text-slate-400" />
+            </button>
+          </div>
+
+          <div
+            className="mb-8 p-8 rounded-2xl text-white relative overflow-hidden"
+            style={{ backgroundColor: typeInfo.color }}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12" />
+            <div className="relative z-10">
+              <div className="text-center mb-4">
+                <div className="inline-block px-6 py-2 bg-white bg-opacity-20 rounded-full text-sm font-medium mb-3 backdrop-blur-sm">
+                  デザイナータイプ
+                </div>
+                <h3 className="text-4xl font-black mb-2 tracking-wide">
+                  {typeInfo.name}
+                </h3>
+                <p className="text-white text-opacity-90 text-lg leading-relaxed max-w-2xl mx-auto">
+                  {typeInfo.description}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="font-bold text-slate-900 mb-4">スキルバランス</h3>
+              <div className="h-64 flex items-center justify-center bg-white rounded-xl border border-slate-200 p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={chartData}>
+                    <PolarGrid stroke="#e5e7eb" />
+                    <PolarAngleAxis
+                      dataKey="skill"
+                      tick={{ fontSize: 12, fill: '#475569' }}
+                    />
+                    <Radar
+                      dataKey="value"
+                      stroke={typeInfo.color}
+                      fill={typeInfo.color}
+                      fillOpacity={0.4}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-bold text-slate-900 mb-4">スキル詳細</h3>
+              <div className="space-y-4">
+                {skillDetails.map((skill) => (
+                  <div key={skill.label}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-slate-700">{skill.label}</span>
+                      <span className="text-sm font-bold text-slate-900">{skill.value}</span>
+                    </div>
+                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${skill.color} rounded-full transition-all duration-500`}
+                        style={{ width: `${skill.value}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <h4 className="font-bold text-slate-900 mb-2">特徴</h4>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {typeInfo.characteristics}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow-sm p-8 mb-4 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
+            <Sparkles className="text-slate-400" size={32} />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">
+            まだ診断を受けていません
+          </h3>
+          <p className="text-slate-600 mb-6">
+            あなたのデザイナータイプを知るために、スキル診断を受けてみましょう
+          </p>
+          <button
+            onClick={() => navigate('/diagnosis')}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-medium rounded-xl hover:from-red-600 hover:to-orange-600 transition-all"
+          >
+            診断を受ける
+          </button>
+        </div>
+      )}
 
       <div className="mb-4 -mx-4 sm:mx-0">
         <div className="relative">

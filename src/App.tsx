@@ -8,6 +8,7 @@ import SignUp from './pages/SignUp';
 import Home from './pages/Home';
 import AIChat from './pages/AIChat';
 import VideoLectures from './pages/VideoLectures';
+import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import DiagnosisPage from './pages/DiagnosisPage';
 import DiagnosisResultPage from './pages/DiagnosisResultPage';
@@ -152,6 +153,14 @@ function AppRoutes() {
         element={
           <PrivateRoute>
             <VideoLectures />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <PrivateRoute>
+            <Profile />
           </PrivateRoute>
         }
       />

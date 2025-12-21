@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MessageCircle, PlayCircle } from 'lucide-react';
+import { Home, MessageCircle, User } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,7 +12,7 @@ export default function Layout({ children }: LayoutProps) {
   const navItems = [
     { path: '/', label: 'ホーム', icon: Home },
     { path: '/chat', label: 'AIチャット', icon: MessageCircle },
-    { path: '/videos', label: '動画講義', icon: PlayCircle },
+    { path: '/profile', label: 'プロフィール', icon: User },
   ];
 
   return (
