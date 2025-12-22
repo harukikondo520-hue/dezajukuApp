@@ -1,8 +1,11 @@
+import { useState, useEffect, useRef } from 'react';
 import { useCommunityStats } from '../../hooks/useCommunityStats';
 import { Users, Trophy, Wallet, TrendingUp } from 'lucide-react';
 
 export default function CommunityContent() {
   const { data: stats, isLoading } = useCommunityStats();
+  const [animatedCumulativeRevenue, setAnimatedCumulativeRevenue] = useState(0);
+  const animationRef = useRef<number | null>(null);
 
   if (isLoading) {
     return (
@@ -16,13 +19,44 @@ export default function CommunityContent() {
 
   if (!stats) return null;
 
-  const formatCurrency = (value: number) => {
-    if (value >= 10000000) {
-      return `${(value / 10000000).toFixed(1)}千万円`;
-    } else if (value >= 10000) {
-      return `${Math.round(value / 10000)}万円`;
+  useEffect(() => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
     }
-    return `${value.toLocaleString()}円`;
+
+    const duration = 1500;
+    const startTime = Date.now();
+    const startValue = animatedCumulativeRevenue;
+    const endValue = stats.cumulativeRevenue;
+
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const currentValue = startValue + (endValue - startValue) * easeOutQuart;
+
+      setAnimatedCumulativeRevenue(Math.floor(currentValue));
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    if (stats.cumulativeRevenue > 0) {
+      animationRef.current = requestAnimationFrame(animate);
+    }
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [stats.cumulativeRevenue]);
+
+  const formatCurrency = (value: number) => {
+    return `￥${value.toLocaleString()}`;
   };
 
   return (
@@ -33,7 +67,7 @@ export default function CommunityContent() {
           <span className="text-sm opacity-90">累計収益化金額</span>
         </div>
         <div className="text-4xl font-bold">
-          ¥{stats.cumulativeRevenue.toLocaleString()}
+          ￥{animatedCumulativeRevenue.toLocaleString()}
         </div>
         <p className="text-sm opacity-75 mt-2">
           デザジュク生徒全員の収益合計

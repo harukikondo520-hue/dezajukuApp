@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, TrendingUp, Award, Calculator, Wallet, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -33,8 +33,6 @@ export default function MyPageContent() {
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
   const [hasDiagnosis, setHasDiagnosis] = useState(false);
   const [hasExDiagnosis, setHasExDiagnosis] = useState(false);
-  const [animatedTotal, setAnimatedTotal] = useState(0);
-  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -209,42 +207,6 @@ export default function MyPageContent() {
     allProjects.reduce((sum, p) => sum + p.reward, 0),
     [allProjects]
   );
-
-  useEffect(() => {
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
-
-    const duration = 1500;
-    const startTime = Date.now();
-    const startValue = animatedTotal;
-    const endValue = totalIncome;
-
-    const animate = () => {
-      const currentTime = Date.now();
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      const currentValue = startValue + (endValue - startValue) * easeOutQuart;
-
-      setAnimatedTotal(Math.floor(currentValue));
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      }
-    };
-
-    if (totalIncome > 0) {
-      animationRef.current = requestAnimationFrame(animate);
-    }
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [totalIncome]);
 
   const progressPercent = useMemo(() => {
     if (videoProgress.total === 0) return 0;
@@ -489,7 +451,7 @@ export default function MyPageContent() {
               <TrendingUp size={16} className="text-red-500" />
               <span className="text-xs text-slate-500">累計収益</span>
             </div>
-            <p className="text-lg font-bold text-slate-900">￥{animatedTotal.toLocaleString()}</p>
+            <p className="text-lg font-bold text-slate-900">￥{totalIncome.toLocaleString()}</p>
           </div>
         </div>
       </div>
