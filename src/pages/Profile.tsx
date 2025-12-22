@@ -57,6 +57,8 @@ export default function Profile() {
   const [editedName, setEditedName] = useState('');
   const [exReport, setExReport] = useState<any>(null);
   const [showFullReport, setShowFullReport] = useState(false);
+  const [hasDiagnosis, setHasDiagnosis] = useState(false);
+  const [hasExDiagnosis, setHasExDiagnosis] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -87,6 +89,7 @@ export default function Profile() {
 
       if (data && !error) {
         setDiagnosis(data);
+        setHasDiagnosis(true);
 
         if (data.ex_values && data.ex_vision && data.ex_strength && data.ex_challenge && data.ex_style) {
           setExReport({
@@ -96,7 +99,13 @@ export default function Profile() {
             challenge: data.ex_challenge,
             style: data.ex_style,
           });
+          setHasExDiagnosis(true);
+        } else {
+          setHasExDiagnosis(false);
         }
+      } else {
+        setHasDiagnosis(false);
+        setHasExDiagnosis(false);
       }
     } catch (error) {
       console.error('診断データの取得に失敗:', error);
@@ -257,6 +266,47 @@ export default function Profile() {
         </div>
       </div>
 
+      {!hasDiagnosis && (
+        <div
+          onClick={() => navigate('/diagnosis')}
+          className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl p-6 mb-4 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1 text-white">
+              <h3 className="text-lg font-bold mb-1">デザイナータイプ診断</h3>
+              <p className="text-sm text-white/90">
+                5分でわかるスキル診断で、あなたのデザイナータイプを発見しよう
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {hasDiagnosis && !hasExDiagnosis && (
+        <div
+          onClick={() => navigate('/diagnosis')}
+          className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 mb-4 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1 text-white">
+              <div className="inline-block px-2 py-1 bg-white/30 rounded-full text-xs font-bold mb-2">
+                EX診断
+              </div>
+              <h3 className="text-lg font-bold mb-1">デザイナータイプ診断</h3>
+              <p className="text-sm text-white/90">
+                AIがあなたの価値観から長期戦略を提案します
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {typeInfo ? (
         <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-4 border border-slate-200">
           <div className="flex items-center justify-between mb-6">
@@ -318,25 +368,7 @@ export default function Profile() {
             </div>
           </div>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-4 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-            <Sparkles className="text-slate-400" size={32} />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-2">
-            まだ診断を受けていません
-          </h3>
-          <p className="text-slate-600 mb-6">
-            あなたのデザイナータイプを知るために、スキル診断を受けてみましょう
-          </p>
-          <button
-            onClick={() => navigate('/diagnosis')}
-            className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-medium rounded-xl hover:from-red-600 hover:to-orange-600 transition-all"
-          >
-            診断を受ける
-          </button>
-        </div>
-      )}
+      ) : null}
 
       {exReport && (
         <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-sm p-6 md:p-8 mb-4 border border-amber-200">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, TrendingUp, Award, Calculator, Wallet, Sparkles } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -33,6 +33,8 @@ export default function MyPageContent() {
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
   const [hasDiagnosis, setHasDiagnosis] = useState(false);
   const [hasExDiagnosis, setHasExDiagnosis] = useState(false);
+  const [animatedTotal, setAnimatedTotal] = useState(0);
+  const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -207,6 +209,42 @@ export default function MyPageContent() {
     allProjects.reduce((sum, p) => sum + p.reward, 0),
     [allProjects]
   );
+
+  useEffect(() => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+
+    const duration = 1500;
+    const startTime = Date.now();
+    const startValue = animatedTotal;
+    const endValue = totalIncome;
+
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const currentValue = startValue + (endValue - startValue) * easeOutQuart;
+
+      setAnimatedTotal(Math.floor(currentValue));
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    if (totalIncome > 0) {
+      animationRef.current = requestAnimationFrame(animate);
+    }
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [totalIncome]);
 
   const progressPercent = useMemo(() => {
     if (videoProgress.total === 0) return 0;
@@ -430,28 +468,28 @@ export default function MyPageContent() {
               <Wallet size={16} className="text-blue-500" />
               <span className="text-xs text-slate-500">今月月収</span>
             </div>
-            <p className="text-lg font-bold text-slate-900">¥{thisMonthIncome.toLocaleString()}</p>
+            <p className="text-lg font-bold text-slate-900">￥{thisMonthIncome.toLocaleString()}</p>
           </div>
           <div className="bg-slate-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
               <Award size={16} className="text-amber-500" />
               <span className="text-xs text-slate-500">最高月収</span>
             </div>
-            <p className="text-lg font-bold text-slate-900">¥{maxMonthlyIncome.toLocaleString()}</p>
+            <p className="text-lg font-bold text-slate-900">￥{maxMonthlyIncome.toLocaleString()}</p>
           </div>
           <div className="bg-slate-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
               <Calculator size={16} className="text-green-500" />
               <span className="text-xs text-slate-500">平均月収</span>
             </div>
-            <p className="text-lg font-bold text-slate-900">¥{avgMonthlyIncome.toLocaleString()}</p>
+            <p className="text-lg font-bold text-slate-900">￥{avgMonthlyIncome.toLocaleString()}</p>
           </div>
           <div className="bg-slate-50 rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
               <TrendingUp size={16} className="text-red-500" />
               <span className="text-xs text-slate-500">累計収益</span>
             </div>
-            <p className="text-lg font-bold text-slate-900">¥{totalIncome.toLocaleString()}</p>
+            <p className="text-lg font-bold text-slate-900">￥{animatedTotal.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -644,49 +682,6 @@ export default function MyPageContent() {
           </div>
         </div>
       )}
-
-      <div className="space-y-4">
-        {!hasDiagnosis && (
-          <div
-            onClick={() => navigate('/diagnosis')}
-            className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex-1 text-white">
-                <h3 className="text-lg font-bold mb-1">デザイナーとしての強みを知りませんか？</h3>
-                <p className="text-sm text-white/90">
-                  5分でわかるスキル診断で、あなたのデザイナータイプを発見しよう
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {hasDiagnosis && !hasExDiagnosis && (
-          <div
-            onClick={() => navigate('/diagnosis')}
-            className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-7 h-7 text-white" />
-              </div>
-              <div className="flex-1 text-white">
-                <div className="inline-block px-2 py-1 bg-white/30 rounded-full text-xs font-bold mb-2">
-                  EX診断
-                </div>
-                <h3 className="text-lg font-bold mb-1">さらに深くあなたを知りませんか？</h3>
-                <p className="text-sm text-white/90">
-                  AIがあなたの価値観から長期戦略を提案します
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
