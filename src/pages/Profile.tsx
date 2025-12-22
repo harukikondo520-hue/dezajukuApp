@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Bell, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star } from 'lucide-react';
+import { LogOut, Bell, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -55,6 +55,8 @@ export default function Profile() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [exReport, setExReport] = useState<any>(null);
+  const [showFullReport, setShowFullReport] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -85,6 +87,16 @@ export default function Profile() {
 
       if (data && !error) {
         setDiagnosis(data);
+
+        if (data.ex_values && data.ex_vision && data.ex_strength && data.ex_challenge && data.ex_style) {
+          setExReport({
+            values: data.ex_values,
+            vision: data.ex_vision,
+            strength: data.ex_strength,
+            challenge: data.ex_challenge,
+            style: data.ex_style,
+          });
+        }
       }
     } catch (error) {
       console.error('診断データの取得に失敗:', error);
@@ -323,6 +335,81 @@ export default function Profile() {
           >
             診断を受ける
           </button>
+        </div>
+      )}
+
+      {exReport && (
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl shadow-sm p-6 md:p-8 mb-4 border border-amber-200">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="text-amber-500" size={24} />
+              診断EX レポート
+            </h2>
+            <div className="inline-block px-3 py-1 bg-amber-500 text-white text-xs font-bold rounded-full">
+              AI分析
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 mb-4">
+            <h3 className="font-bold text-slate-900 mb-3 text-lg">
+              あなたのデザイナーとしての価値観
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold text-amber-700 mb-2">大切にしている価値観</h4>
+                <p className="text-slate-700 text-sm leading-relaxed">
+                  {showFullReport ? exReport.values : exReport.values.substring(0, 100) + '...'}
+                </p>
+              </div>
+
+              {showFullReport && (
+                <>
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-700 mb-2">3年後の理想像</h4>
+                    <p className="text-slate-700 text-sm leading-relaxed">{exReport.vision}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-700 mb-2">あなたの強み</h4>
+                    <p className="text-slate-700 text-sm leading-relaxed">{exReport.strength}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-700 mb-2">現在の課題</h4>
+                    <p className="text-slate-700 text-sm leading-relaxed">{exReport.challenge}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold text-amber-700 mb-2">デザインスタイル</h4>
+                    <p className="text-slate-700 text-sm leading-relaxed">{exReport.style}</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={() => setShowFullReport(!showFullReport)}
+              className="mt-4 flex items-center gap-2 text-amber-600 hover:text-amber-700 font-medium text-sm transition"
+            >
+              {showFullReport ? (
+                <>
+                  <ChevronUp size={18} />
+                  要約を見る
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={18} />
+                  全文を読む
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="bg-amber-100 rounded-xl p-4">
+            <p className="text-xs text-amber-800">
+              <strong>💡 ヒント：</strong> この診断結果をもとに、あなたの長期的なキャリア戦略を考えてみましょう。ハルキAIに相談することもできます。
+            </p>
+          </div>
         </div>
       )}
     </div>

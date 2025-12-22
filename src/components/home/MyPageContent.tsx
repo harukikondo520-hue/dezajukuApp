@@ -32,6 +32,7 @@ export default function MyPageContent() {
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
   const [hasDiagnosis, setHasDiagnosis] = useState(false);
+  const [hasExDiagnosis, setHasExDiagnosis] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -55,11 +56,22 @@ export default function MyPageContent() {
     try {
       const { data } = await supabase
         .from('skill_diagnosis')
-        .select('id')
+        .select('id, ex_values, ex_vision, ex_strength, ex_challenge, ex_style')
         .eq('user_id', user!.id)
         .maybeSingle();
 
       setHasDiagnosis(!!data);
+
+      if (data) {
+        const hasExAnswers = !!(
+          data.ex_values &&
+          data.ex_vision &&
+          data.ex_strength &&
+          data.ex_challenge &&
+          data.ex_style
+        );
+        setHasExDiagnosis(hasExAnswers);
+      }
     } catch (error) {
       console.error('Error checking diagnosis:', error);
     }
@@ -319,24 +331,6 @@ export default function MyPageContent() {
 
   return (
     <div>
-      {!hasDiagnosis && (
-        <div
-          onClick={() => navigate('/diagnosis')}
-          className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl p-6 mb-6 cursor-pointer hover:shadow-lg transition-all duration-300"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 text-white">
-              <h3 className="text-lg font-bold mb-1">あなたのデザイナータイプを診断</h3>
-              <p className="text-sm text-white/90">
-                スキル診断でデザイナーとしての強みを知ろう
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-200">
         <div className="flex items-center gap-2 mb-6">
@@ -650,6 +644,49 @@ export default function MyPageContent() {
           </div>
         </div>
       )}
+
+      <div className="space-y-4">
+        {!hasDiagnosis && (
+          <div
+            onClick={() => navigate('/diagnosis')}
+            className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 text-white">
+                <h3 className="text-lg font-bold mb-1">デザイナーとしての強みを知りませんか？</h3>
+                <p className="text-sm text-white/90">
+                  5分でわかるスキル診断で、あなたのデザイナータイプを発見しよう
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hasDiagnosis && !hasExDiagnosis && (
+          <div
+            onClick={() => navigate('/diagnosis')}
+            className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 text-white">
+                <div className="inline-block px-2 py-1 bg-white/30 rounded-full text-xs font-bold mb-2">
+                  EX診断
+                </div>
+                <h3 className="text-lg font-bold mb-1">さらに深くあなたを知りませんか？</h3>
+                <p className="text-sm text-white/90">
+                  AIがあなたの価値観から長期戦略を提案します
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

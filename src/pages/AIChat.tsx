@@ -15,13 +15,16 @@ export default function AIChat() {
     {
       id: '1',
       role: 'assistant',
-      content: `こんにちは、${profile?.name || 'ゲスト'}さん！デザジュクのAIアシスタントです。学習内容や案件について、何でもお気軽にご質問ください。`,
+      content: `こんにちは、${profile?.name || 'ゲスト'}さん！ハルキAIです。デザジュクの創設者として、あなたの学習や案件について全力でサポートします。何でもお気軽にご質問ください。`,
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const difyChatUrl = import.meta.env.VITE_DIFY_CHAT_URL;
+  const useDify = !!difyChatUrl;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -60,9 +63,9 @@ export default function AIChat() {
 
   const getPlaceholderResponse = (question: string): string => {
     const responses = [
-      'ご質問ありがとうございます。Dify APIとの連携が完了次第、より詳細な回答をお届けできるようになります。',
-      '素晴らしい質問ですね！現在、AIチャット機能は準備中です。近日中にフル機能をご利用いただけます。',
-      'この機能は現在開発中です。完成後は、デザジュクのカリキュラムに関する質問や、案件相談、学習サポートなど、幅広くお手伝いできるようになります。',
+      'ご質問ありがとうございます。Dify連携が完了すると、より詳細な回答をお届けできるようになります。',
+      '素晴らしい質問ですね！ハルキAIとして、あなたのデザイナーキャリアを全力でサポートします。',
+      'デザジュクの創設者として、あなたの成長を心から応援しています。この機能は近日中にフル稼働します。',
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   };
@@ -74,14 +77,36 @@ export default function AIChat() {
     '営業文の書き方',
   ];
 
+  if (useDify) {
+    return (
+      <div className="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
+        <div className="text-center py-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mb-4">
+            <Sparkles size={32} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900">ハルキAI</h1>
+          <p className="text-sm text-slate-500 mt-1">デザジュク創設者と直接話そう</p>
+        </div>
+
+        <div className="flex-1 rounded-2xl overflow-hidden shadow-lg">
+          <iframe
+            src={difyChatUrl}
+            className="w-full h-full border-0"
+            allow="microphone"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
       <div className="text-center py-6">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mb-4">
           <Sparkles size={32} className="text-white" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">AIチャット</h1>
-        <p className="text-sm text-slate-500 mt-1">学習・案件についてなんでも相談できます</p>
+        <h1 className="text-2xl font-bold text-slate-900">ハルキAI</h1>
+        <p className="text-sm text-slate-500 mt-1">デザジュク創設者と直接話そう</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 space-y-4 mb-4">
@@ -156,7 +181,7 @@ export default function AIChat() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="メッセージを入力..."
+            placeholder="ハルキAIに質問する..."
             className="flex-1 bg-transparent px-4 py-2 text-slate-900 placeholder-slate-400 focus:outline-none"
             disabled={isLoading}
           />
@@ -169,7 +194,7 @@ export default function AIChat() {
           </button>
         </div>
         <p className="text-xs text-slate-400 text-center mt-2">
-          Dify AI連携準備中 - 近日公開予定
+          Dify連携準備中 - 設定が完了すると自動で有効化されます
         </p>
       </form>
     </div>
