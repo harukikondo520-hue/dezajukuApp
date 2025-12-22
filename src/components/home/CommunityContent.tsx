@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCommunityStats } from '../../hooks/useCommunityStats';
-import { Users, Trophy, Wallet, TrendingUp } from 'lucide-react';
+import { Users, Trophy, Wallet, TrendingUp, CheckCircle } from 'lucide-react';
 
 export default function CommunityContent() {
   const { data: stats, isLoading } = useCommunityStats();
@@ -101,7 +101,7 @@ export default function CommunityContent() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 col-span-2">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
               <Trophy className="w-4 h-4 text-yellow-600" />
@@ -113,6 +113,18 @@ export default function CommunityContent() {
           <p className="text-xs text-gray-500">今月最高収益</p>
           <p className="text-2xl font-bold text-gray-900">
             {formatCurrency(stats.mvpIncome)}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 text-purple-600" />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">今月収益化できた人数</p>
+          <p className="text-xl font-bold text-gray-900">
+            {stats.activeUsersCount}人
           </p>
         </div>
       </div>
