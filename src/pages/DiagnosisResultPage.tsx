@@ -18,6 +18,8 @@ export default function DiagnosisResultPage() {
 
   useEffect(() => {
     const answers = location.state?.answers;
+    const exAnswers = location.state?.exAnswers;
+
     if (!answers) {
       navigate('/diagnosis');
       return;
@@ -30,7 +32,7 @@ export default function DiagnosisResultPage() {
     setDesignerType(type);
 
     if (user) {
-      saveDiagnosis(calculatedScores, type, answers);
+      saveDiagnosis(calculatedScores, type, answers, exAnswers);
     }
   }, [location.state, user]);
 
@@ -45,7 +47,8 @@ export default function DiagnosisResultPage() {
   const saveDiagnosis = async (
     scores: SkillScores,
     type: DesignerType,
-    answers: Record<string, number>
+    answers: Record<string, number>,
+    exAnswers?: any[]
   ) => {
     setSaving(true);
     try {
@@ -58,6 +61,11 @@ export default function DiagnosisResultPage() {
         mindset_skill: scores.mindset,
         designer_type: type,
         raw_answers: answers,
+        ex_values: exAnswers?.[0]?.answer || null,
+        ex_vision: exAnswers?.[1]?.answer || null,
+        ex_strength: exAnswers?.[2]?.answer || null,
+        ex_challenge: exAnswers?.[3]?.answer || null,
+        ex_style: exAnswers?.[4]?.answer || null,
         diagnosed_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
     } catch (error) {

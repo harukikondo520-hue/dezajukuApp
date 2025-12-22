@@ -1,5 +1,5 @@
 import { useCommunityStats } from '../../hooks/useCommunityStats';
-import { Users, Trophy, TrendingUp, Wallet } from 'lucide-react';
+import { Users, Trophy, Wallet, TrendingUp } from 'lucide-react';
 
 export default function CommunityContent() {
   const { data: stats, isLoading } = useCommunityStats();
@@ -27,18 +27,13 @@ export default function CommunityContent() {
 
   return (
     <div className="space-y-6">
-      <div className="text-center py-4">
-        <h2 className="text-lg font-bold text-gray-800">デザジュク全体の実績</h2>
-        <p className="text-sm text-gray-500 mt-1">みんなで一緒に成長しています</p>
-      </div>
-
       <div className="bg-gradient-to-br from-red-500 to-orange-500 rounded-3xl p-6 text-white">
         <div className="flex items-center gap-2 mb-2">
           <TrendingUp className="w-5 h-5" />
           <span className="text-sm opacity-90">累計収益化金額</span>
         </div>
         <div className="text-4xl font-bold">
-          {formatCurrency(stats.cumulativeRevenue)}
+          ¥{stats.cumulativeRevenue.toLocaleString()}
         </div>
         <p className="text-sm opacity-75 mt-2">
           デザジュク生徒全員の収益合計
@@ -84,11 +79,6 @@ export default function CommunityContent() {
             {formatCurrency(stats.mvpIncome)}
           </p>
         </div>
-      </div>
-
-      <div className="bg-gray-50 rounded-2xl p-4 text-center">
-        <p className="text-sm text-gray-500">今月アクティブな仲間</p>
-        <p className="text-2xl font-bold text-gray-900">{stats.activeUsersCount}人</p>
       </div>
     </div>
   );
