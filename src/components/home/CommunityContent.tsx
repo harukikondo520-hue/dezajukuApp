@@ -111,7 +111,7 @@ export default function CommunityContent() {
             </span>
           </div>
           <p className="text-xs text-gray-500">今月最高収益</p>
-          <p className="text-2xl font-bold text-gray-900">
+          <p className="text-xl font-bold text-gray-900">
             {formatCurrency(stats.mvpIncome)}
           </p>
         </div>
