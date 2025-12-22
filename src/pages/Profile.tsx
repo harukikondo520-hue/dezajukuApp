@@ -220,7 +220,7 @@ export default function Profile() {
 
       {typeInfo ? (
         <>
-          <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-4 border border-slate-200">
+          <div className="mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                 <Sparkles className="text-red-500" size={24} />
@@ -258,12 +258,12 @@ export default function Profile() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
+          <div>
             <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <Sparkles className="text-red-500" size={24} />
               あなたのスキルグラフ
             </h2>
-            <div className="h-56 flex items-center justify-center bg-slate-50 rounded-lg p-2">
+            <div className="h-56 flex items-center justify-center p-2">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={chartData}>
                   <PolarGrid stroke="#e5e7eb" />
