@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Bell, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { LogOut, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { DiagnosisResult, DesignerType } from '../types/diagnosis';
 import { designerTypes } from '../data/questions';
 
@@ -52,7 +52,6 @@ export default function Profile() {
   const navigate = useNavigate();
   const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [hasDiagnosis, setHasDiagnosis] = useState(false);
@@ -65,10 +64,7 @@ export default function Profile() {
 
   const loadData = async () => {
     try {
-      await Promise.all([
-        loadUnreadCount(),
-        loadDiagnosis(),
-      ]);
+      await loadDiagnosis();
     } catch (error) {
       console.error('データの読み込みエラー:', error);
     } finally {
@@ -92,30 +88,6 @@ export default function Profile() {
       }
     } catch (error) {
       console.error('診断データの取得に失敗:', error);
-    }
-  };
-
-  const loadUnreadCount = async () => {
-    try {
-      const { data: announcements, error: announcementsError } = await supabase
-        .from('announcements')
-        .select('id')
-        .lte('published_at', new Date().toISOString());
-
-      if (announcementsError) throw announcementsError;
-
-      const { data: reads, error: readsError } = await supabase
-        .from('announcement_reads')
-        .select('announcement_id')
-        .eq('user_id', user!.id);
-
-      if (readsError) throw readsError;
-
-      const readIds = new Set(reads.map((r) => r.announcement_id));
-      const unread = announcements.filter((a) => !readIds.has(a.id));
-      setUnreadCount(unread.length);
-    } catch (error) {
-      console.error('未読数の取得に失敗:', error);
     }
   };
 
@@ -178,21 +150,6 @@ export default function Profile() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-end mb-2">
-        <Link
-          to="/announcements"
-          className="relative p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-          title="お知らせ"
-        >
-          <Bell size={24} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </Link>
-      </div>
-
       <div className="bg-white rounded-2xl shadow-sm pt-4 px-6 pb-6 mb-4">
         <div className="flex flex-col items-center gap-3">
           <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-red-500 shadow-lg">
@@ -262,22 +219,22 @@ export default function Profile() {
       )}
 
       {typeInfo ? (
-        <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-4 border border-slate-200">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="text-red-500" size={24} />
-              デザイナータイプ
-            </h2>
-            <button
-              onClick={() => navigate('/diagnosis')}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-              title="再診断する"
-            >
-              <RefreshCw className="w-5 h-5 text-slate-400" />
-            </button>
-          </div>
+        <>
+          <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-4 border border-slate-200">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Sparkles className="text-red-500" size={24} />
+                デザイナータイプ
+              </h2>
+              <button
+                onClick={() => navigate('/diagnosis')}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                title="再診断する"
+              >
+                <RefreshCw className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
             <div
               className="p-6 rounded-2xl text-white relative overflow-hidden"
               style={{
@@ -299,29 +256,33 @@ export default function Profile() {
                 </p>
               </div>
             </div>
+          </div>
 
-            <div>
-              <div className="h-56 flex items-center justify-center bg-white p-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={chartData}>
-                    <PolarGrid stroke="#e5e7eb" />
-                    <PolarAngleAxis
-                      dataKey="skill"
-                      tick={{ fontSize: 11, fill: '#475569' }}
-                    />
-                    <Radar
-                      dataKey="value"
-                      stroke={typeInfo.color}
-                      fill={typeInfo.color}
-                      fillOpacity={0.4}
-                      strokeWidth={2}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
+          <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 border border-slate-200">
+            <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <Sparkles className="text-red-500" size={24} />
+              あなたのスキルグラフ
+            </h2>
+            <div className="h-56 flex items-center justify-center bg-slate-50 rounded-lg p-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={chartData}>
+                  <PolarGrid stroke="#e5e7eb" />
+                  <PolarAngleAxis
+                    dataKey="skill"
+                    tick={{ fontSize: 11, fill: '#475569' }}
+                  />
+                  <Radar
+                    dataKey="value"
+                    stroke={typeInfo.color}
+                    fill={typeInfo.color}
+                    fillOpacity={0.4}
+                    strokeWidth={2}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </div>
+        </>
       ) : null}
 
     </div>
