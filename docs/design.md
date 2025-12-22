@@ -15,6 +15,7 @@
 │  - ページコンポーネント                       │
 │  - ビジネスロジック                          │
 │  - 状態管理 (React Hooks)                   │
+│  - カスタムフック                            │
 └─────────────────┬───────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────┐
@@ -29,6 +30,12 @@
 │  - PostgreSQL Database                      │
 │  - Authentication (Auth)                    │
 │  - Row Level Security (RLS)                 │
+│  - Database Functions & Triggers            │
+└─────────────────────────────────────────────┘
+                  │
+┌─────────────────▼───────────────────────────┐
+│           外部連携                           │
+│  - Dify AI (ハルキAI)                       │
 └─────────────────────────────────────────────┘
 ```
 
@@ -42,6 +49,7 @@
 | Supabase | フルマネージドBaaS、RLS、リアルタイム機能 |
 | Vite | 高速なビルド、優れた開発体験 |
 | Recharts | React専用のグラフライブラリ、柔軟なカスタマイズ |
+| Dify | AI対話機能、ナレッジベース統合 |
 
 ---
 
@@ -49,19 +57,27 @@
 
 ```
 src/
-├── components/          # 共通コンポーネント
-│   ├── Layout.tsx      # レイアウト（ナビゲーション含む）
-│   └── Opening.tsx     # オープニング画面
-├── contexts/           # React Context
-│   └── AuthContext.tsx # 認証コンテキスト
-├── data/              # 静的データ
-│   └── questions.ts   # 診断質問データ
-├── hooks/             # カスタムフック
-│   └── useBadges.ts   # バッジ取得フック
-├── lib/               # ユーティリティ
-│   ├── supabase.ts    # Supabaseクライアント
+├── components/             # 共通コンポーネント
+│   ├── Layout.tsx         # レイアウト（ナビゲーション含む）
+│   ├── Opening.tsx        # オープニング画面
+│   └── home/              # ホーム画面専用コンポーネント
+│       ├── TabSwitcher.tsx       # タブ切り替え
+│       ├── MyPageContent.tsx     # マイページタブ
+│       └── CommunityContent.tsx  # コミュニティタブ
+├── contexts/              # React Context
+│   └── AuthContext.tsx    # 認証コンテキスト
+├── data/                  # 静的データ
+│   ├── questions.ts       # 診断質問データ（基本診断）
+│   └── diagnosisExQuestions.ts # 診断EX質問データ
+├── hooks/                 # カスタムフック
+│   ├── useBadges.ts       # バッジ取得フック
+│   ├── useProjects.ts     # 案件管理フック
+│   ├── useDiagnosis.ts    # 診断データフック
+│   └── useCommunityStats.ts # コミュニティ統計フック
+├── lib/                   # ユーティリティ
+│   ├── supabase.ts        # Supabaseクライアント
 │   └── diagnosisCalculator.ts # 診断ロジック
-├── pages/             # ページコンポーネント
+├── pages/                 # ページコンポーネント
 │   ├── Login.tsx
 │   ├── SignUp.tsx
 │   ├── Onboarding.tsx
@@ -74,12 +90,14 @@ src/
 │   ├── Learning.tsx (未使用)
 │   ├── Announcements.tsx (未使用)
 │   └── Survey.tsx (未使用)
-├── types/             # 型定義
-│   ├── database.ts    # データベース型
-│   └── diagnosis.ts   # 診断関連型
-├── App.tsx            # ルーティング設定
-├── main.tsx           # エントリーポイント
-└── index.css          # グローバルスタイル
+├── types/                 # 型定義
+│   ├── database.ts        # データベース型
+│   ├── diagnosis.ts       # 診断関連型
+│   ├── diagnosisEx.ts     # 診断EX関連型
+│   └── community.ts       # コミュニティ関連型
+├── App.tsx                # ルーティング設定
+├── main.tsx               # エントリーポイント
+└── index.css              # グローバルスタイル
 ```
 
 ---
@@ -136,7 +154,7 @@ src/
        roadmap_id を保存
     │
     ▼
-[スキル診断] (/onboarding/diagnosis)
+[スキル診断（基本20問）] (/onboarding/diagnosis)
     │
     ├─ 20問に回答
     │   │
@@ -152,6 +170,17 @@ src/
     ├─ 結果表示
     │   │
     │   ▼
+    │  「次へ」ボタン押下
+    │
+    ▼
+[診断EX（記述5問）] (/diagnosis)
+    │
+    ├─ 5問に記述回答（各50文字以上）
+    │   │
+    │   ▼
+    │  診断EXデータを保存
+    │   │
+    │   ▼
     │  onboarding_completed = true
     │
     ▼
@@ -164,6 +193,12 @@ src/
 [Home.tsx マウント]
     │
     ▼
+[activeTab = 'mypage']
+    │
+    ▼
+[MyPageContent.tsx マウント]
+    │
+    ▼
 [loadAllData() 並列実行]
     │
     ├─ loadProjects() → 今月の案件取得
@@ -174,13 +209,49 @@ src/
     │
     ├─ loadTasks() → ロードマップタスク取得
     │
-    └─ loadVideoProgress() → 動画進捗取得
+    ├─ loadVideoProgress() → 動画進捗取得
+    │
+    └─ checkDiagnosis() → 診断状況確認（基本・EX）
     │
     ▼
 [state更新]
     │
     ▼
 [UI描画]
+    │
+    ▼
+[診断誘導バナー表示判定]
+    ├─ 未診断 → 基本診断への誘導
+    └─ 基本診断完了 & EX未完了 → 診断EXへの誘導
+```
+
+### 3.4 コミュニティ統計フロー
+
+```
+[CommunityContent.tsx マウント]
+    │
+    ▼
+[useCommunityStats() カスタムフック]
+    │
+    ▼
+[並列クエリ実行]
+    │
+    ├─ 今月の総収入取得
+    │   └─ monthly_income テーブルから集計
+    │
+    ├─ 今月の案件獲得数取得
+    │   └─ projects テーブルからカウント
+    │
+    └─ 月間収益ランキング取得（TOP5）
+        └─ monthly_income + users + skill_diagnosis JOIN
+    │
+    ▼
+[state更新]
+    │
+    ▼
+[UI描画]
+    ├─ 統計カード表示
+    └─ ランキングリスト表示
 ```
 
 ---
@@ -217,32 +288,72 @@ interface AuthContextType {
 
 #### Home.tsx
 ```typescript
-- projects: Project[]          // 今月の案件
-- allProjects: Project[]       // 全案件
+- activeTab: 'mypage' | 'community'  // アクティブタブ
+```
+
+#### MyPageContent.tsx
+```typescript
+- projects: Project[]              // 今月の案件
+- allProjects: Project[]           // 全案件
 - monthlyIncomeData: MonthlyData[] // 月別収益
-- tasks: Task[]                // ロードマップタスク
-- userTasks: UserTask[]        // ユーザータスク進捗
+- tasks: Task[]                    // ロードマップタスク
+- userTasks: UserTask[]            // ユーザータスク進捗
 - videoProgress: { completed, total } // 動画進捗
-- showModal: boolean           // モーダル表示
-- editingProject: Project | null // 編集中案件
+- hasDiagnosis: boolean            // 基本診断完了フラグ
+- hasExDiagnosis: boolean          // 診断EX完了フラグ
+- showModal: boolean               // モーダル表示
+- editingProject: Project | null   // 編集中案件
 - formData: { name, reward, status } // フォーム入力
+```
+
+#### CommunityContent.tsx
+```typescript
+- stats: CommunityStats           // コミュニティ統計
+  - totalMonthlyIncome: number    // 今月の総収入
+  - totalProjects: number         // 今月の案件獲得数
+  - averageUnitPrice: number      // 今月の平均単価
+  - topEarners: RankingUser[]     // 収益ランキング
+- loading: boolean                // ロード状態
 ```
 
 #### Profile.tsx
 ```typescript
 - diagnosis: DiagnosisResult | null // 診断結果
-- unreadCount: number          // 未読お知らせ数
-- isEditingName: boolean       // 名前編集中フラグ
-- editedName: string           // 編集中の名前
-- currentBannerIndex: number   // バナー表示位置
-- badges: Badge[]              // バッジ一覧
+- exReport: ExReport | null       // 診断EXレポート
+  - values: string                // 価値観
+  - vision: string                // 3年後の理想像
+  - strength: string              // 強み
+  - challenge: string             // 課題
+  - style: string                 // デザインスタイル
+- showFullReport: boolean         // 全文表示フラグ
+- unreadCount: number             // 未読お知らせ数
+- isEditingName: boolean          // 名前編集中フラグ
+- editedName: string              // 編集中の名前
+- currentBannerIndex: number      // バナー表示位置
+- badges: Badge[]                 // バッジ一覧
 ```
 
 #### DiagnosisPage.tsx
 ```typescript
-- currentQuestion: number      // 現在の質問番号
-- answers: Record<number, number> // 回答データ
-- isSubmitting: boolean        // 送信中フラグ
+- currentQuestion: number         // 現在の質問番号
+- answers: Record<number, number> // 回答データ（基本診断）
+- exAnswers: DiagnosisExAnswers   // 診断EX回答データ
+  - values: string
+  - vision: string
+  - strength: string
+  - challenge: string
+  - style: string
+- isSubmitting: boolean           // 送信中フラグ
+- showExDiagnosis: boolean        // 診断EX表示フラグ
+```
+
+#### AIChat.tsx
+```typescript
+- difyChatUrl: string | undefined // Dify埋め込みURL
+- useDify: boolean                // Dify使用フラグ
+- messages: Message[]             // チャット履歴（プレースホルダー用）
+- input: string                   // 入力テキスト
+- isLoading: boolean              // ロード状態
 ```
 
 ---
@@ -252,7 +363,28 @@ interface AuthContextType {
 ### 5.1 ページコンポーネント
 
 #### Home.tsx
-**責務**: ダッシュボードの表示と案件管理
+**責務**: ダッシュボードのタブ管理
+
+**主要機能**:
+- タブ切り替え（マイページ / コミュニティ）
+- 各タブのコンテンツ表示
+
+**データフロー**:
+```
+useState() → activeTab
+  │
+  ▼
+TabSwitcher → タブクリック
+  │
+  ▼
+setActiveTab() → 再レンダリング
+  │
+  ├─ activeTab === 'mypage' → MyPageContent
+  └─ activeTab === 'community' → CommunityContent
+```
+
+#### MyPageContent.tsx
+**責務**: マイページタブの表示と案件管理
 
 **主要機能**:
 - 月収推移グラフ表示
@@ -260,6 +392,7 @@ interface AuthContextType {
 - カリキュラム進捗表示
 - ロードマップタスク管理
 - 案件CRUD操作
+- 診断誘導バナー表示
 
 **データフロー**:
 ```
@@ -274,8 +407,40 @@ Promise.all([
   loadAllProjects(),
   loadMonthlyIncome(),
   loadTasks(),
-  loadVideoProgress()
+  loadVideoProgress(),
+  checkDiagnosis()
 ])
+  │
+  ▼
+setState() → 再レンダリング
+  │
+  ▼
+診断誘導バナー判定
+  ├─ !hasDiagnosis → 基本診断バナー表示
+  └─ hasDiagnosis && !hasExDiagnosis → EX診断バナー表示
+```
+
+#### CommunityContent.tsx
+**責務**: コミュニティタブの表示
+
+**主要機能**:
+- 今月の総収入表示
+- 今月の案件獲得数表示
+- 今月の平均単価表示
+- 月間収益ランキング表示（TOP5）
+
+**データフロー**:
+```
+useCommunityStats() → カスタムフック
+  │
+  ▼
+useEffect() → loadStats()
+  │
+  ▼
+並列クエリ実行
+  ├─ 総収入集計
+  ├─ 案件数集計
+  └─ ランキング取得
   │
   ▼
 setState() → 再レンダリング
@@ -288,6 +453,7 @@ setState() → 再レンダリング
 - ユーザー名編集
 - デザイナータイプ表示
 - スキルレーダーチャート表示
+- 診断EXレポート表示（要約/全文切り替え）
 - バナーカルーセル
 - バッジ一覧表示
 
@@ -305,6 +471,10 @@ Promise.all([
 ])
   │
   ▼
+診断データ確認
+  ├─ ex_values, ex_vision, etc. 存在
+  │   └─ setExReport() → レポート表示
+  │
 useBadges() → バッジ取得
   │
   ▼
@@ -312,23 +482,25 @@ setState() → 再レンダリング
 ```
 
 #### DiagnosisPage.tsx
-**責務**: スキル診断の実施
+**責務**: スキル診断の実施（基本診断 + 診断EX）
 
 **主要機能**:
-- 20問の質問表示
-- 5段階評価入力
+- 基本診断: 20問の5段階評価
+- 診断EX: 5問の記述式（各50文字以上）
 - プログレスバー表示
 - 前へ/次へナビゲーション
 - 診断結果計算と保存
 
 **データフロー**:
 ```
-diagnosisQuestions → 質問データ
+diagnosisQuestions → 基本診断質問データ
+diagnosisExQuestions → 診断EX質問データ
   │
   ▼
-useState() → answers
+useState() → answers, exAnswers
   │
   ▼
+[基本診断フロー]
 handleAnswer() → 回答記録
   │
   ▼
@@ -338,7 +510,41 @@ handleComplete() → calculateDiagnosisResult()
 supabase.from('skill_diagnosis').upsert()
   │
   ▼
-navigate('/diagnosis/result')
+showExDiagnosis = true
+  │
+  ▼
+[診断EXフロー]
+handleExAnswer() → 記述回答記録
+  │
+  ▼
+handleExComplete() → バリデーション（50文字以上）
+  │
+  ▼
+supabase.from('skill_diagnosis').update()
+  │
+  ▼
+navigate(isOnboarding ? '/' : '/diagnosis/result')
+```
+
+#### AIChat.tsx
+**責務**: ハルキAIチャット機能
+
+**機能**:
+- Dify設定時: iframeでチャットボット埋め込み
+- Dify未設定時: プレースホルダーチャット表示
+
+**データフロー**:
+```
+import.meta.env.VITE_DIFY_CHAT_URL → difyChatUrl
+  │
+  ▼
+useDify = !!difyChatUrl
+  │
+  ├─ useDify === true
+  │   └─ iframeでDify埋め込み
+  │
+  └─ useDify === false
+      └─ プレースホルダーチャット表示
 ```
 
 ### 5.2 共通コンポーネント
@@ -367,6 +573,14 @@ navigate('/diagnosis/result')
 - 3秒のロゴ動画再生
 - sessionStorageによる1回のみ表示制御
 - 動画読み込みエラー時の自動スキップ
+
+#### TabSwitcher.tsx
+**責務**: ホーム画面のタブ切り替えUI
+
+**機能**:
+- マイページ / コミュニティ の2タブ表示
+- アクティブタブのハイライト
+- タブクリックイベント処理
 
 ---
 
@@ -400,6 +614,8 @@ navigate('/diagnosis/result')
 ```
 / (PrivateRoute)
   └─ Home.tsx
+     ├─ MyPageContent (マイページタブ)
+     └─ CommunityContent (コミュニティタブ)
 
 /login (PublicRoute)
   └─ Login.tsx
@@ -411,19 +627,19 @@ navigate('/diagnosis/result')
   └─ Onboarding.tsx
 
 /onboarding/diagnosis (OnboardingRoute)
-  └─ DiagnosisPage.tsx
+  └─ DiagnosisPage.tsx (基本診断 → 診断EX)
 
 /onboarding/result (OnboardingRoute)
   └─ DiagnosisResultPage.tsx
 
 /chat (PrivateRoute)
-  └─ AIChat.tsx
+  └─ AIChat.tsx (ハルキAI)
 
 /profile (PrivateRoute)
   └─ Profile.tsx
 
 /diagnosis (AuthenticatedRoute)
-  └─ DiagnosisPage.tsx
+  └─ DiagnosisPage.tsx (再診断: 基本診断 → 診断EX)
 
 /diagnosis/result (AuthenticatedRoute)
   └─ DiagnosisResultPage.tsx
@@ -441,10 +657,12 @@ auth.users
     ├─1:1─ users (profile)
     │         │
     │         ├─1:N─ projects
+    │         ├─1:N─ monthly_income
     │         ├─1:N─ user_tasks
     │         ├─1:N─ video_progress
     │         ├─1:N─ user_badges
-    │         └─1:1─ skill_diagnosis
+    │         ├─1:N─ weekly_reports
+    │         └─1:1─ skill_diagnosis (基本診断 + 診断EX)
     │
     └─N:1─ roadmaps
               │
@@ -467,6 +685,10 @@ CREATE INDEX idx_users_roadmap_id ON users(roadmap_id);
 CREATE INDEX idx_projects_user_id ON projects(user_id);
 CREATE INDEX idx_projects_created_at ON projects(created_at);
 CREATE INDEX idx_projects_status ON projects(status);
+
+-- monthly_income
+CREATE INDEX idx_monthly_income_user_id ON monthly_income(user_id);
+CREATE INDEX idx_monthly_income_year_month ON monthly_income(year, month);
 
 -- skill_diagnosis
 CREATE INDEX idx_skill_diagnosis_user_id ON skill_diagnosis(user_id);
@@ -523,11 +745,35 @@ CREATE POLICY "Users can delete own projects"
   USING (auth.uid() = user_id);
 ```
 
+#### コミュニティ統計用ポリシー
+
+```sql
+-- monthly_income: 全ユーザーが全員のデータを閲覧可能（統計用）
+CREATE POLICY "All users can view all monthly income for stats"
+  ON monthly_income FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- users: 全ユーザーが名前を閲覧可能（ランキング用）
+CREATE POLICY "All users can view user names for ranking"
+  ON users FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- skill_diagnosis: 全ユーザーがdesigner_typeを閲覧可能（ランキング用）
+CREATE POLICY "All users can view designer types for ranking"
+  ON skill_diagnosis FOR SELECT
+  TO authenticated
+  USING (true);
+```
+
 ---
 
 ## 8. スキル診断ロジック
 
-### 8.1 質問構成
+### 8.1 基本診断（20問）
+
+#### 質問構成
 
 | カテゴリ | 質問数 | 質問ID |
 |---------|--------|--------|
@@ -537,7 +783,7 @@ CREATE POLICY "Users can delete own projects"
 | ビジネス力 (business) | 4 | 13-16 |
 | マインド力 (mindset) | 4 | 17-20 |
 
-### 8.2 スコア計算
+#### スコア計算
 
 ```typescript
 // 各カテゴリのスコア = (回答の合計 / 最大値) × 100
@@ -548,7 +794,7 @@ CREATE POLICY "Users can delete own projects"
 造形力スコア = (18 / 20) × 100 = 90点
 ```
 
-### 8.3 デザイナータイプ判定
+#### デザイナータイプ判定
 
 ```typescript
 // 1. 各カテゴリのスコアを計算
@@ -585,7 +831,7 @@ if (isBalanced) {
 }
 ```
 
-### 8.4 デザイナータイプ定義
+#### デザイナータイプ定義
 
 | タイプ | 英語名 | 特徴 | カラー |
 |--------|--------|------|--------|
@@ -595,6 +841,52 @@ if (isBalanced) {
 | ビジネスデザイナー型 | business_designer | ビジネス力に優れる | #f59e0b（オレンジ） |
 | グロース型 | growth | マインド力に優れる | #8b5cf6（紫） |
 | オールラウンダー型 | all_rounder | バランス型 | #6b7280（グレー） |
+
+### 8.2 診断EX（5問）
+
+#### 質問構成
+
+| 質問ID | 質問内容 | フィールド名 | 最小文字数 |
+|-------|---------|------------|-----------|
+| 1 | デザインで大切にしている価値観 | ex_values | 50 |
+| 2 | 3年後のなりたい姿 | ex_vision | 50 |
+| 3 | 強みや得意な領域 | ex_strength | 50 |
+| 4 | 現在の課題や悩み | ex_challenge | 50 |
+| 5 | デザインスタイルや仕事の進め方 | ex_style | 50 |
+
+#### バリデーション
+
+```typescript
+const validateExAnswer = (answer: string): boolean => {
+  return answer.trim().length >= 50;
+};
+
+const validateAllExAnswers = (answers: DiagnosisExAnswers): boolean => {
+  return (
+    validateExAnswer(answers.values) &&
+    validateExAnswer(answers.vision) &&
+    validateExAnswer(answers.strength) &&
+    validateExAnswer(answers.challenge) &&
+    validateExAnswer(answers.style)
+  );
+};
+```
+
+#### 保存処理
+
+```typescript
+// skill_diagnosisテーブルのex_*カラムに保存
+await supabase
+  .from('skill_diagnosis')
+  .update({
+    ex_values: exAnswers.values,
+    ex_vision: exAnswers.vision,
+    ex_strength: exAnswers.strength,
+    ex_challenge: exAnswers.challenge,
+    ex_style: exAnswers.style,
+  })
+  .eq('user_id', userId);
+```
 
 ---
 
@@ -636,32 +928,34 @@ const { data, error } = await supabase
   .order('created_at', { ascending: false });
 ```
 
-#### レコード作成
+#### 集計クエリ
 ```typescript
-const { error } = await supabase
-  .from('projects')
-  .insert({
-    user_id: userId,
-    name: '案件名',
-    reward: 100000,
-    status: 'in_progress'
-  });
+// 今月の総収入
+const { data, error } = await supabase
+  .from('monthly_income')
+  .select('total_income')
+  .eq('year', currentYear)
+  .eq('month', currentMonth);
+
+const totalIncome = data?.reduce((sum, item) => sum + item.total_income, 0) || 0;
 ```
 
-#### レコード更新
+#### JOIN クエリ（ランキング用）
 ```typescript
-const { error } = await supabase
-  .from('projects')
-  .update({ status: 'completed' })
-  .eq('id', projectId);
-```
-
-#### レコード削除
-```typescript
-const { error } = await supabase
-  .from('projects')
-  .delete()
-  .eq('id', projectId);
+const { data, error } = await supabase
+  .from('monthly_income')
+  .select(`
+    total_income,
+    users!inner(
+      id,
+      name,
+      skill_diagnosis!inner(designer_type)
+    )
+  `)
+  .eq('year', currentYear)
+  .eq('month', currentMonth)
+  .order('total_income', { ascending: false })
+  .limit(5);
 ```
 
 #### Upsert（存在すれば更新、なければ作成）
@@ -671,15 +965,54 @@ const { error } = await supabase
   .upsert({
     user_id: userId,
     design_skill: 85,
+    ex_values: '価値観の回答...',
     // ...
   });
 ```
 
 ---
 
-## 10. エラーハンドリング
+## 10. カスタムフック
 
-### 10.1 認証エラー
+### 10.1 useCommunityStats
+
+**責務**: コミュニティ統計データの取得
+
+```typescript
+export function useCommunityStats() {
+  const [stats, setStats] = useState<CommunityStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  const loadStats = async () => {
+    const [totalIncome, projectCount, ranking] = await Promise.all([
+      fetchTotalMonthlyIncome(),
+      fetchTotalProjects(),
+      fetchMonthlyRanking()
+    ]);
+
+    setStats({
+      totalMonthlyIncome: totalIncome,
+      totalProjects: projectCount,
+      averageUnitPrice: projectCount > 0 ? totalIncome / projectCount : 0,
+      topEarners: ranking
+    });
+
+    setLoading(false);
+  };
+
+  return { stats, loading };
+}
+```
+
+---
+
+## 11. エラーハンドリング
+
+### 11.1 認証エラー
 
 ```typescript
 try {
@@ -693,7 +1026,7 @@ try {
 }
 ```
 
-### 10.2 データベースエラー
+### 11.2 データベースエラー
 
 ```typescript
 const { data, error } = await supabase
@@ -707,18 +1040,26 @@ if (error) {
 }
 ```
 
-### 10.3 グローバルエラーバウンダリ
+### 11.3 バリデーションエラー
 
-将来的な実装検討事項:
-- Reactエラーバウンダリの追加
-- エラーログサービスとの連携
-- ユーザーフレンドリーなエラー画面
+```typescript
+// 診断EXのバリデーション
+const handleExComplete = () => {
+  if (!validateAllExAnswers(exAnswers)) {
+    alert('各質問に50文字以上入力してください');
+    return;
+  }
+
+  // 保存処理
+  saveExDiagnosis();
+};
+```
 
 ---
 
-## 11. パフォーマンス最適化
+## 12. パフォーマンス最適化
 
-### 11.1 データ取得の最適化
+### 12.1 データ取得の最適化
 
 #### 並列クエリ実行
 ```typescript
@@ -744,7 +1085,7 @@ await Promise.all([
 .select('id, name, reward, status')
 ```
 
-### 11.2 レンダリング最適化
+### 12.2 レンダリング最適化
 
 #### useMemo によるメモ化
 ```typescript
@@ -761,56 +1102,72 @@ const handleDelete = useCallback(async (id: string) => {
 }, []);
 ```
 
-### 11.3 コード分割
-
-現在の実装:
-- React Router の lazy loading は未実装
-- 将来的な検討事項
-
 ---
 
-## 12. セキュリティ考慮事項
+## 13. セキュリティ考慮事項
 
-### 12.1 認証
-
+### 13.1 認証
 - Supabase Authによる安全な認証
 - パスワードは6文字以上を要求
 - セッションは自動で管理
 
-### 12.2 データアクセス
-
+### 13.2 データアクセス
 - Row Level Security (RLS) による厳格なアクセス制御
 - ユーザーは自分のデータのみアクセス可能
+- コミュニティ統計は全ユーザーが閲覧可能（個人情報を除く）
 - データベーストリガーによる自動レコード作成
 
-### 12.3 フロントエンド
-
+### 13.3 フロントエンド
 - XSS対策: Reactの自動エスケープ
 - CSRF対策: SupabaseのトークンベースAPI
 - 環境変数: 機密情報は.envファイルで管理
 
 ---
 
-## 13. テスト戦略
+## 14. 外部連携
 
-現在の実装:
-- 手動テストのみ実施
+### 14.1 Dify統合（ハルキAI）
 
-将来的な実装検討事項:
-- ユニットテスト (Vitest)
-- 統合テスト (React Testing Library)
-- E2Eテスト (Playwright)
+#### 設定方法
+
+1. 環境変数設定
+```bash
+# .env
+VITE_DIFY_CHAT_URL=https://your-dify-instance.com/chatbot/your-chatbot-id
+```
+
+2. iframe埋め込み
+```typescript
+<iframe
+  src={difyChatUrl}
+  className="w-full h-full border-0"
+  allow="microphone"
+/>
+```
+
+3. フォールバック
+```typescript
+const useDify = !!import.meta.env.VITE_DIFY_CHAT_URL;
+
+if (useDify) {
+  // Dify埋め込み
+} else {
+  // プレースホルダーチャット
+}
+```
+
+詳細は `docs/dify-integration.md` を参照。
 
 ---
 
-## 14. デプロイメント
+## 15. デプロイメント
 
-### 14.1 ビルドコマンド
+### 15.1 ビルドコマンド
 ```bash
 npm run build
 ```
 
-### 14.2 出力
+### 15.2 出力
 ```
 dist/
 ├── index.html
@@ -820,38 +1177,45 @@ dist/
 └── [その他の静的ファイル]
 ```
 
-### 14.3 環境変数
+### 15.3 環境変数
 
 必須:
 - `VITE_SUPABASE_URL`: SupabaseプロジェクトURL
 - `VITE_SUPABASE_ANON_KEY`: Supabase公開鍵
 
+任意:
+- `VITE_DIFY_CHAT_URL`: DifyチャットボットURL（ハルキAI）
+
 ---
 
-## 15. 今後の拡張予定
+## 16. 今後の拡張予定
 
-### 15.1 短期（1-3ヶ月）
+### 16.1 短期（1-3ヶ月）
 
-- AIチャットのDify API連携
+- Dify AI連携の本番運用
+- AI診断EXレポート自動生成
 - 動画講義機能の実装
 - お知らせ機能の実装
 - 週報機能の実装
 
-### 15.2 中期（3-6ヶ月）
+### 16.2 中期（3-6ヶ月）
 
 - リアルタイム通知機能
 - チーム機能（メンター・メンティー）
 - 成果物ポートフォリオ機能
 - 営業文テンプレート機能
+- バッジ自動付与システム
 
-### 15.3 長期（6ヶ月以上）
+### 16.3 長期（6ヶ月以上）
 
 - モバイルアプリ化（React Native）
 - オフライン対応
 - データエクスポート機能
 - 高度な分析ダッシュボード
+- AI による案件マッチング
 
 ---
 
 **ドキュメント作成日**: 2025年12月22日
-**バージョン**: 1.0
+**バージョン**: 2.0
+**更新内容**: 診断EX、ハルキAI、コミュニティ機能、ホーム画面のタブ構成、カスタムフックを追加
