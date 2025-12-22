@@ -91,15 +91,20 @@ export default function Profile() {
         setDiagnosis(data);
         setHasDiagnosis(true);
 
-        if (data.ex_values && data.ex_vision && data.ex_strength && data.ex_challenge && data.ex_style) {
-          setExReport({
-            values: data.ex_values,
-            vision: data.ex_vision,
-            strength: data.ex_strength,
-            challenge: data.ex_challenge,
-            style: data.ex_style,
-          });
-          setHasExDiagnosis(true);
+        if (data.ex_answers && typeof data.ex_answers === 'object') {
+          const exData = data.ex_answers as any;
+          if (exData.values && exData.vision && exData.strength && exData.challenge && exData.style) {
+            setExReport({
+              values: exData.values,
+              vision: exData.vision,
+              strength: exData.strength,
+              challenge: exData.challenge,
+              style: exData.style,
+            });
+            setHasExDiagnosis(true);
+          } else {
+            setHasExDiagnosis(false);
+          }
         } else {
           setHasExDiagnosis(false);
         }

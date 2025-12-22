@@ -7,19 +7,9 @@ export default function CommunityContent() {
   const [animatedCumulativeRevenue, setAnimatedCumulativeRevenue] = useState(0);
   const animationRef = useRef<number | null>(null);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  if (!stats) return null;
-
   useEffect(() => {
+    if (!stats) return;
+
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -53,11 +43,23 @@ export default function CommunityContent() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [stats.cumulativeRevenue]);
+  }, [stats?.cumulativeRevenue]);
 
   const formatCurrency = (value: number) => {
     return `￥${value.toLocaleString()}`;
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-24 bg-gray-100 rounded-2xl animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!stats) return null;
 
   return (
     <div className="space-y-6">

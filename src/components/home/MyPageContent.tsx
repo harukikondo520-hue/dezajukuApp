@@ -56,20 +56,14 @@ export default function MyPageContent() {
     try {
       const { data } = await supabase
         .from('skill_diagnosis')
-        .select('id, ex_values, ex_vision, ex_strength, ex_challenge, ex_style')
+        .select('id, ex_answers')
         .eq('user_id', user!.id)
         .maybeSingle();
 
       setHasDiagnosis(!!data);
 
       if (data) {
-        const hasExAnswers = !!(
-          data.ex_values &&
-          data.ex_vision &&
-          data.ex_strength &&
-          data.ex_challenge &&
-          data.ex_style
-        );
+        const hasExAnswers = !!(data.ex_answers && Object.keys(data.ex_answers).length > 0);
         setHasExDiagnosis(hasExAnswers);
       }
     } catch (error) {

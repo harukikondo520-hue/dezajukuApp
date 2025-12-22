@@ -61,11 +61,13 @@ export default function DiagnosisResultPage() {
         mindset_skill: scores.mindset,
         designer_type: type,
         raw_answers: answers,
-        ex_values: exAnswers?.[0]?.answer || null,
-        ex_vision: exAnswers?.[1]?.answer || null,
-        ex_strength: exAnswers?.[2]?.answer || null,
-        ex_challenge: exAnswers?.[3]?.answer || null,
-        ex_style: exAnswers?.[4]?.answer || null,
+        ex_answers: exAnswers ? {
+          values: exAnswers[0]?.answer || null,
+          vision: exAnswers[1]?.answer || null,
+          strength: exAnswers[2]?.answer || null,
+          challenge: exAnswers[3]?.answer || null,
+          style: exAnswers[4]?.answer || null,
+        } : null,
         diagnosed_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
     } catch (error) {
