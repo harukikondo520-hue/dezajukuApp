@@ -32,7 +32,6 @@ export default function MyPageContent() {
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
   const [hasDiagnosis, setHasDiagnosis] = useState(false);
-  const [hasExDiagnosis, setHasExDiagnosis] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -56,16 +55,11 @@ export default function MyPageContent() {
     try {
       const { data } = await supabase
         .from('skill_diagnosis')
-        .select('id, ex_answers')
+        .select('id')
         .eq('user_id', user!.id)
         .maybeSingle();
 
       setHasDiagnosis(!!data);
-
-      if (data) {
-        const hasExAnswers = !!(data.ex_answers && Object.keys(data.ex_answers).length > 0);
-        setHasExDiagnosis(hasExAnswers);
-      }
     } catch (error) {
       console.error('Error checking diagnosis:', error);
     }
