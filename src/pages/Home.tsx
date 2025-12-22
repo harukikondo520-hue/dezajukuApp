@@ -1,12 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, LogOut, TrendingUp, Award, Calculator, Wallet, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, Rocket, Star } from 'lucide-react';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
+import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, LogOut, TrendingUp, Award, Calculator, Wallet } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { Database } from '../types/database';
-import { DiagnosisResult, DesignerType } from '../types/diagnosis';
-import { designerTypes } from '../data/questions';
 
 type Project = Database['public']['Tables']['projects']['Row'];
 type Task = Database['public']['Tables']['tasks']['Row'];
@@ -16,46 +13,6 @@ interface MonthlyData {
   month: string;
   amount: number;
 }
-
-const getDesignerTypeIcon = (type: DesignerType) => {
-  const iconProps = { size: 120, strokeWidth: 1.5 };
-
-  switch (type) {
-    case 'artist':
-      return <Palette {...iconProps} />;
-    case 'strategist':
-      return <Lightbulb {...iconProps} />;
-    case 'partner':
-      return <Handshake {...iconProps} />;
-    case 'business_designer':
-      return <TrendingUp {...iconProps} />;
-    case 'growth':
-      return <Rocket {...iconProps} />;
-    case 'all_rounder':
-      return <Star {...iconProps} />;
-    default:
-      return <Star {...iconProps} />;
-  }
-};
-
-const getTypeGradient = (type: DesignerType) => {
-  switch (type) {
-    case 'artist':
-      return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-    case 'strategist':
-      return 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
-    case 'partner':
-      return 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
-    case 'business_designer':
-      return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-    case 'growth':
-      return 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
-    case 'all_rounder':
-      return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
-    default:
-      return 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
-  }
-};
 
 export default function Home() {
   const { profile, user, signOut } = useAuth();
@@ -74,7 +31,6 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
-  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -89,25 +45,8 @@ export default function Home() {
       loadMonthlyIncome(),
       loadTasks(),
       loadVideoProgress(),
-      loadDiagnosis(),
     ]);
     setLoading(false);
-  };
-
-  const loadDiagnosis = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('skill_diagnosis')
-        .select('*')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-
-      if (data && !error) {
-        setDiagnosis(data);
-      }
-    } catch (error) {
-      console.error('診断データの取得に失敗:', error);
-    }
   };
 
   const loadProjects = async () => {
@@ -363,18 +302,6 @@ export default function Home() {
 
   const chartMax = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
 
-  const typeInfo = diagnosis ? designerTypes[diagnosis.designer_type] : null;
-
-  const chartData = diagnosis
-    ? [
-        { skill: '造形力', value: diagnosis.design_skill },
-        { skill: '設計力', value: diagnosis.planning_skill },
-        { skill: 'CW力', value: diagnosis.client_skill },
-        { skill: 'ビジネス力', value: diagnosis.business_skill },
-        { skill: 'マインド力', value: diagnosis.mindset_skill },
-      ]
-    : [];
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -403,87 +330,6 @@ export default function Home() {
           <LogOut size={20} />
         </button>
       </div>
-
-      {typeInfo ? (
-        <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl shadow-sm p-6 md:p-8 mb-6 border border-slate-200">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="text-red-500" size={24} />
-              デザイナータイプ
-            </h2>
-            <button
-              onClick={() => navigate('/diagnosis')}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-              title="再診断する"
-            >
-              <RefreshCw className="w-5 h-5 text-slate-400" />
-            </button>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div
-              className="p-6 rounded-2xl text-white relative overflow-hidden"
-              style={{
-                background: getTypeGradient(typeInfo.type)
-              }}
-            >
-              <div className="absolute right-[10px] top-[10px] opacity-15 pointer-events-none">
-                {getDesignerTypeIcon(typeInfo.type)}
-              </div>
-              <div className="relative z-10">
-                <div className="inline-block px-4 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium mb-2 backdrop-blur-sm">
-                  あなたのタイプ
-                </div>
-                <h3 className="text-3xl font-black mb-2 tracking-wide">
-                  {typeInfo.name}
-                </h3>
-                <p className="text-white text-opacity-90 text-sm leading-relaxed">
-                  {typeInfo.description}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <div className="h-56 flex items-center justify-center bg-white p-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={chartData}>
-                    <PolarGrid stroke="#e5e7eb" />
-                    <PolarAngleAxis
-                      dataKey="skill"
-                      tick={{ fontSize: 11, fill: '#475569' }}
-                    />
-                    <Radar
-                      dataKey="value"
-                      stroke={typeInfo.color}
-                      fill={typeInfo.color}
-                      fillOpacity={0.4}
-                      strokeWidth={2}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-6 text-center border border-slate-200">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-            <Sparkles className="text-slate-400" size={32} />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-2">
-            まだ診断を受けていません
-          </h3>
-          <p className="text-slate-600 mb-6">
-            あなたのデザイナータイプを知るために、スキル診断を受けてみましょう
-          </p>
-          <button
-            onClick={() => navigate('/diagnosis')}
-            className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-medium rounded-xl hover:from-red-600 hover:to-orange-600 transition-all"
-          >
-            診断を受ける
-          </button>
-        </div>
-      )}
 
       <div className="bg-white rounded-2xl p-6 mb-6 border border-slate-200">
         <div className="flex items-center gap-2 mb-6">
