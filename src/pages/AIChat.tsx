@@ -545,7 +545,7 @@ AI: ${aiResponse.slice(0, 100)}`;
           <div className="max-w-4xl mx-auto flex items-start gap-3">
             {/* ハルキさんのアイコン */}
             <img
-              src="https://pbs.twimg.com/profile_images/1728314820918218752/qYVrzYWu_400x400.jpg"
+              src="/haruki_icon.jpg"
               alt="ハルキさん"
               className="flex-shrink-0 w-12 h-12 rounded-full shadow-md object-cover"
             />
@@ -569,9 +569,11 @@ AI: ${aiResponse.slice(0, 100)}`;
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mb-4">
-                <Bot size={32} className="text-white" />
-              </div>
+              <img
+                src="/haruki_icon.jpg"
+                alt="ハルキさん"
+                className="w-16 h-16 rounded-2xl shadow-lg object-cover mb-4"
+              />
               <h3 className="text-xl font-bold text-slate-900 mb-2">
                 ハルキAIと話そう
               </h3>
@@ -602,16 +604,20 @@ AI: ${aiResponse.slice(0, 100)}`;
                   }`}
                 >
                   <div
-                    className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                    className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
                       message.role === 'user'
                         ? 'bg-slate-200'
-                        : 'bg-gradient-to-br from-red-500 to-red-600'
+                        : ''
                     }`}
                   >
                     {message.role === 'user' ? (
                       <User size={20} className="text-slate-600" />
                     ) : (
-                      <Bot size={20} className="text-white" />
+                      <img
+                        src="/haruki_icon.jpg"
+                        alt="ハルキさん"
+                        className="w-full h-full object-cover"
+                      />
                     )}
                   </div>
                   <div
@@ -630,8 +636,12 @@ AI: ${aiResponse.slice(0, 100)}`;
 
               {isLoading && (
                 <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600">
-                    <Bot size={20} className="text-white" />
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
+                    <img
+                      src="/haruki_icon.jpg"
+                      alt="ハルキさん"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
                     <div className="flex items-center gap-1">
