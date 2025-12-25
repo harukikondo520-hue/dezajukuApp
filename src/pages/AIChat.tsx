@@ -651,19 +651,20 @@ AI: ${aiResponse.slice(0, 100)}`;
                     </p>
             </div>
           </div>
-        ))}
+              ))}
 
-        {isLoading && (
-          <div className="flex items-start gap-3">
+              {/* ローディングインジケーター - ストリーミング中は表示しない */}
+              {isLoading && !messages.some(msg => msg.isStreaming) && (
+                <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img
                       src="/haruki_icon.jpg"
                       alt="ハルキさん"
                       className="w-full h-full object-cover"
                     />
-            </div>
-            <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
-              <div className="flex items-center gap-1">
+                  </div>
+                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+                    <div className="flex items-center gap-1">
                       <div
                         className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                         style={{ animationDelay: '0ms' }}
@@ -676,10 +677,10 @@ AI: ${aiResponse.slice(0, 100)}`;
                         className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                         style={{ animationDelay: '300ms' }}
                       />
-              </div>
-            </div>
-          </div>
-        )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
         <div ref={messagesEndRef} />
             </>
