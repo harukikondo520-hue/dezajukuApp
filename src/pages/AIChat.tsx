@@ -102,8 +102,8 @@ export default function AIChat() {
     }
   };
 
-  const createNewConversation = async () => {
-    if (!user) return;
+  const createNewConversation = async (): Promise<Conversation | null> => {
+    if (!user) return null;
 
     const { data, error } = await supabase
       .from('conversations')
@@ -118,7 +118,7 @@ export default function AIChat() {
 
     if (error) {
       console.error('トークルーム作成エラー:', error);
-      return;
+      throw error;
     }
 
     if (data) {
@@ -126,7 +126,10 @@ export default function AIChat() {
       setCurrentConversation(data);
       setMessages([]);
       setIsSidebarOpen(false);
+      return data;
     }
+
+    return null;
   };
 
   // AIでトークルームタイトルを生成する関数
@@ -269,17 +272,20 @@ AI: ${aiResponse.slice(0, 100)}`;
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    setIsLoading(true);
+    setError('');
+
+    let conversation = currentConversation;
+
     // トークルームがない場合は作成
-    if (!currentConversation) {
+    if (!conversation) {
       try {
-        setIsLoading(true);
-        await createNewConversation();
-        // 少し待ってから再度送信を試みる
-        setTimeout(() => {
+        conversation = await createNewConversation();
+        if (!conversation) {
+          setError('トークルームの作成に失敗しました。もう一度お試しください。');
           setIsLoading(false);
-          handleSubmit(e);
-        }, 500);
-        return;
+          return;
+        }
       } catch (error) {
         console.error('トークルーム作成エラー:', error);
         setError('トークルームの作成に失敗しました。もう一度お試しください。');
@@ -299,8 +305,6 @@ AI: ${aiResponse.slice(0, 100)}`;
     
     const userInput = input.trim();
     setInput('');
-    setIsLoading(true);
-    setError('');
 
     // メッセージを保存
     try {
@@ -352,7 +356,7 @@ AI: ${aiResponse.slice(0, 100)}`;
         // Dify APIにメッセージを送信（ストリーミング）
         const response = await sendMessageToDify(
           userInput,
-          currentConversation.dify_conversation_id || '',
+          conversation.dify_conversation_id || '',
           (chunk) => {
             // ストリーミングでテキストを更新
             setMessages((prev) =>
@@ -380,16 +384,16 @@ AI: ${aiResponse.slice(0, 100)}`;
         await saveMessage('assistant', assistantContent);
 
         // タイトルが「新しい会話」の場合、AIでタイトルを生成
-        if (currentConversation.title === '新しい会話') {
+        if (conversation.title === '新しい会話') {
           await generateConversationTitle(userInput, assistantContent);
         }
 
         // Dify会話IDを保存
-        if (response.conversation_id && !currentConversation.dify_conversation_id) {
+        if (response.conversation_id && !conversation.dify_conversation_id) {
           await supabase
             .from('conversations')
             .update({ dify_conversation_id: response.conversation_id })
-            .eq('id', currentConversation.id);
+            .eq('id', conversation.id);
 
           setCurrentConversation((prev) =>
             prev ? { ...prev, dify_conversation_id: response.conversation_id } : null
