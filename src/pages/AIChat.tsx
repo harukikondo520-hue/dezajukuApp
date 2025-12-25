@@ -71,11 +71,7 @@ export default function AIChat() {
     }
 
     setConversations(data || []);
-
-    // 最新のトークルームを自動選択（初回のみ）
-    if (data && data.length > 0 && !currentConversation) {
-      await loadConversation(data[0]);
-    }
+    // 自動選択を削除 - ユーザーが明示的に選択するまで空の状態
   };
 
   const loadConversation = async (conversation: Conversation) => {
@@ -114,7 +110,7 @@ export default function AIChat() {
       .insert([
         {
           user_id: user.id,
-          title: '新しい会話',
+          title: '新しい会話', // 一時的なタイトル
         },
       ])
       .select()
@@ -127,8 +123,60 @@ export default function AIChat() {
 
     if (data) {
       setConversations((prev) => [data, ...prev]);
-      await loadConversation(data);
+      setCurrentConversation(data);
+      setMessages([]);
       setIsSidebarOpen(false);
+    }
+  };
+
+  // AIでトークルームタイトルを生成する関数
+  const generateConversationTitle = async (userMessage: string, aiResponse: string) => {
+    if (!currentConversation) return;
+
+    try {
+      // Dify APIを使ってタイトルを生成
+      // 短い要約を生成するために、専用のプロンプトを送信
+      const titlePrompt = `以下の会話の内容を、15文字以内の簡潔なタイトルにしてください。タイトルのみを返してください。
+
+ユーザー: ${userMessage.slice(0, 100)}
+AI: ${aiResponse.slice(0, 100)}`;
+
+      const response = await sendMessageToDify(
+        titlePrompt,
+        '', // 新しい会話として送信
+        (chunk) => {}, // ストリーミングは不要
+        { name: profile?.name }
+      );
+
+      const generatedTitle = response.answer.trim().slice(0, 30);
+
+      // タイトルを更新
+      await supabase
+        .from('conversations')
+        .update({ title: generatedTitle })
+        .eq('id', currentConversation.id);
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === currentConversation.id ? { ...c, title: generatedTitle } : c
+        )
+      );
+      setCurrentConversation((prev) => (prev ? { ...prev, title: generatedTitle } : null));
+    } catch (error) {
+      console.error('タイトル生成エラー:', error);
+      // エラーの場合は最初のメッセージから生成
+      const fallbackTitle = userMessage.slice(0, 20) + (userMessage.length > 20 ? '...' : '');
+      await supabase
+        .from('conversations')
+        .update({ title: fallbackTitle })
+        .eq('id', currentConversation.id);
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === currentConversation.id ? { ...c, title: fallbackTitle } : c
+        )
+      );
+      setCurrentConversation((prev) => (prev ? { ...prev, title: fallbackTitle } : null));
     }
   };
 
@@ -161,7 +209,7 @@ export default function AIChat() {
     }
   };
 
-  const saveMessage = async (role: 'user' | 'assistant', content: string) => {
+  const saveMessage = async (role: 'user' | 'assistant', content: string, isFirstMessage: boolean = false) => {
     if (!currentConversation) return;
 
     const { error } = await supabase
@@ -183,22 +231,6 @@ export default function AIChat() {
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', currentConversation.id);
-
-    // タイトルが「新しい会話」の場合、最初のメッセージから自動生成
-    if (currentConversation.title === '新しい会話' && role === 'user') {
-      const newTitle = content.slice(0, 30) + (content.length > 30 ? '...' : '');
-      await supabase
-        .from('conversations')
-        .update({ title: newTitle })
-        .eq('id', currentConversation.id);
-
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === currentConversation.id ? { ...c, title: newTitle } : c
-        )
-      );
-      setCurrentConversation((prev) => (prev ? { ...prev, title: newTitle } : null));
-    }
   };
 
   // 診断結果を読み込み
@@ -329,6 +361,11 @@ export default function AIChat() {
         const assistantContent = response.answer || '';
         await saveMessage('assistant', assistantContent);
 
+        // タイトルが「新しい会話」の場合、AIでタイトルを生成
+        if (currentConversation.title === '新しい会話') {
+          await generateConversationTitle(userInput, assistantContent);
+        }
+
         // Dify会話IDを保存
         if (response.conversation_id && !currentConversation.dify_conversation_id) {
           await supabase
@@ -366,6 +403,23 @@ export default function AIChat() {
         };
         setMessages((prev) => [...prev, assistantMessage]);
         await saveMessage('assistant', assistantMessage.content);
+
+        // タイトルが「新しい会話」の場合、最初のメッセージからタイトル生成
+        if (currentConversation && currentConversation.title === '新しい会話') {
+          const newTitle = userInput.slice(0, 20) + (userInput.length > 20 ? '...' : '');
+          await supabase
+            .from('conversations')
+            .update({ title: newTitle })
+            .eq('id', currentConversation.id);
+
+          setConversations((prev) =>
+            prev.map((c) =>
+              c.id === currentConversation.id ? { ...c, title: newTitle } : c
+            )
+          );
+          setCurrentConversation((prev) => (prev ? { ...prev, title: newTitle } : null));
+        }
+
         setIsLoading(false);
       }, 1000);
     }
