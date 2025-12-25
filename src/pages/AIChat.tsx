@@ -541,19 +541,20 @@ AI: ${aiResponse.slice(0, 100)}`;
         </div>
 
         {/* ハルキさんの今日の一言 */}
-        <div className="px-4 py-4 lg:px-6">
+        <div className="px-4 py-4 lg:px-6 bg-slate-50/50">
           <div className="max-w-4xl mx-auto flex items-start gap-3">
-            {/* ハルキさんのアイコン（仮） */}
-            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md">
-              <Bot size={24} className="text-white" />
-            </div>
+            {/* ハルキさんのアイコン */}
+            <img
+              src="https://pbs.twimg.com/profile_images/1728314820918218752/qYVrzYWu_400x400.jpg"
+              alt="ハルキさん"
+              className="flex-shrink-0 w-12 h-12 rounded-full shadow-md object-cover"
+            />
             {/* 吹き出し */}
-            <div className="flex-1">
-              <div className="relative bg-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm border border-slate-200">
+            <div className="flex-1 mt-1">
+              <div className="relative bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-slate-200">
                 <p className="text-sm font-medium text-slate-900">{getTodayQuote()}</p>
-                <div className="absolute -left-2 top-0 w-4 h-4 bg-white border-l border-t border-slate-200 transform rotate-45 -translate-y-2"></div>
               </div>
-              <p className="text-xs text-slate-500 mt-1 ml-1">ハルキさんの今日の一言</p>
+              <p className="text-xs text-slate-500 mt-1.5 ml-1">ハルキさんの今日の一言</p>
             </div>
           </div>
         </div>
