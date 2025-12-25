@@ -530,20 +530,31 @@ AI: ${aiResponse.slice(0, 100)}`;
 
       {/* メインチャットエリア */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* 今日の一言ヘッダー */}
-        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3">
-          <div className="flex items-center justify-between max-w-4xl mx-auto">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition"
-            >
-              <Menu size={20} />
-            </button>
-            <div className="flex-1 text-center lg:text-left">
-              <p className="text-xs opacity-90">ハルキさんの今日の一言</p>
-              <p className="text-sm font-medium mt-0.5">{getTodayQuote()}</p>
+        {/* ハンバーガーメニュー（独立） */}
+        <div className="lg:hidden fixed top-4 left-4 z-30">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-3 bg-white shadow-lg rounded-xl hover:bg-slate-50 transition border border-slate-200"
+          >
+            <Menu size={24} className="text-slate-700" />
+          </button>
+        </div>
+
+        {/* ハルキさんの今日の一言 */}
+        <div className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 px-4 py-4 lg:px-6">
+          <div className="max-w-4xl mx-auto flex items-start gap-3">
+            {/* ハルキさんのアイコン（仮） */}
+            <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md">
+              <Bot size={24} className="text-white" />
             </div>
-            <div className="w-10 lg:hidden" />
+            {/* 吹き出し */}
+            <div className="flex-1">
+              <div className="relative bg-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm border border-slate-200">
+                <p className="text-sm font-medium text-slate-900">{getTodayQuote()}</p>
+                <div className="absolute -left-2 top-0 w-4 h-4 bg-white border-l border-t border-slate-200 transform rotate-45 -translate-y-2"></div>
+              </div>
+              <p className="text-xs text-slate-500 mt-1 ml-1">ハルキさんの今日の一言</p>
+            </div>
           </div>
         </div>
 
