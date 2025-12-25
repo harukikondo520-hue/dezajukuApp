@@ -541,7 +541,7 @@ AI: ${aiResponse.slice(0, 100)}`;
         </div>
 
         {/* ハルキさんの今日の一言 */}
-        <div className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 px-4 py-4 lg:px-6">
+        <div className="px-4 py-4 lg:px-6">
           <div className="max-w-4xl mx-auto flex items-start gap-3">
             {/* ハルキさんのアイコン（仮） */}
             <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-md">

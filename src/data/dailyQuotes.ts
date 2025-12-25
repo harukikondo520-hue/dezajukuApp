@@ -1,5 +1,5 @@
 export const dailyQuotes = [
-  "本日もぶち上げ丸"
+  "本日もぶち上げ。"
 ];
 
 export function getTodayQuote(): string {
