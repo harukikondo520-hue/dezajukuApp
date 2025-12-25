@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, RefreshCw } from 'lucide-react';
+import { Send, Bot, User, Plus, MessageSquare, Trash2, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
+import { getTodayQuote } from '../data/dailyQuotes';
 
 interface Message {
   id: string;
@@ -11,6 +12,14 @@ interface Message {
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  dify_conversation_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 interface DiagnosisData {
@@ -27,22 +36,170 @@ export default function AIChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // トークルーム関連
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const difyApiKey = import.meta.env.VITE_DIFY_API_KEY;
   const difyApiUrl = import.meta.env.VITE_DIFY_API_URL;
   const useDify = !!(difyApiKey && difyApiUrl);
 
-  // 会話IDをローカルストレージから読み込み
+  // トークルーム一覧を読み込み
   useEffect(() => {
-    const savedConversationId = localStorage.getItem('dify_conversation_id');
-    if (savedConversationId) {
-      setConversationId(savedConversationId);
+    if (user) {
+      loadConversations();
     }
-  }, []);
+  }, [user]);
+
+  const loadConversations = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('トークルーム読み込みエラー:', error);
+      return;
+    }
+
+    setConversations(data || []);
+
+    // 最新のトークルームを自動選択（初回のみ）
+    if (data && data.length > 0 && !currentConversation) {
+      await loadConversation(data[0]);
+    }
+  };
+
+  const loadConversation = async (conversation: Conversation) => {
+    setCurrentConversation(conversation);
+    setMessages([]);
+
+    // メッセージを読み込み
+    const { data, error } = await supabase
+      .from('conversation_messages')
+      .select('*')
+      .eq('conversation_id', conversation.id)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('メッセージ読み込みエラー:', error);
+      return;
+    }
+
+    if (data) {
+      setMessages(
+        data.map((msg) => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+        }))
+      );
+    }
+  };
+
+  const createNewConversation = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .insert([
+        {
+          user_id: user.id,
+          title: '新しい会話',
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('トークルーム作成エラー:', error);
+      return;
+    }
+
+    if (data) {
+      setConversations((prev) => [data, ...prev]);
+      await loadConversation(data);
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    if (!confirm('このトークルームを削除しますか？')) return;
+
+    const { error } = await supabase
+      .from('conversations')
+      .delete()
+      .eq('id', conversationId);
+
+    if (error) {
+      console.error('トークルーム削除エラー:', error);
+      return;
+    }
+
+    setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+
+    // 削除したトークルームが現在のものだった場合
+    if (currentConversation?.id === conversationId) {
+      if (conversations.length > 1) {
+        const nextConversation = conversations.find((c) => c.id !== conversationId);
+        if (nextConversation) {
+          await loadConversation(nextConversation);
+        }
+      } else {
+        setCurrentConversation(null);
+        setMessages([]);
+      }
+    }
+  };
+
+  const saveMessage = async (role: 'user' | 'assistant', content: string) => {
+    if (!currentConversation) return;
+
+    const { error } = await supabase
+      .from('conversation_messages')
+      .insert([
+        {
+          conversation_id: currentConversation.id,
+          role,
+          content,
+        },
+      ]);
+
+    if (error) {
+      console.error('メッセージ保存エラー:', error);
+    }
+
+    // トークルームのupdated_atを更新
+    await supabase
+      .from('conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', currentConversation.id);
+
+    // タイトルが「新しい会話」の場合、最初のメッセージから自動生成
+    if (currentConversation.title === '新しい会話' && role === 'user') {
+      const newTitle = content.slice(0, 30) + (content.length > 30 ? '...' : '');
+      await supabase
+        .from('conversations')
+        .update({ title: newTitle })
+        .eq('id', currentConversation.id);
+
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === currentConversation.id ? { ...c, title: newTitle } : c
+        )
+      );
+      setCurrentConversation((prev) => (prev ? { ...prev, title: newTitle } : null));
+    }
+  };
 
   // 診断結果を読み込み
   useEffect(() => {
@@ -80,6 +237,14 @@ export default function AIChat() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // トークルームがない場合は作成
+    if (!currentConversation) {
+      await createNewConversation();
+      // 作成後に再度送信を試みる
+      setTimeout(() => handleSubmit(e), 100);
+      return;
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -88,6 +253,8 @@ export default function AIChat() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    await saveMessage('user', input.trim());
+    
     const userInput = input.trim();
     setInput('');
     setIsLoading(true);
@@ -132,12 +299,10 @@ export default function AIChat() {
           }
         }
 
-        console.log('Difyに送信するコンテキスト:', userContext);
-
         // Dify APIにメッセージを送信（ストリーミング）
         const response = await sendMessageToDify(
           userInput,
-          conversationId,
+          currentConversation.dify_conversation_id || '',
           (chunk) => {
             // ストリーミングでテキストを更新
             setMessages((prev) =>
@@ -160,10 +325,20 @@ export default function AIChat() {
           )
         );
 
-        // 会話IDを保存
-        if (response.conversation_id) {
-          setConversationId(response.conversation_id);
-          localStorage.setItem('dify_conversation_id', response.conversation_id);
+        // AIの応答をDBに保存
+        const assistantContent = response.answer || '';
+        await saveMessage('assistant', assistantContent);
+
+        // Dify会話IDを保存
+        if (response.conversation_id && !currentConversation.dify_conversation_id) {
+          await supabase
+            .from('conversations')
+            .update({ dify_conversation_id: response.conversation_id })
+            .eq('id', currentConversation.id);
+
+          setCurrentConversation((prev) =>
+            prev ? { ...prev, dify_conversation_id: response.conversation_id } : null
+          );
         }
       } catch (err: any) {
         console.error('Dify API エラー:', err);
@@ -182,7 +357,7 @@ export default function AIChat() {
       }
     } else {
       // Dify未設定の場合はプレースホルダー
-      setTimeout(() => {
+      setTimeout(async () => {
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -190,23 +365,12 @@ export default function AIChat() {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
+        await saveMessage('assistant', assistantMessage.content);
         setIsLoading(false);
       }, 1000);
     }
   };
 
-  const handleResetConversation = () => {
-    localStorage.removeItem('dify_conversation_id');
-    setConversationId('');
-    setMessages([
-      {
-        id: '1',
-        role: 'assistant',
-        content: `こんにちは、${profile?.name || 'ゲスト'}さん！ハルキAIです。デザジュクの創設者として、あなたの学習や案件について全力でサポートします。何でもお気軽にご質問ください。`,
-        timestamp: new Date(),
-      },
-    ]);
-  };
 
   const getPlaceholderResponse = (question: string): string => {
     const responses = [
@@ -225,132 +389,241 @@ export default function AIChat() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
-      {/* ヘッダー - スマホで小さく */}
-      <div className="text-center py-3 sm:py-6">
-        <div className="flex items-center justify-between mb-2 sm:mb-4">
-          <div className="flex-1" />
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl">
-            <Sparkles size={20} className="sm:w-8 sm:h-8 text-white" />
-          </div>
-          <div className="flex-1 flex justify-end">
-            {useDify && (
+    <div className="flex h-[calc(100vh-80px)] overflow-hidden">
+      {/* サイドバー（モバイルはオーバーレイ） */}
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity lg:hidden ${
+          isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+      <div
+        className={`fixed lg:static inset-y-0 left-0 w-80 bg-slate-900 text-white z-50 transform transition-transform lg:translate-x-0 ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex flex-col h-full">
+          {/* サイドバーヘッダー */}
+          <div className="p-4 border-b border-slate-700">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">トークルーム</h2>
               <button
-                onClick={handleResetConversation}
-                className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
-                title="会話をリセット"
+                onClick={() => setIsSidebarOpen(false)}
+                className="lg:hidden p-1 hover:bg-slate-800 rounded-lg transition"
               >
-                <RefreshCw size={16} className="sm:w-5 sm:h-5" />
+                <X size={20} />
               </button>
+            </div>
+            <button
+              onClick={createNewConversation}
+              className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 rounded-lg transition flex items-center justify-center gap-2 font-medium"
+            >
+              <Plus size={18} />
+              新しい会話
+            </button>
+          </div>
+
+          {/* トークルーム一覧 */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {conversations.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-8">
+                トークルームがありません
+                <br />
+                新しい会話を作成しましょう
+              </p>
+            ) : (
+              conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className={`group relative p-3 rounded-lg cursor-pointer transition ${
+                    currentConversation?.id === conv.id
+                      ? 'bg-red-600'
+                      : 'hover:bg-slate-800'
+                  }`}
+                  onClick={() => {
+                    loadConversation(conv);
+                    setIsSidebarOpen(false);
+                  }}
+                >
+                  <div className="flex items-start gap-2">
+                    <MessageSquare size={16} className="mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{conv.title}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {new Date(conv.updated_at).toLocaleDateString('ja-JP', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteConversation(conv.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-700 rounded transition"
+                      title="削除"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
-        <h1 className="text-lg sm:text-2xl font-bold text-slate-900">ハルキAI</h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          {useDify ? 'デザジュク創設者と直接話そう' : 'Dify連携準備中'}
-        </p>
+      </div>
+
+      {/* メインチャットエリア */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* 今日の一言ヘッダー */}
+        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3">
+          <div className="flex items-center justify-between max-w-4xl mx-auto">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex-1 text-center lg:text-left">
+              <p className="text-xs opacity-90">ハルキさんの今日の一言</p>
+              <p className="text-sm font-medium mt-0.5">{getTodayQuote()}</p>
+            </div>
+            <div className="w-10 lg:hidden" />
+          </div>
+        </div>
+
         {error && (
-          <div className="mt-2 sm:mt-3 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-50 text-red-600 text-xs sm:text-sm rounded-lg inline-block">
+          <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center">
             {error}
           </div>
         )}
-      </div>
 
-      <div className="flex-1 overflow-y-auto px-4 space-y-4 mb-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex items-start gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
-          >
-            <div
-              className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                message.role === 'user'
-                  ? 'bg-slate-200'
-                  : 'bg-gradient-to-br from-red-500 to-red-600'
-              }`}
-            >
-              {message.role === 'user' ? (
-                <User size={20} className="text-slate-600" />
-              ) : (
-                <Bot size={20} className="text-white" />
-              )}
-            </div>
-            <div
-              className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                message.role === 'user'
-                  ? 'bg-slate-900 text-white rounded-tr-none'
-                  : 'bg-slate-100 text-slate-900 rounded-tl-none'
-              }`}
-            >
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-            </div>
-          </div>
-        ))}
-
-        {isLoading && (
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600">
-              <Bot size={20} className="text-white" />
-            </div>
-            <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+        {/* メッセージエリア */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center px-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mb-4">
+                <Bot size={32} className="text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">
+                ハルキAIと話そう
+              </h3>
+              <p className="text-sm text-slate-500 mb-6 max-w-md">
+                デザジュク創設者のハルキが、あなたのデザイナーキャリアをサポートします。
+                何でもお気軽にご質問ください。
+              </p>
+              <div className="space-y-2 w-full max-w-md">
+                <p className="text-xs text-slate-500 mb-2">よくある質問:</p>
+                {suggestedQuestions.map((question, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setInput(question)}
+                    className="w-full text-left text-sm px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition border border-slate-200"
+                  >
+                    {question}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {messages.length === 0 && (
-        <div className="px-4 mb-4">
-          <p className="text-xs text-slate-500 mb-2">よくある質問:</p>
-          <div className="flex flex-wrap gap-2">
-            {suggestedQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => setInput(question)}
-                className="text-xs sm:text-sm px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition"
-              >
-                {question}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="px-4 pb-4">
-        <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="ハルキAIに質問する..."
-            className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={18} className="sm:w-5 sm:h-5" />
-          </button>
-        </div>
-        <p className="text-xs text-slate-400 text-center mt-2">
-          {useDify ? (
-            <>
-              <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
-              Dify連携中
-            </>
           ) : (
-            'Dify連携準備中 - .envファイルでVITE_DIFY_API_KEYとVITE_DIFY_API_URLを設定してください'
+            <>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex items-start gap-3 ${
+                    message.role === 'user' ? 'flex-row-reverse' : ''
+                  }`}
+                >
+                  <div
+                    className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+                      message.role === 'user'
+                        ? 'bg-slate-200'
+                        : 'bg-gradient-to-br from-red-500 to-red-600'
+                    }`}
+                  >
+                    {message.role === 'user' ? (
+                      <User size={20} className="text-slate-600" />
+                    ) : (
+                      <Bot size={20} className="text-white" />
+                    )}
+                  </div>
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                      message.role === 'user'
+                        ? 'bg-slate-900 text-white rounded-tr-none'
+                        : 'bg-slate-100 text-slate-900 rounded-tl-none'
+                    }`}
+                  >
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
+              {isLoading && (
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600">
+                    <Bot size={20} className="text-white" />
+                  </div>
+                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <div
+                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '0ms' }}
+                      />
+                      <div
+                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '150ms' }}
+                      />
+                      <div
+                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '300ms' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </>
           )}
-        </p>
-      </form>
+        </div>
+
+        {/* 入力エリア */}
+        <div className="border-t border-slate-200 bg-white px-4 py-4">
+          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="ハルキAIに質問する..."
+                className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send size={18} className="sm:w-5 sm:h-5" />
+              </button>
+            </div>
+            <p className="text-xs text-slate-400 text-center mt-2">
+              {useDify ? (
+                <>
+                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
+                  Dify連携中
+                </>
+              ) : (
+                'Dify連携準備中'
+              )}
+            </p>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
