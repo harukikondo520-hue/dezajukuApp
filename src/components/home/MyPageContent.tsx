@@ -664,11 +664,11 @@ export default function MyPageContent() {
       {/* モーダル */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100">
-            <h2 className="text-2xl font-bold text-slate-900 mb-8">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 sm:mb-8">
               {editingProject ? '案件を編集' : '案件を追加'}
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
                   案件名
@@ -678,7 +678,7 @@ export default function MyPageContent() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
-                  className="w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-medium"
+                  className="w-full px-4 py-3 sm:py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-medium text-base"
                   placeholder="例: LP制作"
                 />
               </div>
@@ -692,7 +692,7 @@ export default function MyPageContent() {
                   onChange={(e) => setFormData({ ...formData, reward: e.target.value })}
                   required
                   min="0"
-                  className="w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-semibold text-lg number-display"
+                  className="w-full px-4 py-3 sm:py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-semibold text-lg number-display"
                   placeholder="150000"
                 />
               </div>
@@ -705,23 +705,24 @@ export default function MyPageContent() {
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   required
-                  className="w-full px-4 py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-medium"
+                  className="w-full px-4 py-3 sm:py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-medium text-base"
+                  style={{ colorScheme: 'light' }}
                 />
               </div>
-              <div className="flex gap-3 pt-6">
+              <div className="flex gap-3 pt-4 sm:pt-6">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModal(false);
                     setEditingProject(null);
                   }}
-                  className="flex-1 px-6 py-4 rounded-xl border-2 border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all duration-300"
+                  className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl border-2 border-slate-300 text-slate-700 font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all duration-300"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-6 py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-semibold hover:from-red-700 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl shadow-red-500/30"
+                  className="flex-1 px-4 sm:px-6 py-3 sm:py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-500 text-white font-semibold hover:from-red-700 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl shadow-red-500/30"
                 >
                   {editingProject ? '更新' : '追加'}
                 </button>
