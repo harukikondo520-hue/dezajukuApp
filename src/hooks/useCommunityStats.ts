@@ -6,59 +6,61 @@ export function useCommunityStats() {
   return useQuery({
     queryKey: ['communityStats'],
     queryFn: async (): Promise<CommunityStats> => {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      try {
+        // PostgreSQL関数を使用して累計収益を取得
+        const { data: cumulativeData, error: cumulativeError } = await supabase
+          .rpc('get_cumulative_revenue');
 
-      const { data: monthlyProjects, error: monthlyError } = await supabase
-        .from('projects')
-        .select('reward, user_id')
-        .gte('created_at', startOfMonth.toISOString());
+        if (cumulativeError) {
+          console.error('Error fetching cumulative revenue:', cumulativeError);
+        }
 
-      if (monthlyError) throw monthlyError;
+        const cumulativeRevenue = cumulativeData || 0;
+        console.log('Cumulative revenue from RPC:', cumulativeRevenue);
 
-      const { data: offsetData } = await supabase
-        .from('community_settings')
-        .select('value')
-        .eq('key', 'cumulative_offset')
-        .maybeSingle();
+        // PostgreSQL関数を使用して今月の統計を取得
+        const { data: monthlyData, error: monthlyError } = await supabase
+          .rpc('get_monthly_stats');
 
-      const cumulativeOffset = (offsetData?.value as any)?.amount || 20000000;
+        if (monthlyError) {
+          console.error('Error fetching monthly stats:', monthlyError);
+        }
 
-      const { data: allProjects } = await supabase
-        .from('projects')
-        .select('reward');
+        const monthlyStats = monthlyData?.[0] || {
+          total_monthly_revenue: 0,
+          active_users_count: 0,
+          avg_monthly_income: 0,
+          mvp_income: 0,
+        };
 
-      const dbCumulative = allProjects?.reduce((sum, p) => sum + (p.reward || 0), 0) || 0;
+        // PostgreSQL関数を使用して履歴を取得
+        const { data: historyData, error: historyError } = await supabase
+          .rpc('get_monthly_history');
 
-      const { data: monthlyHistory } = await supabase
-        .from('projects')
-        .select('reward, created_at')
-        .gte('created_at', new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString());
+        if (historyError) {
+          console.error('Error fetching monthly history:', historyError);
+        }
 
-      const totalMonthly = monthlyProjects?.reduce((sum, p) => sum + (p.reward || 0), 0) || 0;
-      const uniqueUsers = new Set(monthlyProjects?.map(p => p.user_id));
-      const avgMonthly = uniqueUsers.size > 0 ? Math.round(totalMonthly / uniqueUsers.size) : 0;
-      const maxMonthly = Math.max(...(monthlyProjects?.map(p => p.reward) || [0]));
+        const monthlyRevenueHistory = (historyData as any)?.map((row: any) => ({
+          month: row.month,
+          total: row.total,
+        })) || [];
 
-      const historyMap = new Map<string, number>();
-      monthlyHistory?.forEach(p => {
-        const month = new Date(p.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short' });
-        historyMap.set(month, (historyMap.get(month) || 0) + (p.reward || 0));
-      });
-
-      return {
-        totalMonthlyRevenue: totalMonthly,
-        averageMonthlyIncome: avgMonthly,
-        mvpIncome: maxMonthly,
-        mvpUserName: '匿名',
-        cumulativeRevenue: cumulativeOffset + dbCumulative,
-        activeUsersCount: uniqueUsers.size,
-        monthlyRevenueHistory: Array.from(historyMap.entries()).map(([month, total]) => ({
-          month,
-          total
-        }))
-      };
+        return {
+          totalMonthlyRevenue: Number(monthlyStats.total_monthly_revenue),
+          averageMonthlyIncome: Number(monthlyStats.avg_monthly_income),
+          mvpIncome: Number(monthlyStats.mvp_income),
+          mvpUserName: '匿名',
+          cumulativeRevenue: Number(cumulativeRevenue),
+          activeUsersCount: Number(monthlyStats.active_users_count),
+          monthlyRevenueHistory,
+        };
+      } catch (error) {
+        console.error('Error in useCommunityStats:', error);
+        throw error;
+      }
     },
-    staleTime: 1000 * 60 * 10,
+    staleTime: 1000 * 30,
+    refetchOnWindowFocus: true,
   });
 }

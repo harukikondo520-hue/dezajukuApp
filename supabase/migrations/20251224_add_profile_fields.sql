@@ -1,0 +1,6 @@
+-- プロフィール情報のカラムを追加
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS age INTEGER,
+ADD COLUMN IF NOT EXISTS occupation TEXT,
+ADD COLUMN IF NOT EXISTS gender TEXT;
+

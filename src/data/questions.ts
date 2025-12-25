@@ -62,7 +62,7 @@ export const designerTypes: Record<DesignerType, DesignerTypeInfo> = {
     type: 'all_rounder',
     name: 'オールラウンダー型',
     description: 'バランスよく全体を見渡せるタイプ。どの領域も安定しており、状況に応じて柔軟に対応できる強みがあります。',
-    color: '#6b7280'
+    color: '#14b8a6'
   }
 };
 

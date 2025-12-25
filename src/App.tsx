@@ -12,6 +12,9 @@ import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import DiagnosisPage from './pages/DiagnosisPage';
 import DiagnosisResultPage from './pages/DiagnosisResultPage';
+import SkillDiagnosisPage from './pages/SkillDiagnosisPage';
+import SkillDiagnosisResultPage from './pages/SkillDiagnosisResultPage';
+import ProjectManagement from './pages/ProjectManagement';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
@@ -165,6 +168,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/projects"
+        element={
+          <PrivateRoute>
+            <ProjectManagement />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/diagnosis"
         element={
           <AuthenticatedRoute>
@@ -177,6 +188,22 @@ function AppRoutes() {
         element={
           <AuthenticatedRoute>
             <DiagnosisResultPage />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/skill-diagnosis"
+        element={
+          <AuthenticatedRoute>
+            <SkillDiagnosisPage />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/skill-diagnosis/result"
+        element={
+          <AuthenticatedRoute>
+            <SkillDiagnosisResultPage />
           </AuthenticatedRoute>
         }
       />

@@ -22,6 +22,9 @@ export interface Database {
           last_login_at: string;
           created_at: string;
           updated_at: string;
+          age: number | null;
+          occupation: string | null;
+          gender: string | null;
         };
         Insert: {
           id: string;
@@ -35,6 +38,9 @@ export interface Database {
           last_login_at?: string;
           created_at?: string;
           updated_at?: string;
+          age?: number | null;
+          occupation?: string | null;
+          gender?: string | null;
         };
         Update: {
           id?: string;
@@ -48,6 +54,9 @@ export interface Database {
           last_login_at?: string;
           created_at?: string;
           updated_at?: string;
+          age?: number | null;
+          occupation?: string | null;
+          gender?: string | null;
         };
       };
       projects: {

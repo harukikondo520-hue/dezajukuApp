@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { diagnosisQuestions } from '../data/questions';
 import { diagnosisExQuestions } from '../data/diagnosisExQuestions';
@@ -9,11 +9,20 @@ type Stage = 'basic' | 'ex';
 
 export default function DiagnosisPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [stage, setStage] = useState<Stage>('basic');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [exAnswers, setExAnswers] = useState<DiagnosisExAnswer[]>([]);
   const [currentExAnswer, setCurrentExAnswer] = useState('');
+
+  useEffect(() => {
+    if (location.state?.startWithEx && location.state?.basicAnswers) {
+      setStage('ex');
+      setAnswers(location.state.basicAnswers);
+      setCurrentIndex(0);
+    }
+  }, [location.state]);
 
   const currentQuestion = stage === 'basic'
     ? diagnosisQuestions[currentIndex]
@@ -32,8 +41,13 @@ export default function DiagnosisPage() {
     if (currentIndex < diagnosisQuestions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      setStage('ex');
-      setCurrentIndex(0);
+      // 基本診断終了後、結果ページへ遷移（EX診断はスキップ）
+      navigate('/diagnosis/result', {
+        state: {
+          answers: newAnswers,
+          exAnswers: undefined
+        }
+      });
     }
   };
 
@@ -71,8 +85,13 @@ export default function DiagnosisPage() {
         setCurrentExAnswer(exAnswers[currentIndex - 1].answer);
       }
     } else if (stage === 'ex') {
-      setStage('basic');
-      setCurrentIndex(diagnosisQuestions.length - 1);
+      // EX診断の最初の質問で戻るボタンを押した場合、結果ページに戻る
+      navigate('/diagnosis/result', {
+        state: {
+          answers,
+          exAnswers: undefined
+        }
+      });
     }
   };
 

@@ -122,7 +122,7 @@ export default function CommunityContent() {
               <CheckCircle className="w-4 h-4 text-purple-600" />
             </div>
           </div>
-          <p className="text-xs text-gray-500">今月収益化できた人数</p>
+          <p className="text-xs text-gray-500">今月収益化人数</p>
           <p className="text-xl font-bold text-gray-900">
             {stats.activeUsersCount}人
           </p>

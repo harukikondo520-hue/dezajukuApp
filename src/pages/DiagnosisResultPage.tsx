@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ArrowRight, ClipboardCheck } from 'lucide-react';
 import { calculateSkillScores, determineDesignerType } from '../lib/diagnosisCalculator';
-import { designerTypes, skillLabels } from '../data/questions';
+import { designerTypes } from '../data/questions';
 import { SkillScores, DesignerType } from '../types/diagnosis';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,6 +14,7 @@ export default function DiagnosisResultPage() {
   const [scores, setScores] = useState<SkillScores | null>(null);
   const [designerType, setDesignerType] = useState<DesignerType | null>(null);
   const [saving, setSaving] = useState(false);
+  const [hasExAnswers, setHasExAnswers] = useState(false);
 
   useEffect(() => {
     const answers = location.state?.answers;
@@ -30,6 +30,7 @@ export default function DiagnosisResultPage() {
 
     setScores(calculatedScores);
     setDesignerType(type);
+    setHasExAnswers(!!exAnswers);
 
     if (user) {
       saveDiagnosis(calculatedScores, type, answers, exAnswers);
@@ -42,6 +43,20 @@ export default function DiagnosisResultPage() {
     } else {
       navigate('/onboarding');
     }
+  };
+
+  const handleTakeExDiagnosis = () => {
+    const answers = location.state?.answers;
+    navigate('/diagnosis', {
+      state: {
+        startWithEx: true,
+        basicAnswers: answers
+      }
+    });
+  };
+
+  const handleSkipExDiagnosis = () => {
+    handleNext();
   };
 
   const saveDiagnosis = async (
@@ -87,14 +102,6 @@ export default function DiagnosisResultPage() {
 
   const typeInfo = designerTypes[designerType];
 
-  const chartData = [
-    { skill: '造形力', value: scores.design, fullMark: 100 },
-    { skill: '設計力', value: scores.planning, fullMark: 100 },
-    { skill: 'CW力', value: scores.client, fullMark: 100 },
-    { skill: 'ビジネス力', value: scores.business, fullMark: 100 },
-    { skill: 'マインド力', value: scores.mindset, fullMark: 100 },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-red-50 to-white">
       <div className="max-w-lg mx-auto px-4 py-8">
@@ -111,73 +118,59 @@ export default function DiagnosisResultPage() {
             {typeInfo.name}
           </h1>
 
-          <p className="text-gray-600 text-sm leading-relaxed">
+          <p className="text-gray-600 text-sm leading-relaxed px-4">
             {typeInfo.description}
           </p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
-          <h2 className="text-center text-sm font-medium text-gray-500 mb-4">
-            スキルマップ
-          </h2>
-
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={chartData}>
-                <PolarGrid stroke="#e5e7eb" />
-                <PolarAngleAxis
-                  dataKey="skill"
-                  tick={{ fontSize: 12, fill: '#6b7280' }}
-                />
-                <PolarRadiusAxis
-                  angle={90}
-                  domain={[0, 100]}
-                  tick={{ fontSize: 10 }}
-                  tickCount={6}
-                />
-                <Radar
-                  name="スキル"
-                  dataKey="value"
-                  stroke="#ef4444"
-                  fill="#ef4444"
-                  fillOpacity={0.3}
-                  strokeWidth={2}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
+        <div className="bg-white rounded-3xl shadow-lg p-8 mb-8">
+          <div className="text-center">
+            <div className="inline-block p-6 bg-gradient-to-br from-red-50 to-orange-50 rounded-full mb-4">
+              <Sparkles className="w-12 h-12" style={{ color: typeInfo.color }} />
+            </div>
+            <p className="text-sm text-gray-600 leading-relaxed">
+              詳しいスキル診断は別途受けることができます。<br />
+              まずはあなたのデザイナータイプを確認して、<br />
+              自分の強みを理解しましょう！
+            </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-lg p-6 mb-8">
-          <h2 className="text-sm font-medium text-gray-500 mb-4">スコア詳細</h2>
-
-          <div className="space-y-4">
-            {Object.entries(scores).map(([key, value]) => (
-              <div key={key}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-700">{skillLabels[key as keyof typeof skillLabels]}</span>
-                  <span className="font-bold text-gray-900">{value}</span>
-                </div>
-                <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500"
-                    style={{ width: `${value}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+        {hasExAnswers ? (
+          <button
+            onClick={handleNext}
+            disabled={saving}
+            className="w-full py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-2xl
+              hover:from-red-600 hover:to-orange-600 transition-all duration-200 shadow-lg
+              disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? '保存中...' : '次へ進む'}
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <button
+              onClick={handleTakeExDiagnosis}
+              disabled={saving}
+              className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-2xl
+                hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg
+                disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <ClipboardCheck size={20} />
+              デザイナータイプ診断EXを受ける
+            </button>
+            
+            <button
+              onClick={handleSkipExDiagnosis}
+              disabled={saving}
+              className="w-full py-4 border-2 border-slate-300 text-slate-700 font-medium rounded-2xl
+                hover:bg-slate-50 transition-all duration-200
+                disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              スキップして次へ進む
+              <ArrowRight size={20} />
+            </button>
           </div>
-        </div>
-
-        <button
-          onClick={handleNext}
-          disabled={saving}
-          className="w-full py-4 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-2xl
-            hover:from-red-600 hover:to-orange-600 transition-all duration-200 shadow-lg
-            disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? '保存中...' : '次へ進む'}
-        </button>
+        )}
       </div>
     </div>
   );

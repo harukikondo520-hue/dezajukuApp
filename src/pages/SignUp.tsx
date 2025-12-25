@@ -7,6 +7,9 @@ export default function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [age, setAge] = useState('');
+  const [occupation, setOccupation] = useState('');
+  const [gender, setGender] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
@@ -29,7 +32,7 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      await signUp(email, password, name);
+      await signUp(email, password, name, age ? parseInt(age) : null, occupation || null, gender || null);
       navigate('/');
     } catch (err: any) {
       if (err.message?.includes('already registered')) {
@@ -59,17 +62,65 @@ export default function SignUp() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
-                お名前（ローマ字）
+                ニックネーム
               </label>
               <input
                 id="name"
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value.toUpperCase())}
+                onChange={(e) => setName(e.target.value)}
                 required
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
-                placeholder="TARO YAMADA"
+                placeholder="例：たろう"
               />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label htmlFor="age" className="block text-sm font-medium text-slate-700 mb-2">
+                  年齢
+                </label>
+                <input
+                  id="age"
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                  placeholder="25"
+                />
+              </div>
+
+              <div className="col-span-2">
+                <label htmlFor="occupation" className="block text-sm font-medium text-slate-700 mb-2">
+                  職業
+                </label>
+                <input
+                  id="occupation"
+                  type="text"
+                  value={occupation}
+                  onChange={(e) => setOccupation(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                  placeholder="例：会社員"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="gender" className="block text-sm font-medium text-slate-700 mb-2">
+                性別
+              </label>
+              <select
+                id="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+              >
+                <option value="">選択してください</option>
+                <option value="male">男性</option>
+                <option value="female">女性</option>
+                <option value="other">その他</option>
+                <option value="prefer_not_to_say">回答しない</option>
+              </select>
             </div>
 
             <div>

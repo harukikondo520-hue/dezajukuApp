@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string, age?: number | null, occupation?: string | null, gender?: string | null) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (email: string, password: string, name: string, age?: number | null, occupation?: string | null, gender?: string | null) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -78,11 +78,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.user) {
       const { error: updateError } = await supabase
         .from('users')
-        .update({ name: name })
+        .update({ 
+          name: name,
+          age: age,
+          occupation: occupation,
+          gender: gender,
+        })
         .eq('id', data.user.id);
 
       if (updateError) {
-        console.error('Error updating user name:', updateError);
+        console.error('Error updating user profile:', updateError);
       }
     }
   };

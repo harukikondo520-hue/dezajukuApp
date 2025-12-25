@@ -1,16 +1,29 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Sparkles, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { sendMessageToDify } from '../lib/difyApi';
+import { supabase } from '../lib/supabase';
+import { designerTypes } from '../data/questions';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  isStreaming?: boolean;
+}
+
+interface DiagnosisData {
+  designer_type?: string;
+  design_skill?: number;
+  planning_skill?: number;
+  client_skill?: number;
+  business_skill?: number;
+  mindset_skill?: number;
 }
 
 export default function AIChat() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -21,10 +34,46 @@ export default function AIChat() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [diagnosisData, setDiagnosisData] = useState<DiagnosisData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const difyChatUrl = import.meta.env.VITE_DIFY_CHAT_URL;
-  const useDify = !!difyChatUrl;
+  const difyApiKey = import.meta.env.VITE_DIFY_API_KEY;
+  const difyApiUrl = import.meta.env.VITE_DIFY_API_URL;
+  const useDify = !!(difyApiKey && difyApiUrl);
+
+  // 会話IDをローカルストレージから読み込み
+  useEffect(() => {
+    const savedConversationId = localStorage.getItem('dify_conversation_id');
+    if (savedConversationId) {
+      setConversationId(savedConversationId);
+    }
+  }, []);
+
+  // 診断結果を読み込み
+  useEffect(() => {
+    const loadDiagnosisData = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('skill_diagnosis')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (data && !error) {
+          setDiagnosisData(data);
+          console.log('診断データを読み込みました:', data);
+        }
+      } catch (error) {
+        console.error('診断データの読み込みに失敗:', error);
+      }
+    };
+
+    loadDiagnosisData();
+  }, [user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,19 +95,124 @@ export default function AIChat() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const userInput = input.trim();
     setInput('');
     setIsLoading(true);
+    setError('');
 
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+    // Dify APIが設定されている場合
+    if (useDify) {
+      try {
+        // ストリーミング用のメッセージを追加
+        const streamingMessageId = (Date.now() + 1).toString();
+        const streamingMessage: Message = {
+          id: streamingMessageId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+          isStreaming: true,
+        };
+        setMessages((prev) => [...prev, streamingMessage]);
+
+        // ユーザーコンテキストを構築
+        const userContext: any = {
+          name: profile?.name,
+        };
+
+        if (diagnosisData) {
+          // デザイナータイプ情報
+          if (diagnosisData.designer_type) {
+            const typeInfo = designerTypes[diagnosisData.designer_type as keyof typeof designerTypes];
+            if (typeInfo) {
+              userContext.designerType = typeInfo.name;
+              userContext.designerTypeDescription = typeInfo.description;
+            }
+          }
+
+          // スキル診断情報
+          if (diagnosisData.design_skill !== null && diagnosisData.design_skill !== undefined) {
+            userContext.designSkill = diagnosisData.design_skill;
+            userContext.planningSkill = diagnosisData.planning_skill;
+            userContext.clientSkill = diagnosisData.client_skill;
+            userContext.businessSkill = diagnosisData.business_skill;
+            userContext.mindsetSkill = diagnosisData.mindset_skill;
+          }
+        }
+
+        console.log('Difyに送信するコンテキスト:', userContext);
+
+        // Dify APIにメッセージを送信（ストリーミング）
+        const response = await sendMessageToDify(
+          userInput,
+          conversationId,
+          (chunk) => {
+            // ストリーミングでテキストを更新
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === streamingMessageId
+                  ? { ...msg, content: msg.content + chunk }
+                  : msg
+              )
+            );
+          },
+          userContext
+        );
+
+        // ストリーミング完了後、isStreamingをfalseに
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === streamingMessageId
+              ? { ...msg, isStreaming: false }
+              : msg
+          )
+        );
+
+        // 会話IDを保存
+        if (response.conversation_id) {
+          setConversationId(response.conversation_id);
+          localStorage.setItem('dify_conversation_id', response.conversation_id);
+        }
+      } catch (err: any) {
+        console.error('Dify API エラー:', err);
+        setError(err.message || 'メッセージの送信に失敗しました');
+        
+        // エラーメッセージを表示
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: 'すみません、エラーが発生しました。もう一度お試しください。',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Dify未設定の場合はプレースホルダー
+      setTimeout(() => {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: getPlaceholderResponse(userInput),
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        setIsLoading(false);
+      }, 1000);
+    }
+  };
+
+  const handleResetConversation = () => {
+    localStorage.removeItem('dify_conversation_id');
+    setConversationId('');
+    setMessages([
+      {
+        id: '1',
         role: 'assistant',
-        content: getPlaceholderResponse(userMessage.content),
+        content: `こんにちは、${profile?.name || 'ゲスト'}さん！ハルキAIです。デザジュクの創設者として、あなたの学習や案件について全力でサポートします。何でもお気軽にご質問ください。`,
         timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      setIsLoading(false);
-    }, 1000);
+      },
+    ]);
   };
 
   const getPlaceholderResponse = (question: string): string => {
@@ -77,36 +231,35 @@ export default function AIChat() {
     '営業文の書き方',
   ];
 
-  if (useDify) {
-    return (
-      <div className="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
-        <div className="text-center py-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mb-4">
-            <Sparkles size={32} className="text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900">ハルキAI</h1>
-          <p className="text-sm text-slate-500 mt-1">デザジュク創設者と直接話そう</p>
-        </div>
-
-        <div className="flex-1 rounded-2xl overflow-hidden shadow-lg">
-          <iframe
-            src={difyChatUrl}
-            className="w-full h-full border-0"
-            allow="microphone"
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
       <div className="text-center py-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mb-4">
-          <Sparkles size={32} className="text-white" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl">
+            <Sparkles size={32} className="text-white" />
+          </div>
+          <div className="flex-1 flex justify-end">
+            {useDify && (
+              <button
+                onClick={handleResetConversation}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                title="会話をリセット"
+              >
+                <RefreshCw size={20} />
+              </button>
+            )}
+          </div>
         </div>
         <h1 className="text-2xl font-bold text-slate-900">ハルキAI</h1>
-        <p className="text-sm text-slate-500 mt-1">デザジュク創設者と直接話そう</p>
+        <p className="text-sm text-slate-500 mt-1">
+          {useDify ? 'デザジュク創設者と直接話そう' : 'Dify連携準備中'}
+        </p>
+        {error && (
+          <div className="mt-3 px-4 py-2 bg-red-50 text-red-600 text-sm rounded-lg inline-block">
+            {error}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 space-y-4 mb-4">
@@ -194,7 +347,14 @@ export default function AIChat() {
           </button>
         </div>
         <p className="text-xs text-slate-400 text-center mt-2">
-          Dify連携準備中 - 設定が完了すると自動で有効化されます
+          {useDify ? (
+            <>
+              <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
+              Dify連携中
+            </>
+          ) : (
+            'Dify連携準備中 - .envファイルでVITE_DIFY_API_KEYとVITE_DIFY_API_URLを設定してください'
+          )}
         </p>
       </form>
     </div>

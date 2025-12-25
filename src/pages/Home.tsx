@@ -1,15 +1,11 @@
-import { useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import TabSwitcher from '../components/home/TabSwitcher';
 import MyPageContent from '../components/home/MyPageContent';
-import CommunityContent from '../components/home/CommunityContent';
 
 export default function Home() {
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'mypage' | 'community'>('mypage');
 
   const handleSignOut = async () => {
     try {
@@ -22,28 +18,31 @@ export default function Home() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-500">
-            <img src="/dezajuku_icon_0531_1-05 copy.png" alt="Profile" className="w-full h-full object-cover" />
+      <div className="bg-white rounded-3xl p-6 mb-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-red-500 shadow-lg shadow-red-500/20">
+                <img src="/dezajuku_icon_0531_1-05 copy.png" alt="Profile" className="w-full h-full object-cover" />
+              </div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+            </div>
+            <div>
+              <p className="text-sm text-slate-500 mb-0.5">おかえりなさい</p>
+              <p className="text-xl font-bold text-slate-900">{profile?.name || 'ゲスト'}さん</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-slate-500">おかえりなさい</p>
-            <p className="font-bold text-slate-900">{profile?.name || 'ゲスト'}さん</p>
-          </div>
+          <button
+            onClick={handleSignOut}
+            className="p-3 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300"
+            title="ログアウト"
+          >
+            <LogOut size={22} />
+          </button>
         </div>
-        <button
-          onClick={handleSignOut}
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
-          title="ログアウト"
-        >
-          <LogOut size={20} />
-        </button>
       </div>
 
-      <TabSwitcher activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {activeTab === 'mypage' ? <MyPageContent /> : <CommunityContent />}
+      <MyPageContent />
     </div>
   );
 }
