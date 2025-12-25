@@ -354,15 +354,17 @@ AI: ${aiResponse.slice(0, 100)}`;
         }
 
         // Dify APIにメッセージを送信（ストリーミング）
+        let streamedContent = '';
         const response = await sendMessageToDify(
           userInput,
           conversation.dify_conversation_id || '',
           (chunk) => {
             // ストリーミングでテキストを更新
+            streamedContent += chunk;
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === streamingMessageId
-                  ? { ...msg, content: msg.content + chunk }
+                  ? { ...msg, content: streamedContent, isStreaming: true }
                   : msg
               )
             );
@@ -374,14 +376,16 @@ AI: ${aiResponse.slice(0, 100)}`;
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === streamingMessageId
-              ? { ...msg, isStreaming: false }
+              ? { ...msg, content: response.answer || streamedContent, isStreaming: false }
               : msg
           )
         );
 
         // AIの応答をDBに保存
-        const assistantContent = response.answer || '';
-        await saveMessage('assistant', assistantContent);
+        const assistantContent = response.answer || streamedContent;
+        if (assistantContent) {
+          await saveMessage('assistant', assistantContent);
+        }
 
         // タイトルが「新しい会話」の場合、AIでタイトルを生成
         if (conversation.title === '新しい会話') {
@@ -404,14 +408,14 @@ AI: ${aiResponse.slice(0, 100)}`;
         const errorMsg = err.message || 'AIからの応答に失敗しました。もう一度お試しください。';
         setError(errorMsg);
         
-        // エラーメッセージを削除（ストリーミング中のメッセージ）
+        // エラー時、ストリーミング中のメッセージを削除
         setMessages((prev) => prev.filter(msg => msg.id !== streamingMessageId));
         
-        // エラーメッセージを表示
+        // ユーザーフレンドリーなエラーメッセージを追加
         const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
+          id: (Date.now() + 2).toString(),
           role: 'assistant',
-          content: '申し訳ございません。AIからの応答中にエラーが発生しました。もう一度お試しください。',
+          content: '申し訳ございません。現在AIからの応答が取得できません。しばらく経ってから再度お試しください。',
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errorMessage]);
