@@ -39,7 +39,7 @@ export default function AIChat() {
   const [error, setError] = useState<string>('');
   const [diagnosisData, setDiagnosisData] = useState<DiagnosisData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   // トークルーム関連
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
@@ -271,10 +271,21 @@ AI: ${aiResponse.slice(0, 100)}`;
 
     // トークルームがない場合は作成
     if (!currentConversation) {
-      await createNewConversation();
-      // 作成後に再度送信を試みる
-      setTimeout(() => handleSubmit(e), 100);
-      return;
+      try {
+        setIsLoading(true);
+        await createNewConversation();
+        // 少し待ってから再度送信を試みる
+        setTimeout(() => {
+          setIsLoading(false);
+          handleSubmit(e);
+        }, 500);
+        return;
+      } catch (error) {
+        console.error('トークルーム作成エラー:', error);
+        setError('トークルームの作成に失敗しました。もう一度お試しください。');
+        setIsLoading(false);
+        return;
+      }
     }
 
     const userMessage: Message = {
@@ -285,12 +296,19 @@ AI: ${aiResponse.slice(0, 100)}`;
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    await saveMessage('user', input.trim());
     
     const userInput = input.trim();
     setInput('');
     setIsLoading(true);
     setError('');
+
+    // メッセージを保存
+    try {
+      await saveMessage('user', userInput);
+    } catch (err) {
+      console.error('メッセージ保存エラー:', err);
+      setError('メッセージの保存に失敗しました');
+    }
 
     // Dify APIが設定されている場合
     if (useDify) {
@@ -379,13 +397,17 @@ AI: ${aiResponse.slice(0, 100)}`;
         }
       } catch (err: any) {
         console.error('Dify API エラー:', err);
-        setError(err.message || 'メッセージの送信に失敗しました');
+        const errorMsg = err.message || 'AIからの応答に失敗しました。もう一度お試しください。';
+        setError(errorMsg);
+        
+        // エラーメッセージを削除（ストリーミング中のメッセージ）
+        setMessages((prev) => prev.filter(msg => msg.id !== streamingMessageId));
         
         // エラーメッセージを表示
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: 'すみません、エラーが発生しました。もう一度お試しください。',
+          content: '申し訳ございません。AIからの応答中にエラーが発生しました。もう一度お試しください。',
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errorMessage]);
@@ -395,33 +417,22 @@ AI: ${aiResponse.slice(0, 100)}`;
     } else {
       // Dify未設定の場合はプレースホルダー
       setTimeout(async () => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: getPlaceholderResponse(userInput),
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-        await saveMessage('assistant', assistantMessage.content);
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+          content: 'Dify APIが設定されていません。.envファイルにVITE_DIFY_API_KEYとVITE_DIFY_API_URLを設定してください。',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
 
-        // タイトルが「新しい会話」の場合、最初のメッセージからタイトル生成
-        if (currentConversation && currentConversation.title === '新しい会話') {
-          const newTitle = userInput.slice(0, 20) + (userInput.length > 20 ? '...' : '');
-          await supabase
-            .from('conversations')
-            .update({ title: newTitle })
-            .eq('id', currentConversation.id);
-
-          setConversations((prev) =>
-            prev.map((c) =>
-              c.id === currentConversation.id ? { ...c, title: newTitle } : c
-            )
-          );
-          setCurrentConversation((prev) => (prev ? { ...prev, title: newTitle } : null));
+        try {
+          await saveMessage('assistant', assistantMessage.content);
+        } catch (err) {
+          console.error('メッセージ保存エラー:', err);
         }
 
-        setIsLoading(false);
-      }, 1000);
+      setIsLoading(false);
+    }, 1000);
     }
   };
 
@@ -442,7 +453,7 @@ AI: ${aiResponse.slice(0, 100)}`;
     '営業文の書き方',
   ];
 
-  return (
+    return (
     <div className="flex h-[calc(100vh-80px)] overflow-hidden">
       {/* サイドバー（モバイルはオーバーレイ） */}
       <div
@@ -524,7 +535,7 @@ AI: ${aiResponse.slice(0, 100)}`;
                 </div>
               ))
             )}
-          </div>
+        </div>
         </div>
       </div>
 
@@ -557,7 +568,7 @@ AI: ${aiResponse.slice(0, 100)}`;
               <p className="text-xs text-slate-500 mt-1.5 ml-1">ハルキさんの今日の一言</p>
             </div>
           </div>
-        </div>
+      </div>
 
         {error && (
           <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center">
@@ -596,55 +607,55 @@ AI: ${aiResponse.slice(0, 100)}`;
             </div>
           ) : (
             <>
-              {messages.map((message) => (
-                <div
-                  key={message.id}
+        {messages.map((message) => (
+          <div
+            key={message.id}
                   className={`flex items-start gap-3 ${
                     message.role === 'user' ? 'flex-row-reverse' : ''
                   }`}
-                >
-                  <div
+          >
+            <div
                     className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
-                      message.role === 'user'
-                        ? 'bg-slate-200'
+                message.role === 'user'
+                  ? 'bg-slate-200'
                         : ''
-                    }`}
-                  >
-                    {message.role === 'user' ? (
-                      <User size={20} className="text-slate-600" />
-                    ) : (
+              }`}
+            >
+              {message.role === 'user' ? (
+                <User size={20} className="text-slate-600" />
+              ) : (
                       <img
                         src="/haruki_icon.jpg"
                         alt="ハルキさん"
                         className="w-full h-full object-cover"
                       />
-                    )}
-                  </div>
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                      message.role === 'user'
-                        ? 'bg-slate-900 text-white rounded-tr-none'
-                        : 'bg-slate-100 text-slate-900 rounded-tl-none'
-                    }`}
-                  >
+              )}
+            </div>
+            <div
+              className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                message.role === 'user'
+                  ? 'bg-slate-900 text-white rounded-tr-none'
+                  : 'bg-slate-100 text-slate-900 rounded-tl-none'
+              }`}
+            >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {message.content}
                     </p>
-                  </div>
-                </div>
-              ))}
+            </div>
+          </div>
+        ))}
 
-              {isLoading && (
-                <div className="flex items-start gap-3">
+        {isLoading && (
+          <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img
                       src="/haruki_icon.jpg"
                       alt="ハルキさん"
                       className="w-full h-full object-cover"
                     />
-                  </div>
-                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
-                    <div className="flex items-center gap-1">
+            </div>
+            <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+              <div className="flex items-center gap-1">
                       <div
                         className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                         style={{ animationDelay: '0ms' }}
@@ -657,12 +668,12 @@ AI: ${aiResponse.slice(0, 100)}`;
                         className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                         style={{ animationDelay: '300ms' }}
                       />
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
+            </div>
+          </div>
+        )}
 
-              <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} />
             </>
           )}
         </div>
@@ -670,34 +681,43 @@ AI: ${aiResponse.slice(0, 100)}`;
         {/* 入力エリア */}
         <div className="border-t border-slate-200 bg-white px-4 py-4">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="ハルキAIに質問する..."
+            {!currentConversation && !isLoading && (
+              <p className="text-xs text-amber-600 mb-2 text-center">
+                メッセージを送信すると、新しいトークルームが作成されます
+              </p>
+            )}
+        <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+                placeholder={isLoading ? "送信中..." : "ハルキAIに質問する..."}
                 className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || isLoading}
+                className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
+                title={!input.trim() ? "メッセージを入力してください" : isLoading ? "送信中..." : "送信"}
+          >
                 <Send size={18} className="sm:w-5 sm:h-5" />
-              </button>
-            </div>
-            <p className="text-xs text-slate-400 text-center mt-2">
+          </button>
+        </div>
+        <p className="text-xs text-slate-400 text-center mt-2">
               {useDify ? (
                 <>
                   <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
                   Dify連携中
                 </>
               ) : (
-                'Dify連携準備中'
+                <>
+                  <span className="inline-block w-2 h-2 bg-amber-500 rounded-full mr-2" />
+                  Dify連携準備中 - 応答機能が制限されています
+                </>
               )}
-            </p>
-          </form>
+        </p>
+      </form>
         </div>
       </div>
     </div>
