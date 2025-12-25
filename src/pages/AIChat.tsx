@@ -24,14 +24,7 @@ interface DiagnosisData {
 
 export default function AIChat() {
   const { profile, user } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content: `こんにちは、${profile?.name || 'ゲスト'}さん！ハルキAIです。デザジュクの創設者として、あなたの学習や案件について全力でサポートします。何でもお気軽にご質問ください。`,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string>('');
@@ -233,30 +226,31 @@ export default function AIChat() {
 
   return (
     <div className="max-w-4xl mx-auto h-[calc(100vh-180px)] flex flex-col">
-      <div className="text-center py-6">
-        <div className="flex items-center justify-between mb-4">
+      {/* ヘッダー - スマホで小さく */}
+      <div className="text-center py-3 sm:py-6">
+        <div className="flex items-center justify-between mb-2 sm:mb-4">
           <div className="flex-1" />
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl">
-            <Sparkles size={32} className="text-white" />
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl">
+            <Sparkles size={20} className="sm:w-8 sm:h-8 text-white" />
           </div>
           <div className="flex-1 flex justify-end">
             {useDify && (
               <button
                 onClick={handleResetConversation}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
                 title="会話をリセット"
               >
-                <RefreshCw size={20} />
+                <RefreshCw size={16} className="sm:w-5 sm:h-5" />
               </button>
             )}
           </div>
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">ハルキAI</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-lg sm:text-2xl font-bold text-slate-900">ハルキAI</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-1">
           {useDify ? 'デザジュク創設者と直接話そう' : 'Dify連携準備中'}
         </p>
         {error && (
-          <div className="mt-3 px-4 py-2 bg-red-50 text-red-600 text-sm rounded-lg inline-block">
+          <div className="mt-2 sm:mt-3 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-50 text-red-600 text-xs sm:text-sm rounded-lg inline-block">
             {error}
           </div>
         )}
@@ -311,7 +305,7 @@ export default function AIChat() {
         <div ref={messagesEndRef} />
       </div>
 
-      {messages.length === 1 && (
+      {messages.length === 0 && (
         <div className="px-4 mb-4">
           <p className="text-xs text-slate-500 mb-2">よくある質問:</p>
           <div className="flex flex-wrap gap-2">
@@ -319,7 +313,7 @@ export default function AIChat() {
               <button
                 key={index}
                 onClick={() => setInput(question)}
-                className="text-sm px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition"
+                className="text-xs sm:text-sm px-3 py-1.5 bg-slate-100 text-slate-700 rounded-full hover:bg-slate-200 transition"
               >
                 {question}
               </button>
@@ -335,15 +329,15 @@ export default function AIChat() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="ハルキAIに質問する..."
-            className="flex-1 bg-transparent px-4 py-2 text-slate-900 placeholder-slate-400 focus:outline-none"
+            className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
             disabled={isLoading}
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Send size={20} />
+            <Send size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
         <p className="text-xs text-slate-400 text-center mt-2">
