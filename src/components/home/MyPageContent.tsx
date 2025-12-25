@@ -705,8 +705,12 @@ export default function MyPageContent() {
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   required
-                  className="w-full px-4 py-3 sm:py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-medium text-base"
-                  style={{ colorScheme: 'light' }}
+                  className="w-full px-4 py-3 sm:py-3.5 rounded-xl border-2 border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-300 font-medium text-base appearance-none"
+                  style={{ 
+                    colorScheme: 'light',
+                    lineHeight: '1.5',
+                    height: 'auto'
+                  }}
                 />
               </div>
               <div className="flex gap-3 pt-4 sm:pt-6">
