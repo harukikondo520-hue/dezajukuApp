@@ -530,8 +530,8 @@ AI: ${aiResponse.slice(0, 100)}`;
 
       {/* メインチャットエリア */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* ハンバーガーメニュー（独立） */}
-        <div className="lg:hidden fixed top-4 left-4 z-30">
+        {/* ハンバーガーメニュー（右上に配置） */}
+        <div className="lg:hidden fixed top-4 right-4 z-30">
           <button
             onClick={() => setIsSidebarOpen(true)}
             className="p-3 bg-white shadow-lg rounded-xl hover:bg-slate-50 transition border border-slate-200"
