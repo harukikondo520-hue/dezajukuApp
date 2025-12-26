@@ -60,9 +60,9 @@ export function useAddProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['monthlyIncome'] });
-      queryClient.invalidateQueries({ queryKey: ['thisMonthIncome'] });
-      queryClient.invalidateQueries({ queryKey: ['totalIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['monthly-income'] });
+      queryClient.invalidateQueries({ queryKey: ['this-month-income'] });
+      queryClient.invalidateQueries({ queryKey: ['total-income'] });
       queryClient.invalidateQueries({ queryKey: ['communityStats'] });
     },
   });
@@ -81,9 +81,9 @@ export function useUpdateProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['monthlyIncome'] });
-      queryClient.invalidateQueries({ queryKey: ['thisMonthIncome'] });
-      queryClient.invalidateQueries({ queryKey: ['totalIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['monthly-income'] });
+      queryClient.invalidateQueries({ queryKey: ['this-month-income'] });
+      queryClient.invalidateQueries({ queryKey: ['total-income'] });
       queryClient.invalidateQueries({ queryKey: ['communityStats'] });
     },
   });
@@ -102,9 +102,9 @@ export function useDeleteProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      queryClient.invalidateQueries({ queryKey: ['monthlyIncome'] });
-      queryClient.invalidateQueries({ queryKey: ['thisMonthIncome'] });
-      queryClient.invalidateQueries({ queryKey: ['totalIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['monthly-income'] });
+      queryClient.invalidateQueries({ queryKey: ['this-month-income'] });
+      queryClient.invalidateQueries({ queryKey: ['total-income'] });
       queryClient.invalidateQueries({ queryKey: ['communityStats'] });
     },
   });
