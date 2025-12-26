@@ -60,6 +60,9 @@ export function useAddProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['thisMonthIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['totalIncome'] });
       queryClient.invalidateQueries({ queryKey: ['communityStats'] });
     },
   });
@@ -78,6 +81,9 @@ export function useUpdateProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['thisMonthIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['totalIncome'] });
       queryClient.invalidateQueries({ queryKey: ['communityStats'] });
     },
   });
@@ -96,6 +102,9 @@ export function useDeleteProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['monthlyIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['thisMonthIncome'] });
+      queryClient.invalidateQueries({ queryKey: ['totalIncome'] });
       queryClient.invalidateQueries({ queryKey: ['communityStats'] });
     },
   });
