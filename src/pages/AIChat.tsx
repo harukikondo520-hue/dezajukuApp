@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
-import { getTodayQuote } from '../data/dailyQuotes';
 
 interface Message {
   id: string;
@@ -461,8 +460,8 @@ AI: ${aiResponse.slice(0, 100)}`;
     '営業文の書き方',
   ];
 
-    return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden">
+  return (
+    <div className="flex h-[calc(100vh-80px)] overflow-hidden max-h-[calc(100vh-80px)]">
       {/* サイドバー（モバイルはオーバーレイ） */}
       <div
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity lg:hidden ${
@@ -471,11 +470,11 @@ AI: ${aiResponse.slice(0, 100)}`;
         onClick={() => setIsSidebarOpen(false)}
       />
       <div
-        className={`fixed lg:static inset-y-0 left-0 w-80 bg-slate-900 text-white z-50 transform transition-transform lg:translate-x-0 ${
+        className={`fixed lg:static inset-y-0 left-0 w-80 bg-slate-900 text-white z-50 transform transition-transform lg:translate-x-0 flex flex-col ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* サイドバーヘッダー */}
           <div className="p-4 border-b border-slate-700">
             <div className="flex items-center justify-between mb-4">
@@ -548,7 +547,7 @@ AI: ${aiResponse.slice(0, 100)}`;
       </div>
 
       {/* メインチャットエリア */}
-      <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden h-full">
         {/* ハンバーガーメニュー（右上に固定） */}
         <div className="lg:hidden fixed top-4 right-4 z-50">
           <button
@@ -559,35 +558,14 @@ AI: ${aiResponse.slice(0, 100)}`;
           </button>
         </div>
 
-        {/* スクロール可能なメッセージ全体エリア - 入力欄の高さ分の余白を確保 */}
-        <div className="flex-1 overflow-y-auto pb-2">
-          {/* ハルキさんの今日の一言 - スクロールで隠れる */}
-          <div className="px-4 py-4 lg:px-6 bg-slate-50/50 border-b border-slate-100">
-            <div className="max-w-4xl mx-auto flex items-start gap-3">
-              {/* ハルキさんのアイコン */}
-              <img
-                src="/haruki_icon.jpg"
-                alt="ハルキさん"
-                className="flex-shrink-0 w-12 h-12 rounded-full shadow-md object-cover"
-              />
-              {/* 吹き出し */}
-              <div className="flex-1 mt-1">
-                <div className="relative bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-slate-200">
-                  <p className="text-sm font-medium text-slate-900">{getTodayQuote()}</p>
-                </div>
-                <p className="text-xs text-slate-500 mt-1.5 ml-1">ハルキさんの今日の一言</p>
-              </div>
-            </div>
+        {error && (
+          <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center flex-shrink-0">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center">
-              {error}
-            </div>
-          )}
-
-          {/* メッセージエリア */}
-          <div className="px-4 py-6 space-y-4 max-w-4xl mx-auto w-full min-h-[400px]">
+        {/* メッセージエリア - チャットのみスクロール可能 */}
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <img
@@ -617,43 +595,43 @@ AI: ${aiResponse.slice(0, 100)}`;
             </div>
           ) : (
             <>
-        {messages.map((message) => (
-          <div
-            key={message.id}
+              {messages.map((message) => (
+                <div
+                  key={message.id}
                   className={`flex items-start gap-3 ${
                     message.role === 'user' ? 'flex-row-reverse' : ''
                   }`}
-          >
-            <div
+                >
+                  <div
                     className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
-                message.role === 'user'
-                  ? 'bg-slate-200'
+                      message.role === 'user'
+                        ? 'bg-slate-200'
                         : ''
-              }`}
-            >
-              {message.role === 'user' ? (
-                <User size={20} className="text-slate-600" />
-              ) : (
+                    }`}
+                  >
+                    {message.role === 'user' ? (
+                      <User size={20} className="text-slate-600" />
+                    ) : (
                       <img
                         src="/haruki_icon.jpg"
                         alt="ハルキさん"
                         className="w-full h-full object-cover"
                       />
-              )}
-            </div>
-            <div
-              className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                message.role === 'user'
-                  ? 'bg-slate-900 text-white rounded-tr-none'
-                  : 'bg-slate-100 text-slate-900 rounded-tl-none'
-              }`}
-            >
+                    )}
+                  </div>
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                      message.role === 'user'
+                        ? 'bg-slate-900 text-white rounded-tr-none'
+                        : 'bg-slate-100 text-slate-900 rounded-tl-none'
+                    }`}
+                  >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {message.content}
                     </p>
-            </div>
-          </div>
-        ))}
+                  </div>
+                </div>
+              ))}
 
               {/* ローディングインジケーター - ストリーミング中は表示しない */}
               {isLoading && !messages.some(msg => msg.isStreaming) && (
