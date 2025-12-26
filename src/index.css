@@ -54,15 +54,4 @@
       background-position: 200% 0;
     }
   }
-
-  /* グラフバーアニメーション */
-  @keyframes slideUp {
-    from {
-      height: 0;
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
 }
