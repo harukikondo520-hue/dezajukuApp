@@ -335,38 +335,53 @@ export default function MyPageContent() {
         {/* グラフ */}
         <div className="relative h-64 mb-6">
           <div className="absolute inset-0 flex items-end justify-around gap-1 px-4">
-            {monthlyIncomeData.map((data, index) => {
-              const isSelected = selectedMonth === index;
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((monthIndex) => {
+              const data = monthlyIncomeData[monthIndex] || { month: '', amount: 0 };
+              const isSelected = selectedMonth === monthIndex;
               const maxAmount = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
-              const heightPercent = (data.amount / maxAmount) * 100;
+              const heightPercent = data.amount > 0 ? (data.amount / maxAmount) * 100 : 0;
               
               return (
                 <div
-                  key={index}
+                  key={monthIndex}
                   className="flex-1 flex flex-col items-center justify-end cursor-pointer group"
                   onClick={() => {
-                    setSelectedMonth(index);
+                    setSelectedMonth(monthIndex);
                     setShowMonthDetails(true);
                   }}
                 >
                   <div className="relative w-full flex flex-col items-center justify-end h-full">
-                    <div
-                      className={`w-full rounded-t-lg transition-all duration-500 ease-out ${
-                        isSelected
-                          ? 'bg-green-500 shadow-lg'
-                          : 'bg-slate-300 group-hover:bg-slate-400'
-                      }`}
-                      style={{
-                        height: `${heightPercent}%`,
-                        animationDelay: `${index * 50}ms`,
-                        animation: 'slideUp 0.6s ease-out'
-                      }}
-                    />
+                    {data.amount > 0 && (
+                      <div
+                        className={`w-full rounded-t-lg transition-all duration-500 ease-out ${
+                          isSelected
+                            ? 'bg-green-500 shadow-lg'
+                            : 'bg-slate-300 group-hover:bg-slate-400'
+                        }`}
+                        style={{
+                          height: `${heightPercent}%`,
+                          animationDelay: `${monthIndex * 50}ms`,
+                          animation: 'slideUp 0.6s ease-out'
+                        }}
+                      />
+                    )}
+                    {data.amount === 0 && (
+                      <div
+                        className={`w-full rounded-t-lg transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-green-200'
+                            : 'bg-slate-100'
+                        }`}
+                        style={{
+                          height: '4px',
+                        }}
+                      />
+                    )}
                   </div>
                   <p className={`text-xs mt-2 font-semibold transition-colors duration-200 ${
                     isSelected ? 'text-green-600' : 'text-slate-400'
                   }`}>
-                    {index + 1}月
+                    {monthIndex + 1}月
                   </p>
                 </div>
               );
