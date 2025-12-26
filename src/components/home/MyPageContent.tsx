@@ -207,6 +207,9 @@ export default function MyPageContent() {
   if (isLoading) {
     return (
       <div>
+        {/* グラフスケルトン */}
+        <ChartSkeleton />
+
         {/* プロジェクトカードスケルトン */}
         <div className="mb-6">
           <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide">
@@ -217,15 +220,83 @@ export default function MyPageContent() {
             </div>
           </div>
         </div>
-
-        {/* グラフスケルトン */}
-        <ChartSkeleton />
       </div>
     );
   }
 
   return (
     <div>
+      {/* 月収推移グラフ */}
+      <div className="bg-white rounded-3xl pt-6 pb-6 px-6 mb-6 border border-slate-100 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-900 mb-6">月収推移</h3>
+        
+        <div className="relative h-72">
+          {/* Y軸ラベル */}
+          <div className="absolute left-0 top-0 bottom-8 w-12 flex flex-col justify-between text-xs text-slate-400 font-semibold z-10 bg-white">
+            {[1, 0.75, 0.5, 0.25, 0].map((ratio, i) => (
+              <div key={i} className="text-right pr-2">
+                {Math.round((chartMax * ratio) / 10000)}万
+              </div>
+            ))}
+          </div>
+
+          {/* 横スクロール可能なグラフエリア */}
+          <div className="absolute left-12 right-0 top-0 bottom-0 overflow-x-auto scrollbar-hide">
+            <div className="relative h-full" style={{ minWidth: '600px', width: 'max-content' }}>
+              {/* グリッド線 */}
+              <div className="absolute inset-0 bottom-8 pointer-events-none">
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+                  <div
+                    key={i}
+                    className="absolute left-0 right-0 border-t border-slate-100"
+                    style={{ bottom: `${ratio * 100}%` }}
+                  ></div>
+                ))}
+              </div>
+
+              {/* 棒グラフ */}
+              <div className="absolute inset-0 bottom-8 flex items-end gap-3 px-2">
+                {monthlyDataWithLabels.map((data, index) => {
+                  const heightPercent = chartMax > 0 ? (data.amount / chartMax) * 100 : 0;
+                  
+                  return (
+                    <div key={index} className="flex-1 min-w-[40px] flex flex-col items-center group relative">
+                      {/* ツールチップ */}
+                      <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg">
+                        ￥{data.amount.toLocaleString()}
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                      </div>
+
+                      {/* 棒グラフ */}
+                      <div className="w-full h-full flex items-end justify-center">
+                        <div
+                          className="w-full rounded-t-xl bg-gradient-to-t from-red-500 via-red-400 to-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden"
+                          style={{
+                            height: `${heightPercent}%`,
+                            minHeight: data.amount > 0 ? '8px' : '0px',
+                            animation: 'slideUp 0.8s ease-out',
+                            animationDelay: `${index * 80}ms`,
+                            animationFillMode: 'both'
+                          }}
+                        >
+                          {/* 光沢エフェクト */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
+                        </div>
+                      </div>
+
+                      {/* 月ラベル */}
+                      <div className="mt-2 text-xs font-bold text-slate-500 group-hover:text-red-600 transition-colors duration-200 absolute -bottom-6">
+                        {data.month}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 案件管理 - 横スクロール */}
       <div className="mb-6">
         <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide">
@@ -304,77 +375,6 @@ export default function MyPageContent() {
           >
             <History size={18} strokeWidth={2.5} />
           </button>
-        </div>
-      </div>
-
-      {/* 月収推移グラフ */}
-      <div className="bg-white rounded-3xl pt-6 pb-6 px-6 mb-6 border border-slate-100 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-6">月収推移</h3>
-        
-        <div className="relative h-72">
-          {/* Y軸ラベル */}
-          <div className="absolute left-0 top-0 bottom-8 w-12 flex flex-col justify-between text-xs text-slate-400 font-semibold z-10 bg-white">
-            {[1, 0.75, 0.5, 0.25, 0].map((ratio, i) => (
-              <div key={i} className="text-right pr-2">
-                {Math.round((chartMax * ratio) / 10000)}万
-              </div>
-            ))}
-          </div>
-
-          {/* 横スクロール可能なグラフエリア */}
-          <div className="absolute left-12 right-0 top-0 bottom-0 overflow-x-auto scrollbar-hide">
-            <div className="relative h-full" style={{ minWidth: '600px', width: 'max-content' }}>
-              {/* グリッド線 */}
-              <div className="absolute inset-0 bottom-8 pointer-events-none">
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-                  <div
-                    key={i}
-                    className="absolute left-0 right-0 border-t border-slate-100"
-                    style={{ bottom: `${ratio * 100}%` }}
-                  ></div>
-                ))}
-              </div>
-
-              {/* 棒グラフ */}
-              <div className="absolute inset-0 bottom-8 flex items-end gap-3 px-2">
-                {monthlyDataWithLabels.map((data, index) => {
-                  const heightPercent = chartMax > 0 ? (data.amount / chartMax) * 100 : 0;
-                  
-                  return (
-                    <div key={index} className="flex-1 min-w-[40px] flex flex-col items-center group relative">
-                      {/* ツールチップ */}
-                      <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg">
-                        ￥{data.amount.toLocaleString()}
-                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
-                      </div>
-
-                      {/* 棒グラフ */}
-                      <div className="w-full h-full flex items-end justify-center">
-                        <div
-                          className="w-full rounded-t-xl bg-gradient-to-t from-red-500 via-red-400 to-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden"
-                          style={{
-                            height: `${heightPercent}%`,
-                            minHeight: data.amount > 0 ? '8px' : '0px',
-                            animation: 'slideUp 0.8s ease-out',
-                            animationDelay: `${index * 80}ms`,
-                            animationFillMode: 'both'
-                          }}
-                        >
-                          {/* 光沢エフェクト */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
-                        </div>
-                      </div>
-
-                      {/* 月ラベル */}
-                      <div className="mt-2 text-xs font-bold text-slate-500 group-hover:text-red-600 transition-colors duration-200 absolute -bottom-6">
-                        {data.month}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
