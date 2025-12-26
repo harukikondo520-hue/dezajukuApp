@@ -177,17 +177,31 @@ export default function MyPageContent() {
     // それ以上は50万円単位で切り上げ
     return Math.ceil(maxValue / 500000) * 500000;
   };
-  
-  const actualMax = Math.max(...monthlyIncomeData.map(d => d.amount), 0);
-  const chartMax = calculateChartMax(actualMax);
 
-  // グラフ用の月ラベルを生成
+  // グラフ用の12ヶ月データを生成
   const monthlyDataWithLabels = useMemo(() => {
-    return monthlyIncomeData.map(d => ({
-      ...d,
-      month: new Date(d.month + '-01').toLocaleDateString('ja-JP', { month: 'short' })
-    }));
+    const now = new Date();
+    const fullYearData = [];
+    
+    // 12ヶ月分のデータを生成（1月〜12月）
+    for (let i = 0; i < 12; i++) {
+      const monthDate = new Date(now.getFullYear(), i, 1);
+      const key = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+      
+      // monthlyIncomeDataから該当月のデータを探す
+      const existingData = monthlyIncomeData.find(d => d.month === key);
+      
+      fullYearData.push({
+        month: monthDate.toLocaleDateString('ja-JP', { month: 'short' }),
+        amount: existingData?.amount || 0
+      });
+    }
+    
+    return fullYearData;
   }, [monthlyIncomeData]);
+
+  const actualMax = Math.max(...monthlyDataWithLabels.map(d => d.amount), 0);
+  const chartMax = calculateChartMax(actualMax);
 
   // 初回ローディング時のみスケルトン表示
   if (isLoading) {
@@ -299,62 +313,67 @@ export default function MyPageContent() {
         
         <div className="relative h-72">
           {/* Y軸ラベル */}
-          <div className="absolute left-0 top-0 bottom-8 w-12 flex flex-col justify-between text-xs text-slate-400 font-semibold">
-            {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio, i) => (
+          <div className="absolute left-0 top-0 bottom-8 w-12 flex flex-col justify-between text-xs text-slate-400 font-semibold z-10 bg-white">
+            {[1, 0.75, 0.5, 0.25, 0].map((ratio, i) => (
               <div key={i} className="text-right pr-2">
                 {Math.round((chartMax * ratio) / 10000)}万
               </div>
             ))}
           </div>
 
-          {/* グラフエリア */}
-          <div className="absolute left-12 right-0 top-0 bottom-8 flex items-end justify-around gap-2">
-            {monthlyDataWithLabels.map((data, index) => {
-              const heightPercent = chartMax > 0 ? (data.amount / chartMax) * 100 : 0;
-              
-              return (
-                <div key={index} className="flex-1 flex flex-col items-center group relative">
-                  {/* ツールチップ */}
-                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10 shadow-lg">
-                    ￥{data.amount.toLocaleString()}
-                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
-                  </div>
+          {/* 横スクロール可能なグラフエリア */}
+          <div className="absolute left-12 right-0 top-0 bottom-0 overflow-x-auto scrollbar-hide">
+            <div className="relative h-full" style={{ minWidth: '600px', width: 'max-content' }}>
+              {/* グリッド線 */}
+              <div className="absolute inset-0 bottom-8 pointer-events-none">
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+                  <div
+                    key={i}
+                    className="absolute left-0 right-0 border-t border-slate-100"
+                    style={{ bottom: `${ratio * 100}%` }}
+                  ></div>
+                ))}
+              </div>
 
-                  {/* 棒グラフ */}
-                  <div className="w-full h-full flex items-end justify-center">
-                    <div
-                      className="w-full rounded-t-xl bg-gradient-to-t from-red-500 via-red-400 to-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden"
-                      style={{
-                        height: `${heightPercent}%`,
-                        minHeight: data.amount > 0 ? '8px' : '0px',
-                        animation: 'slideUp 0.8s ease-out',
-                        animationDelay: `${index * 80}ms`,
-                        animationFillMode: 'both'
-                      }}
-                    >
-                      {/* 光沢エフェクト */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
+              {/* 棒グラフ */}
+              <div className="absolute inset-0 bottom-8 flex items-end gap-3 px-2">
+                {monthlyDataWithLabels.map((data, index) => {
+                  const heightPercent = chartMax > 0 ? (data.amount / chartMax) * 100 : 0;
+                  
+                  return (
+                    <div key={index} className="flex-1 min-w-[40px] flex flex-col items-center group relative">
+                      {/* ツールチップ */}
+                      <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-20 shadow-lg">
+                        ￥{data.amount.toLocaleString()}
+                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                      </div>
+
+                      {/* 棒グラフ */}
+                      <div className="w-full h-full flex items-end justify-center">
+                        <div
+                          className="w-full rounded-t-xl bg-gradient-to-t from-red-500 via-red-400 to-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden"
+                          style={{
+                            height: `${heightPercent}%`,
+                            minHeight: data.amount > 0 ? '8px' : '0px',
+                            animation: 'slideUp 0.8s ease-out',
+                            animationDelay: `${index * 80}ms`,
+                            animationFillMode: 'both'
+                          }}
+                        >
+                          {/* 光沢エフェクト */}
+                          <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
+                        </div>
+                      </div>
+
+                      {/* 月ラベル */}
+                      <div className="mt-2 text-xs font-bold text-slate-500 group-hover:text-red-600 transition-colors duration-200 absolute -bottom-6">
+                        {data.month}
+                      </div>
                     </div>
-                  </div>
-
-                  {/* 月ラベル */}
-                  <div className="mt-2 text-xs font-bold text-slate-500 group-hover:text-red-600 transition-colors duration-200">
-                    {data.month}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* グリッド線 */}
-          <div className="absolute left-12 right-0 top-0 bottom-8 pointer-events-none">
-            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-              <div
-                key={i}
-                className="absolute left-0 right-0 border-t border-slate-100"
-                style={{ top: `${(1 - ratio) * 100}%` }}
-              ></div>
-            ))}
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
