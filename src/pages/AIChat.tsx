@@ -559,8 +559,8 @@ AI: ${aiResponse.slice(0, 100)}`;
           </button>
         </div>
 
-        {/* スクロール可能なメッセージ全体エリア */}
-        <div className="flex-1 overflow-y-auto">
+        {/* スクロール可能なメッセージ全体エリア - 入力欄の高さ分の余白を確保 */}
+        <div className="flex-1 overflow-y-auto pb-2">
           {/* ハルキさんの今日の一言 - スクロールで隠れる */}
           <div className="px-4 py-4 lg:px-6 bg-slate-50/50 border-b border-slate-100">
             <div className="max-w-4xl mx-auto flex items-start gap-3">
@@ -690,8 +690,8 @@ AI: ${aiResponse.slice(0, 100)}`;
           </div>
         </div>
 
-        {/* 入力エリア - スリムに */}
-        <div className="border-t border-slate-200 bg-white px-4 py-3">
+        {/* 入力エリア - 常に下部に固定 */}
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 shadow-lg">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
             <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
               <input
