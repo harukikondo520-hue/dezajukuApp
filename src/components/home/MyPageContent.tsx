@@ -5,6 +5,7 @@ import { useAddProject, useUpdateProject, useDeleteProject } from '../../hooks/u
 import { useCurrentMonthProjects, useAllProjects, usePastProjects } from '../../hooks/useUserProjects';
 import { useMonthlyIncome, useThisMonthIncome, useTotalIncome } from '../../hooks/useIncome';
 import { useTasks, useUserTasks, useVideoProgress } from '../../hooks/useTasksAndProgress';
+import { ProjectCardSkeleton, ChartSkeleton } from '../Skeleton';
 import type { Database } from '../../types/database';
 
 type Project = Database['public']['Tables']['projects']['Row'];
@@ -188,10 +189,23 @@ export default function MyPageContent() {
     }));
   }, [monthlyIncomeData]);
 
+  // 初回ローディング時のみスケルトン表示
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-slate-600">読み込み中...</div>
+      <div>
+        {/* プロジェクトカードスケルトン */}
+        <div className="mb-6">
+          <div className="overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide">
+            <div className="flex gap-3 min-w-min">
+              <ProjectCardSkeleton />
+              <ProjectCardSkeleton />
+              <ProjectCardSkeleton />
+            </div>
+          </div>
+        </div>
+
+        {/* グラフスケルトン */}
+        <ChartSkeleton />
       </div>
     );
   }

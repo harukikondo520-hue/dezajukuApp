@@ -8,6 +8,7 @@ import { DesignerType } from '../types/diagnosis';
 import { designerTypes } from '../data/questions';
 import { skillCategoryNames } from '../data/skillQuestions';
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
+import { ProfileCardSkeleton } from '../components/Skeleton';
 
 const getDesignerTypeIcon = (type: DesignerType) => {
   const iconProps = { size: 120, strokeWidth: 1.5 };
@@ -142,8 +143,9 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-slate-600">読み込み中...</div>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <ProfileCardSkeleton />
+        {hasSkillDiagnosis && <ProfileCardSkeleton />}
       </div>
     );
   }

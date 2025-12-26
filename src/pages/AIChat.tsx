@@ -5,6 +5,7 @@ import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
 import { useConversations, useConversationMessages, useDiagnosisData, useCreateConversation, useDeleteConversation, useUpdateConversationTitle } from '../hooks/useConversations';
+import { ConversationListSkeleton, ChatMessageSkeleton } from '../components/Skeleton';
 
 interface Message {
   id: string;
@@ -378,7 +379,7 @@ AI: ${aiResponse.slice(0, 100)}`;
     '営業文の書き方',
   ];
 
-  return (
+    return (
     <div className="flex h-[calc(100vh-80px)] overflow-hidden max-h-[calc(100vh-80px)]">
       {/* サイドバー（モバイルはオーバーレイ） */}
       <div
@@ -415,7 +416,9 @@ AI: ${aiResponse.slice(0, 100)}`;
 
           {/* トークルーム一覧 */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {conversations.length === 0 ? (
+            {conversationsLoading ? (
+              <ConversationListSkeleton />
+            ) : conversations.length === 0 ? (
               <p className="text-sm text-slate-400 text-center py-8">
                 トークルームがありません
                 <br />
@@ -479,7 +482,7 @@ AI: ${aiResponse.slice(0, 100)}`;
         {error && (
           <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center flex-shrink-0">
             {error}
-          </div>
+      </div>
         )}
 
         {/* メッセージエリア - チャットのみスクロール可能 */}
@@ -513,43 +516,43 @@ AI: ${aiResponse.slice(0, 100)}`;
             </div>
           ) : (
             <>
-              {messages.map((message) => (
-                <div
-                  key={message.id}
+        {messages.map((message) => (
+          <div
+            key={message.id}
                   className={`flex items-start gap-3 ${
                     message.role === 'user' ? 'flex-row-reverse' : ''
                   }`}
-                >
-                  <div
+          >
+            <div
                     className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
-                      message.role === 'user'
-                        ? 'bg-slate-200'
+                message.role === 'user'
+                  ? 'bg-slate-200'
                         : ''
-                    }`}
-                  >
-                    {message.role === 'user' ? (
-                      <User size={20} className="text-slate-600" />
-                    ) : (
+              }`}
+            >
+              {message.role === 'user' ? (
+                <User size={20} className="text-slate-600" />
+              ) : (
                       <img
                         src="/haruki_icon.jpg"
                         alt="ハルキさん"
                         className="w-full h-full object-cover"
                       />
-                    )}
-                  </div>
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-4 py-3 ${
-                      message.role === 'user'
-                        ? 'bg-slate-900 text-white rounded-tr-none'
-                        : 'bg-slate-100 text-slate-900 rounded-tl-none'
-                    }`}
-                  >
+              )}
+            </div>
+            <div
+              className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+                message.role === 'user'
+                  ? 'bg-slate-900 text-white rounded-tr-none'
+                  : 'bg-slate-100 text-slate-900 rounded-tl-none'
+              }`}
+            >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {message.content}
                     </p>
-                  </div>
-                </div>
-              ))}
+            </div>
+          </div>
+        ))}
 
               {/* ローディングインジケーター - ストリーミング中は表示しない */}
               {isLoading && !messages.some(msg => msg.isStreaming) && (
@@ -589,23 +592,23 @@ AI: ${aiResponse.slice(0, 100)}`;
         {/* 入力エリア - 常に下部に固定 */}
         <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 shadow-lg">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
+        <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
                 placeholder={isLoading ? "送信中..." : "ハルキAIに質問する..."}
                 className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={!input.trim() || isLoading}
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            disabled={!input.trim() || isLoading}
                 className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
                 title={!input.trim() ? "メッセージを入力してください" : isLoading ? "送信中..." : "送信"}
-              >
+          >
                 <Send size={18} className="sm:w-5 sm:h-5" />
-              </button>
+          </button>
             </div>
           </form>
         </div>
