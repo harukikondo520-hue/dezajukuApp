@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, TrendingUp, Calculator, Wallet, History, X } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, TrendingUp, Calculator, Wallet, History, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAddProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
 import { useCurrentMonthProjects, useAllProjects, usePastProjects } from '../../hooks/useUserProjects';
@@ -34,6 +34,8 @@ export default function MyPageContent() {
   const [showModal, setShowModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth()); // 0-11
+  const [showMonthDetails, setShowMonthDetails] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     reward: '',
@@ -63,6 +65,21 @@ export default function MyPageContent() {
     const currentIndex = tasks.findIndex(t => t.id === currentTask.id);
     return tasks[currentIndex + 1] || null;
   }, [tasks, currentTask]);
+
+  // 選択された月のデータ
+  const selectedMonthData = useMemo(() => {
+    const monthData = monthlyIncomeData[selectedMonth] || { month: '', amount: 0 };
+    return monthData;
+  }, [monthlyIncomeData, selectedMonth]);
+
+  // 選択された月のプロジェクト
+  const selectedMonthProjects = useMemo(() => {
+    return allProjects.filter(p => {
+      if (!p.completed_at) return false;
+      const projectMonth = new Date(p.completed_at).getMonth();
+      return projectMonth === selectedMonth;
+    });
+  }, [allProjects, selectedMonth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,98 +311,128 @@ export default function MyPageContent() {
       </div>
 
       {/* 月収推移グラフ */}
-      <div className="bg-white rounded-3xl pt-4 pb-6 px-6 mb-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300">
-        <div className="relative">
-          <div className="h-56 sm:h-64">
-            <svg className="w-full h-full" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#f97316" />
-                </linearGradient>
-                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-                </linearGradient>
-                <filter id="shadow">
-                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.1"/>
-                </filter>
-              </defs>
+      <div className="bg-white rounded-3xl p-6 mb-6 border border-slate-100 shadow-sm">
+        {/* 月タブ */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'].map((month, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                setSelectedMonth(index);
+                setShowMonthDetails(true);
+              }}
+              className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm transition-all duration-200 ${
+                selectedMonth === index
+                  ? 'bg-green-500 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-400 hover:text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {month}
+            </button>
+          ))}
+        </div>
 
-              {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => (
-                <g key={i}>
-                  <line
-                    x1="40"
-                    y1={145 - ratio * 115}
-                    x2="310"
-                    y2={145 - ratio * 115}
-                    stroke="#e2e8f0"
-                    strokeWidth="1"
-                    strokeDasharray={ratio === 0 ? "0" : "3,3"}
-                  />
-                  <text
-                    x="32"
-                    y={148 - ratio * 115}
-                    textAnchor="end"
-                    fill="#94a3b8"
-                    style={{ fontSize: '8px', fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
-                  >
-                    {Math.round((chartMax * ratio) / 10000)}万
-                  </text>
-                </g>
-              ))}
-
-              {monthlyDataWithLabels.length > 0 && (
-                <>
-                  <path
-                    d={`M ${monthlyDataWithLabels.map((d, i) => {
-                      const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
-                      const y = 145 - (d.amount / chartMax) * 115;
-                      return `${x},${y}`;
-                    }).join(' L ')} L ${310},145 L 40,145 Z`}
-                    fill="url(#areaGradient)"
-                  />
-
-                  <path
-                    d={`M ${monthlyDataWithLabels.map((d, i) => {
-                      const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
-                      const y = 145 - (d.amount / chartMax) * 115;
-                      return `${x},${y}`;
-                    }).join(' L ')}`}
-                    fill="none"
-                    stroke="url(#lineGradient)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    filter="url(#shadow)"
-                  />
-
-                  {monthlyDataWithLabels.map((d, i) => {
-                    const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
-                    const y = 145 - (d.amount / chartMax) * 115;
-                    return (
-                      <g key={i}>
-                        <circle cx={x} cy={y} r="6" fill="white" stroke="#ef4444" strokeWidth="3" filter="url(#shadow)" />
-                        <circle cx={x} cy={y} r="2.5" fill="#ef4444" />
-                        <text
-                          x={x}
-                          y={165}
-                          textAnchor="middle"
-                          fill="#94a3b8"
-                          style={{ fontSize: '10px', fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
-                        >
-                          {d.month}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </>
-              )}
-            </svg>
+        {/* グラフ */}
+        <div className="relative h-64 mb-6">
+          <div className="absolute inset-0 flex items-end justify-around gap-1 px-4">
+            {monthlyIncomeData.map((data, index) => {
+              const isSelected = selectedMonth === index;
+              const maxAmount = Math.max(...monthlyIncomeData.map(d => d.amount), 1);
+              const heightPercent = (data.amount / maxAmount) * 100;
+              
+              return (
+                <div
+                  key={index}
+                  className="flex-1 flex flex-col items-center justify-end cursor-pointer group"
+                  onClick={() => {
+                    setSelectedMonth(index);
+                    setShowMonthDetails(true);
+                  }}
+                >
+                  <div className="relative w-full flex flex-col items-center justify-end h-full">
+                    <div
+                      className={`w-full rounded-t-lg transition-all duration-500 ease-out ${
+                        isSelected
+                          ? 'bg-green-500 shadow-lg'
+                          : 'bg-slate-300 group-hover:bg-slate-400'
+                      }`}
+                      style={{
+                        height: `${heightPercent}%`,
+                        animationDelay: `${index * 50}ms`,
+                        animation: 'slideUp 0.6s ease-out'
+                      }}
+                    />
+                  </div>
+                  <p className={`text-xs mt-2 font-semibold transition-colors duration-200 ${
+                    isSelected ? 'text-green-600' : 'text-slate-400'
+                  }`}>
+                    {index + 1}月
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <div className="relative bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-6 mb-4 border border-slate-200/50 hover:border-slate-300/50 transition-all duration-300 overflow-hidden group">
+        {/* 選択された月の詳細 */}
+        {showMonthDetails && (
+          <div className="border-t border-slate-200 pt-6 animate-fadeIn">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">
+                {selectedMonth + 1}月の収支
+              </h3>
+              <button
+                onClick={() => setShowMonthDetails(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 transition"
+              >
+                <ChevronUp size={20} />
+              </button>
+            </div>
+
+            {/* 収入・支出サマリー */}
+            <div className="bg-slate-50 rounded-2xl p-5 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-slate-600 font-medium">収入</span>
+                <span className="text-2xl font-black text-green-600 number-display">
+                  ￥{selectedMonthData.amount.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* 収入の内訳 */}
+            {selectedMonthProjects.length > 0 && (
+              <div>
+                <h4 className="text-sm font-bold text-slate-700 mb-3">収入の内訳</h4>
+                <div className="space-y-2">
+                  {selectedMonthProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-4 bg-white rounded-xl border border-slate-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                          <span className="text-green-600 font-bold text-sm">案</span>
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">{project.name}</p>
+                          <p className="text-xs text-slate-500">
+                            {project.completed_at && new Date(project.completed_at).toLocaleDateString('ja-JP')}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-lg font-black text-slate-900 number-display">
+                        ￥{project.reward.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="relative bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-6 mb-4 border border-slate-200/50 hover:border-slate-300/50 transition-all duration-300 overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-2">
