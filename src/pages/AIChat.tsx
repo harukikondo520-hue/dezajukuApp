@@ -379,8 +379,8 @@ AI: ${aiResponse.slice(0, 100)}`;
     '営業文の書き方',
   ];
 
-    return (
-    <div className="flex h-[calc(100vh-80px)] overflow-hidden max-h-[calc(100vh-80px)]">
+  return (
+    <div className="flex overflow-hidden max-h-[calc(100vh-80px)]" style={{ height: 'calc(100vh - 80px)' }}>
       {/* サイドバー（モバイルはオーバーレイ） */}
       <div
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity lg:hidden ${
