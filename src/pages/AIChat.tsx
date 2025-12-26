@@ -588,7 +588,6 @@ AI: ${aiResponse.slice(0, 100)}`;
         <div ref={messagesEndRef} />
             </>
           )}
-          </div>
         </div>
 
         {/* 入力エリア - 常に下部に固定 */}
@@ -609,7 +608,7 @@ AI: ${aiResponse.slice(0, 100)}`;
                 className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
                 title={!input.trim() ? "メッセージを入力してください" : isLoading ? "送信中..." : "送信"}
           >
-                <Send size={18} className="sm:w-5 sm:h-5" />
+                <Send size={20} />
           </button>
             </div>
           </form>
