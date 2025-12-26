@@ -294,96 +294,70 @@ export default function MyPageContent() {
       </div>
 
       {/* 月収推移グラフ */}
-      <div className="bg-white rounded-3xl pt-4 pb-6 px-6 mb-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300">
-        <div className="relative">
-          <div className="h-56 sm:h-64">
-            <svg className="w-full h-full" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#ef4444" />
-                  <stop offset="100%" stopColor="#f97316" />
-                </linearGradient>
-                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.15" />
-                  <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-                </linearGradient>
-                <filter id="shadow">
-                  <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.1"/>
-                </filter>
-              </defs>
+      <div className="bg-white rounded-3xl pt-6 pb-6 px-6 mb-6 border border-slate-100 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-900 mb-6">月収推移</h3>
+        
+        <div className="relative h-72">
+          {/* Y軸ラベル */}
+          <div className="absolute left-0 top-0 bottom-8 w-12 flex flex-col justify-between text-xs text-slate-400 font-semibold">
+            {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio, i) => (
+              <div key={i} className="text-right pr-2">
+                {Math.round((chartMax * ratio) / 10000)}万
+              </div>
+            ))}
+          </div>
 
-              {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => (
-                <g key={i}>
-                  <line
-                    x1="40"
-                    y1={145 - ratio * 115}
-                    x2="310"
-                    y2={145 - ratio * 115}
-                    stroke="#e2e8f0"
-                    strokeWidth="1"
-                    strokeDasharray={ratio === 0 ? "0" : "3,3"}
-                  />
-                  <text
-                    x="32"
-                    y={148 - ratio * 115}
-                    textAnchor="end"
-                    fill="#94a3b8"
-                    style={{ fontSize: '8px', fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
-                  >
-                    {Math.round((chartMax * ratio) / 10000)}万
-                  </text>
-                </g>
-              ))}
+          {/* グラフエリア */}
+          <div className="absolute left-12 right-0 top-0 bottom-8 flex items-end justify-around gap-2">
+            {monthlyDataWithLabels.map((data, index) => {
+              const heightPercent = chartMax > 0 ? (data.amount / chartMax) * 100 : 0;
+              
+              return (
+                <div key={index} className="flex-1 flex flex-col items-center group relative">
+                  {/* ツールチップ */}
+                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                    ￥{data.amount.toLocaleString()}
+                    <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                  </div>
 
-              {monthlyDataWithLabels.length > 0 && (
-                <>
-                  <path
-                    d={`M ${monthlyDataWithLabels.map((d, i) => {
-                      const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
-                      const y = 145 - (d.amount / chartMax) * 115;
-                      return `${x},${y}`;
-                    }).join(' L ')} L ${310},145 L 40,145 Z`}
-                    fill="url(#areaGradient)"
-                  />
+                  {/* 棒グラフ */}
+                  <div className="w-full h-full flex items-end justify-center">
+                    <div
+                      className="w-full rounded-t-xl bg-gradient-to-t from-red-500 via-red-400 to-orange-400 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer relative overflow-hidden"
+                      style={{
+                        height: `${heightPercent}%`,
+                        minHeight: data.amount > 0 ? '8px' : '0px',
+                        animation: 'slideUp 0.8s ease-out',
+                        animationDelay: `${index * 80}ms`,
+                        animationFillMode: 'both'
+                      }}
+                    >
+                      {/* 光沢エフェクト */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent"></div>
+                    </div>
+                  </div>
 
-                  <path
-                    d={`M ${monthlyDataWithLabels.map((d, i) => {
-                      const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
-                      const y = 145 - (d.amount / chartMax) * 115;
-                      return `${x},${y}`;
-                    }).join(' L ')}`}
-                    fill="none"
-                    stroke="url(#lineGradient)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    filter="url(#shadow)"
-                  />
+                  {/* 月ラベル */}
+                  <div className="mt-2 text-xs font-bold text-slate-500 group-hover:text-red-600 transition-colors duration-200">
+                    {data.month}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-                  {monthlyDataWithLabels.map((d, i) => {
-                    const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
-                    const y = 145 - (d.amount / chartMax) * 115;
-                    return (
-                      <g key={i}>
-                        <circle cx={x} cy={y} r="6" fill="white" stroke="#ef4444" strokeWidth="3" filter="url(#shadow)" />
-                        <circle cx={x} cy={y} r="2.5" fill="#ef4444" />
-                        <text
-                          x={x}
-                          y={165}
-                          textAnchor="middle"
-                          fill="#94a3b8"
-                          style={{ fontSize: '10px', fontFamily: 'Montserrat, sans-serif', fontWeight: 600 }}
-                        >
-                          {d.month}
-                        </text>
-                      </g>
-                    );
-                  })}
-                </>
-              )}
-            </svg>
+          {/* グリッド線 */}
+          <div className="absolute left-12 right-0 top-0 bottom-8 pointer-events-none">
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+              <div
+                key={i}
+                className="absolute left-0 right-0 border-t border-slate-100"
+                style={{ top: `${(1 - ratio) * 100}%` }}
+              ></div>
+            ))}
           </div>
         </div>
+      </div>
 
         <div className="relative bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-6 mb-4 border border-slate-200/50 hover:border-slate-300/50 transition-all duration-300 overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
