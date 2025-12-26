@@ -1,70 +1,57 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/AuthContext';
-import type { DiagnosisResult } from '../types/diagnosis';
+import { DiagnosisResult } from '../types/diagnosis';
 
-export function useDiagnosis() {
-  const { user } = useAuth();
+interface SkillDiagnosis {
+  design_skill?: number;
+  planning_skill?: number;
+  client_skill?: number;
+  business_skill?: number;
+  mindset_skill?: number;
+}
 
+/**
+ * デザイナータイプ診断結果を取得
+ */
+export function useDiagnosisResult(userId: string | undefined) {
   return useQuery({
-    queryKey: ['diagnosis', user?.id],
-    queryFn: async (): Promise<DiagnosisResult | null> => {
+    queryKey: ['diagnosis-result', userId],
+    queryFn: async () => {
+      if (!userId) throw new Error('User ID is required');
+
       const { data, error } = await supabase
-        .from('skill_diagnosis')
+        .from('diagnosis_results')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', userId)
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as DiagnosisResult | null;
     },
-    enabled: !!user,
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 30, // 30分間新鮮（診断結果はあまり変更されない）
   });
 }
 
-export function useSaveDiagnosis() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
+/**
+ * スキル診断結果を取得
+ */
+export function useSkillDiagnosis(userId: string | undefined) {
+  return useQuery({
+    queryKey: ['skill-diagnosis', userId],
+    queryFn: async () => {
+      if (!userId) throw new Error('User ID is required');
 
-  return useMutation({
-    mutationFn: async (diagnosis: Omit<DiagnosisResult, 'id' | 'user_id' | 'diagnosed_at' | 'created_at' | 'updated_at'>) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('skill_diagnosis')
-        .upsert({
-          user_id: user!.id,
-          ...diagnosis,
-          diagnosed_at: new Date().toISOString(),
-        });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['diagnosis'] });
-    },
-  });
-}
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-export function useSaveDiagnosisEx() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  return useMutation({
-    mutationFn: async (exData: {
-      ex_answers: any[];
-      ex_report: string;
-      ex_summary: string;
-      ex_key_points: string[];
-    }) => {
-      const { error } = await supabase
-        .from('skill_diagnosis')
-        .update({
-          ...exData,
-          ex_diagnosed_at: new Date().toISOString(),
-        })
-        .eq('user_id', user!.id);
       if (error) throw error;
+      return data as SkillDiagnosis | null;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['diagnosis'] });
-    },
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 30, // 30分間新鮮
   });
 }

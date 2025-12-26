@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
+import { useConversations, useConversationMessages, useDiagnosisData, useCreateConversation, useDeleteConversation, useUpdateConversationTitle } from '../hooks/useConversations';
 
 interface Message {
   id: string;
@@ -21,123 +22,77 @@ interface Conversation {
   updated_at: string;
 }
 
-interface DiagnosisData {
-  designer_type?: string;
-  design_skill?: number;
-  planning_skill?: number;
-  client_skill?: number;
-  business_skill?: number;
-  mindset_skill?: number;
-}
-
 export default function AIChat() {
   const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [diagnosisData, setDiagnosisData] = useState<DiagnosisData | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // React Query フック
+  const { data: conversations = [], isLoading: conversationsLoading } = useConversations(user?.id);
+  const { data: diagnosisData = null } = useDiagnosisData(user?.id);
+  const createConversation = useCreateConversation();
+  const deleteConversation = useDeleteConversation();
+  const updateConversationTitle = useUpdateConversationTitle();
+
   // トークルーム関連
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // 選択中の会話のメッセージを取得
+  const { data: conversationMessages = [] } = useConversationMessages(currentConversation?.id || null);
 
   const difyApiKey = import.meta.env.VITE_DIFY_API_KEY;
   const difyApiUrl = import.meta.env.VITE_DIFY_API_URL;
   const useDify = !!(difyApiKey && difyApiUrl);
 
-  // トークルーム一覧を読み込み
+  // 会話が変更されたらメッセージをロード
   useEffect(() => {
-    if (user) {
-      loadConversations();
-    }
-  }, [user]);
-
-  const loadConversations = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
-
-    if (error) {
-      console.error('トークルーム読み込みエラー:', error);
-      return;
-    }
-
-    setConversations(data || []);
-    // 自動選択を削除 - ユーザーが明示的に選択するまで空の状態
-  };
-
-  const loadConversation = async (conversation: Conversation) => {
-    setCurrentConversation(conversation);
-    setMessages([]);
-
-    // メッセージを読み込み
-    const { data, error } = await supabase
-      .from('conversation_messages')
-      .select('*')
-      .eq('conversation_id', conversation.id)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('メッセージ読み込みエラー:', error);
-      return;
-    }
-
-    if (data) {
+    if (conversationMessages.length > 0) {
       setMessages(
-        data.map((msg) => ({
+        conversationMessages.map((msg) => ({
           id: msg.id,
           role: msg.role as 'user' | 'assistant',
           content: msg.content,
           timestamp: new Date(msg.created_at),
         }))
       );
+    } else if (currentConversation) {
+      setMessages([]);
     }
+  }, [conversationMessages, currentConversation]);
+
+  const loadConversation = (conversation: Conversation) => {
+    setCurrentConversation(conversation);
+    setIsSidebarOpen(false);
   };
 
   const createNewConversation = async (): Promise<Conversation | null> => {
     if (!user) return null;
 
-    const { data, error } = await supabase
-      .from('conversations')
-      .insert([
-        {
-          user_id: user.id,
-          title: '新しい会話', // 一時的なタイトル
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('トークルーム作成エラー:', error);
-      throw error;
-    }
-
-    if (data) {
-      setConversations((prev) => [data, ...prev]);
-      setCurrentConversation(data);
+    try {
+      const newConv = await createConversation.mutateAsync({
+        userId: user.id,
+        title: '新しい会話',
+      });
+      
+      setCurrentConversation(newConv);
       setMessages([]);
       setIsSidebarOpen(false);
-      return data;
+      return newConv;
+    } catch (error) {
+      console.error('トークルーム作成エラー:', error);
+      return null;
     }
-
-    return null;
   };
 
   // AIでトークルームタイトルを生成する関数
   const generateConversationTitle = async (userMessage: string, aiResponse: string) => {
-    if (!currentConversation) return;
+    if (!currentConversation || !user) return;
 
     try {
-      // Dify APIを使ってタイトルを生成
-      // 短い要約を生成するために、専用のプロンプトを送信
       const titlePrompt = `以下の会話の内容を、15文字以内の簡潔なタイトルにしてください。タイトルのみを返してください。
 
 ユーザー: ${userMessage.slice(0, 100)}
@@ -145,69 +100,55 @@ AI: ${aiResponse.slice(0, 100)}`;
 
       const response = await sendMessageToDify(
         titlePrompt,
-        '', // 新しい会話として送信
-        (chunk) => {}, // ストリーミングは不要
+        '',
+        (chunk) => {},
         { name: profile?.name }
       );
 
       const generatedTitle = response.answer.trim().slice(0, 30);
 
-      // タイトルを更新
-      await supabase
-        .from('conversations')
-        .update({ title: generatedTitle })
-        .eq('id', currentConversation.id);
-
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === currentConversation.id ? { ...c, title: generatedTitle } : c
-        )
-      );
+      await updateConversationTitle.mutateAsync({
+        conversationId: currentConversation.id,
+        title: generatedTitle,
+        userId: user.id,
+      });
+      
       setCurrentConversation((prev) => (prev ? { ...prev, title: generatedTitle } : null));
     } catch (error) {
       console.error('タイトル生成エラー:', error);
-      // エラーの場合は最初のメッセージから生成
       const fallbackTitle = userMessage.slice(0, 20) + (userMessage.length > 20 ? '...' : '');
-      await supabase
-        .from('conversations')
-        .update({ title: fallbackTitle })
-        .eq('id', currentConversation.id);
-
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === currentConversation.id ? { ...c, title: fallbackTitle } : c
-        )
-      );
+      
+      await updateConversationTitle.mutateAsync({
+        conversationId: currentConversation.id,
+        title: fallbackTitle,
+        userId: user.id,
+      });
+      
       setCurrentConversation((prev) => (prev ? { ...prev, title: fallbackTitle } : null));
     }
   };
 
-  const deleteConversation = async (conversationId: string) => {
+  const handleDeleteConversation = async (conversationId: string) => {
     if (!confirm('このトークルームを削除しますか？')) return;
-
-    const { error } = await supabase
-      .from('conversations')
-      .delete()
-      .eq('id', conversationId);
-
-    if (error) {
-      console.error('トークルーム削除エラー:', error);
-      return;
-    }
-
-    setConversations((prev) => prev.filter((c) => c.id !== conversationId));
+    if (!user) return;
 
     // 削除したトークルームが現在のものだった場合
     if (currentConversation?.id === conversationId) {
       if (conversations.length > 1) {
         const nextConversation = conversations.find((c) => c.id !== conversationId);
         if (nextConversation) {
-          await loadConversation(nextConversation);
+          loadConversation(nextConversation);
         }
       } else {
         setCurrentConversation(null);
         setMessages([]);
       }
+    }
+
+    try {
+      await deleteConversation.mutateAsync({ conversationId, userId: user.id });
+    } catch (error) {
+      console.error('トークルーム削除エラー:', error);
     }
   };
 
@@ -235,29 +176,6 @@ AI: ${aiResponse.slice(0, 100)}`;
       .eq('id', currentConversation.id);
   };
 
-  // 診断結果を読み込み
-  useEffect(() => {
-    const loadDiagnosisData = async () => {
-      if (!user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from('skill_diagnosis')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (data && !error) {
-          setDiagnosisData(data);
-          console.log('診断データを読み込みました:', data);
-        }
-      } catch (error) {
-        console.error('診断データの読み込みに失敗:', error);
-      }
-    };
-
-    loadDiagnosisData();
-  }, [user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -531,7 +449,7 @@ AI: ${aiResponse.slice(0, 100)}`;
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteConversation(conv.id);
+                        handleDeleteConversation(conv.id);
                       }}
                       className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-700 rounded transition"
                       title="削除"

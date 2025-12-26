@@ -4,9 +4,10 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { DiagnosisResult, DesignerType } from '../types/diagnosis';
+import { DesignerType } from '../types/diagnosis';
 import { designerTypes } from '../data/questions';
 import { skillCategoryNames } from '../data/skillQuestions';
+import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 
 const getDesignerTypeIcon = (type: DesignerType) => {
   const iconProps = { size: 120, strokeWidth: 1.5 };
@@ -51,72 +52,20 @@ const getTypeGradient = (type: DesignerType) => {
 export default function Profile() {
   const { profile, user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
-  const [hasDiagnosis, setHasDiagnosis] = useState(false);
-  const [hasSkillDiagnosis, setHasSkillDiagnosis] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editedAge, setEditedAge] = useState<string>('');
   const [editedOccupation, setEditedOccupation] = useState('');
   const [editedGender, setEditedGender] = useState('');
 
-  useEffect(() => {
-    if (profile) {
-      loadData();
-    }
-  }, [profile]);
+  // React Query フック
+  const { data: diagnosis, isLoading: diagnosisLoading } = useDiagnosisResult(user?.id);
+  const { data: skillDiagnosis, isLoading: skillLoading } = useSkillDiagnosis(user?.id);
 
-  // ページがフォーカスされたときに再読み込み
-  useEffect(() => {
-    const handleFocus = () => {
-      if (profile && !loading) {
-        loadDiagnosis();
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [profile, loading]);
-
-  const loadData = async () => {
-    try {
-      await loadDiagnosis();
-    } catch (error) {
-      console.error('データの読み込みエラー:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadDiagnosis = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('skill_diagnosis')
-        .select('*')
-        .eq('user_id', user!.id)
-        .maybeSingle();
-
-      console.log('診断データ読み込み:', data, error);
-
-      if (data && !error) {
-        setDiagnosis(data);
-        setHasDiagnosis(!!data.designer_type);
-        // スキル診断の判定: design_skillが存在すればスキル診断済みと判定
-        const hasSkills = !!(
-          data.design_skill !== null &&
-          data.design_skill !== undefined
-        );
-        setHasSkillDiagnosis(hasSkills);
-        console.log('スキル診断状態:', hasSkills, data.design_skill);
-      } else {
-        setHasDiagnosis(false);
-        setHasSkillDiagnosis(false);
-      }
-    } catch (error) {
-      console.error('診断データの取得に失敗:', error);
-    }
-  };
+  const loading = diagnosisLoading || skillLoading;
+  const hasDiagnosis = !!diagnosis?.designer_type;
+  const hasSkillDiagnosis = !!skillDiagnosis?.design_skill;
 
   const handleSignOut = async () => {
     try {
@@ -440,11 +389,11 @@ export default function Profile() {
                   <div className="h-56 flex items-center justify-center p-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart data={[
-                        { skill: skillCategoryNames.design, value: diagnosis.design_skill },
-                        { skill: skillCategoryNames.planning, value: diagnosis.planning_skill },
-                        { skill: skillCategoryNames.client, value: diagnosis.client_skill },
-                        { skill: skillCategoryNames.business, value: diagnosis.business_skill },
-                        { skill: skillCategoryNames.mindset, value: diagnosis.mindset_skill },
+                        { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill },
+                        { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill },
+                        { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill },
+                        { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill },
+                        { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill },
                       ]}>
                         <PolarGrid stroke="#e5e7eb" />
                         <PolarAngleAxis
