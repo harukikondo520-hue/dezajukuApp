@@ -1,28 +1,35 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, TrendingUp, Calculator, Wallet, ChevronDown, ChevronUp, History, X } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { useState, useMemo } from 'react';
+import { Plus, Edit2, Trash2, CheckCircle, PlayCircle, Target, TrendingUp, Calculator, Wallet, History, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAddProject, useUpdateProject, useDeleteProject } from '../../hooks/useProjects';
+import { useCurrentMonthProjects, useAllProjects, usePastProjects } from '../../hooks/useUserProjects';
+import { useMonthlyIncome, useThisMonthIncome, useTotalIncome } from '../../hooks/useIncome';
+import { useTasks, useUserTasks, useVideoProgress } from '../../hooks/useTasksAndProgress';
 import type { Database } from '../../types/database';
 
 type Project = Database['public']['Tables']['projects']['Row'];
-type Task = Database['public']['Tables']['tasks']['Row'];
-type UserTask = Database['public']['Tables']['user_tasks']['Row'];
-
-interface MonthlyData {
-  month: string;
-  amount: number;
-}
 
 export default function MyPageContent() {
   const { profile, user } = useAuth();
   const addProject = useAddProject();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [allProjects, setAllProjects] = useState<Project[]>([]);
-  const [pastProjects, setPastProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // React Query フック
+  const { data: projects = [], isLoading: projectsLoading } = useCurrentMonthProjects(user?.id);
+  const { data: allProjects = [], isLoading: allProjectsLoading } = useAllProjects(user?.id);
+  const { data: pastProjects = [], isLoading: pastProjectsLoading } = usePastProjects(user?.id);
+  const { data: monthlyIncomeData = [], isLoading: monthlyIncomeLoading } = useMonthlyIncome(user?.id);
+  const { data: thisMonthIncome = 0, isLoading: thisMonthLoading } = useThisMonthIncome(user?.id);
+  const { data: totalIncome = 0, isLoading: totalIncomeLoading } = useTotalIncome(user?.id);
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks();
+  const { data: userTasks = [], isLoading: userTasksLoading } = useUserTasks(user?.id);
+  const { data: videoProgress = { completed: 0, total: 0 }, isLoading: videoProgressLoading } = useVideoProgress(user?.id);
+
+  // ローディング状態を統合
+  const isLoading = projectsLoading || monthlyIncomeLoading || thisMonthLoading || totalIncomeLoading;
+
+  // UI State
   const [showModal, setShowModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -31,176 +38,14 @@ export default function MyPageContent() {
     reward: '',
     date: new Date().toISOString().split('T')[0],
   });
-  const [monthlyIncomeData, setMonthlyIncomeData] = useState<MonthlyData[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [userTasks, setUserTasks] = useState<UserTask[]>([]);
-  const [videoProgress, setVideoProgress] = useState({ completed: 0, total: 0 });
 
-  useEffect(() => {
-    if (user) {
-      loadAllData();
-    }
-  }, [user]);
 
-  const loadAllData = async () => {
-    await Promise.all([
-      loadProjects(),
-      loadAllProjects(),
-      loadPastProjects(),
-      loadMonthlyIncome(),
-      loadTasks(),
-      loadVideoProgress(),
-    ]);
-    setLoading(false);
-  };
-
-  const loadProjects = async () => {
-    try {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
-
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user!.id)
-        .neq('status', 'completed')
-        .gte('completed_at', startOfMonth)
-        .lte('completed_at', endOfMonth)
-        .order('completed_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error) {
-      console.error('Error loading projects:', error);
-    }
-  };
-
-  const loadAllProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('completed_at', { ascending: false });
-
-      if (error) throw error;
-      setAllProjects(data || []);
-    } catch (error) {
-      console.error('Error loading all projects:', error);
-    }
-  };
-
-  const loadPastProjects = async () => {
-    try {
-      const now = new Date();
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-      // completed_atまたはcreated_atが今月より前の案件を取得
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user!.id)
-        .or(`completed_at.lt.${startOfMonth},and(completed_at.is.null,created_at.lt.${startOfMonth})`)
-        .order('completed_at', { ascending: false, nullsLast: true });
-
-      if (error) throw error;
-      setPastProjects(data || []);
-    } catch (error) {
-      console.error('Error loading past projects:', error);
-    }
-  };
-
-  const loadMonthlyIncome = async () => {
-    try {
-      const months: MonthlyData[] = [];
-      const now = new Date();
-
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthLabel = date.toLocaleDateString('ja-JP', { month: 'short' });
-
-        const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1).toISOString();
-        const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59).toISOString();
-
-        const { data } = await supabase
-          .from('projects')
-          .select('reward, completed_at')
-          .eq('user_id', user!.id)
-          .gte('completed_at', startOfMonth)
-          .lte('completed_at', endOfMonth) as { data: { reward: number }[] | null };
-
-        const total = data?.reduce((sum, p) => sum + (p.reward || 0), 0) || 0;
-        months.push({ month: monthLabel, amount: total });
-      }
-
-      setMonthlyIncomeData(months);
-    } catch (error) {
-      console.error('Error loading monthly income:', error);
-    }
-  };
-
-  const loadTasks = async () => {
-    if (!profile?.roadmap_id) return;
-
-    try {
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('roadmap_id', profile.roadmap_id)
-        .order('order_index', { ascending: true });
-
-      if (tasksError) throw tasksError;
-      setTasks(tasksData || []);
-
-      const { data: userTasksData, error: userTasksError } = await supabase
-        .from('user_tasks')
-        .select('*')
-        .eq('user_id', user!.id);
-
-      if (userTasksError) throw userTasksError;
-      setUserTasks(userTasksData || []);
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    }
-  };
-
-  const loadVideoProgress = async () => {
-    try {
-      const { data: videos } = await supabase
-        .from('videos')
-        .select('id');
-
-      const { data: progress } = await supabase
-        .from('video_progress')
-        .select('*')
-        .eq('user_id', user!.id)
-        .eq('completed', true);
-
-      setVideoProgress({
-        total: videos?.length || 0,
-        completed: progress?.length || 0,
-      });
-    } catch (error) {
-      console.error('Error loading video progress:', error);
-    }
-  };
-
-  const thisMonthIncome = useMemo(() =>
-    projects.reduce((sum, p) => sum + p.reward, 0),
-    [projects]
-  );
-
+  // 平均月収を計算
   const avgMonthlyIncome = useMemo(() => {
     const nonZeroMonths = monthlyIncomeData.filter(d => d.amount > 0);
     if (nonZeroMonths.length === 0) return 0;
     return Math.round(nonZeroMonths.reduce((sum, d) => sum + d.amount, 0) / nonZeroMonths.length);
   }, [monthlyIncomeData]);
-
-  const totalIncome = useMemo(() =>
-    allProjects.reduce((sum, p) => sum + p.reward, 0),
-    [allProjects]
-  );
 
   const progressPercent = useMemo(() => {
     if (videoProgress.total === 0) return 0;
@@ -245,9 +90,6 @@ export default function MyPageContent() {
       setShowModal(false);
       setEditingProject(null);
       setFormData({ name: '', reward: '', date: new Date().toISOString().split('T')[0] });
-      loadProjects();
-      loadAllProjects();
-      loadMonthlyIncome();
     } catch (error) {
       console.error('Error saving project:', error);
     }
@@ -259,9 +101,6 @@ export default function MyPageContent() {
         id: id,
         status: 'completed',
       });
-      loadProjects();
-      loadAllProjects();
-      loadMonthlyIncome();
     } catch (error) {
       console.error('Error completing project:', error);
     }
@@ -272,9 +111,6 @@ export default function MyPageContent() {
 
     try {
       await deleteProject.mutateAsync(id);
-      loadProjects();
-      loadAllProjects();
-      loadMonthlyIncome();
     } catch (error) {
       console.error('Error deleting project:', error);
     }
@@ -285,13 +121,13 @@ export default function MyPageContent() {
       const existingTask = userTasks.find(ut => ut.task_id === taskId);
 
       if (existingTask) {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('user_tasks')
           .update({ completed: true, completed_at: new Date().toISOString() })
           .eq('id', existingTask.id);
         if (error) throw error;
       } else {
-        const { error } = await (supabase as any)
+        const { error } = await supabase
           .from('user_tasks')
           .insert({
             user_id: user!.id,
@@ -302,7 +138,7 @@ export default function MyPageContent() {
         if (error) throw error;
       }
 
-      loadTasks();
+      // React Query will auto-refetch due to mutation
     } catch (error) {
       console.error('Error completing task:', error);
     }
@@ -344,7 +180,15 @@ export default function MyPageContent() {
   const actualMax = Math.max(...monthlyIncomeData.map(d => d.amount), 0);
   const chartMax = calculateChartMax(actualMax);
 
-  if (loading) {
+  // グラフ用の月ラベルを生成
+  const monthlyDataWithLabels = useMemo(() => {
+    return monthlyIncomeData.map(d => ({
+      ...d,
+      month: new Date(d.month + '-01').toLocaleDateString('ja-JP', { month: 'short' })
+    }));
+  }, [monthlyIncomeData]);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-slate-600">読み込み中...</div>
@@ -477,11 +321,11 @@ export default function MyPageContent() {
                 </g>
               ))}
 
-              {monthlyIncomeData.length > 0 && (
+              {monthlyDataWithLabels.length > 0 && (
                 <>
                   <path
-                    d={`M ${monthlyIncomeData.map((d, i) => {
-                      const x = 40 + (i / (monthlyIncomeData.length - 1)) * 270;
+                    d={`M ${monthlyDataWithLabels.map((d, i) => {
+                      const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
                       const y = 145 - (d.amount / chartMax) * 115;
                       return `${x},${y}`;
                     }).join(' L ')} L ${310},145 L 40,145 Z`}
@@ -489,8 +333,8 @@ export default function MyPageContent() {
                   />
 
                   <path
-                    d={`M ${monthlyIncomeData.map((d, i) => {
-                      const x = 40 + (i / (monthlyIncomeData.length - 1)) * 270;
+                    d={`M ${monthlyDataWithLabels.map((d, i) => {
+                      const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
                       const y = 145 - (d.amount / chartMax) * 115;
                       return `${x},${y}`;
                     }).join(' L ')}`}
@@ -502,8 +346,8 @@ export default function MyPageContent() {
                     filter="url(#shadow)"
                   />
 
-                  {monthlyIncomeData.map((d, i) => {
-                    const x = 40 + (i / (monthlyIncomeData.length - 1)) * 270;
+                  {monthlyDataWithLabels.map((d, i) => {
+                    const x = 40 + (i / (monthlyDataWithLabels.length - 1)) * 270;
                     const y = 145 - (d.amount / chartMax) * 115;
                     return (
                       <g key={i}>
@@ -785,7 +629,6 @@ export default function MyPageContent() {
                           onClick={async () => {
                             if (window.confirm(`「${project.name}」を完全に削除しますか？この操作は取り消せません。`)) {
                               await handleDelete(project.id);
-                              await loadPastProjects();
                             }
                           }}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
