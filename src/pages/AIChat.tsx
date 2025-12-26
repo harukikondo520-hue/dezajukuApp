@@ -548,9 +548,9 @@ AI: ${aiResponse.slice(0, 100)}`;
       </div>
 
       {/* メインチャットエリア */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
-        {/* ハンバーガーメニュー（右上に配置） */}
-        <div className="lg:hidden absolute top-4 right-4 z-30">
+      <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden">
+        {/* ハンバーガーメニュー（右上に固定） */}
+        <div className="lg:hidden fixed top-4 right-4 z-50">
           <button
             onClick={() => setIsSidebarOpen(true)}
             className="p-3 bg-white shadow-lg rounded-xl hover:bg-slate-50 transition border border-slate-200"
@@ -559,33 +559,35 @@ AI: ${aiResponse.slice(0, 100)}`;
           </button>
         </div>
 
-        {/* ハルキさんの今日の一言 - スクロールで隠れる */}
-        <div className="px-4 py-4 lg:px-6 bg-slate-50/50 border-b border-slate-100">
-          <div className="max-w-4xl mx-auto flex items-start gap-3">
-            {/* ハルキさんのアイコン */}
-            <img
-              src="/haruki_icon.jpg"
-              alt="ハルキさん"
-              className="flex-shrink-0 w-12 h-12 rounded-full shadow-md object-cover"
-            />
-            {/* 吹き出し */}
-            <div className="flex-1 mt-1">
-              <div className="relative bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-slate-200">
-                <p className="text-sm font-medium text-slate-900">{getTodayQuote()}</p>
+        {/* スクロール可能なメッセージ全体エリア */}
+        <div className="flex-1 overflow-y-auto">
+          {/* ハルキさんの今日の一言 - スクロールで隠れる */}
+          <div className="px-4 py-4 lg:px-6 bg-slate-50/50 border-b border-slate-100">
+            <div className="max-w-4xl mx-auto flex items-start gap-3">
+              {/* ハルキさんのアイコン */}
+              <img
+                src="/haruki_icon.jpg"
+                alt="ハルキさん"
+                className="flex-shrink-0 w-12 h-12 rounded-full shadow-md object-cover"
+              />
+              {/* 吹き出し */}
+              <div className="flex-1 mt-1">
+                <div className="relative bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm border border-slate-200">
+                  <p className="text-sm font-medium text-slate-900">{getTodayQuote()}</p>
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5 ml-1">ハルキさんの今日の一言</p>
               </div>
-              <p className="text-xs text-slate-500 mt-1.5 ml-1">ハルキさんの今日の一言</p>
             </div>
           </div>
-      </div>
 
-        {error && (
-          <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center">
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center">
+              {error}
+            </div>
+          )}
 
-        {/* メッセージエリア */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
+          {/* メッセージエリア */}
+          <div className="px-4 py-6 space-y-4 max-w-4xl mx-auto w-full min-h-[400px]">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <img
@@ -685,48 +687,31 @@ AI: ${aiResponse.slice(0, 100)}`;
         <div ref={messagesEndRef} />
             </>
           )}
+          </div>
         </div>
 
-        {/* 入力エリア */}
-        <div className="border-t border-slate-200 bg-white px-4 py-4">
+        {/* 入力エリア - スリムに */}
+        <div className="border-t border-slate-200 bg-white px-4 py-3">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-            {!currentConversation && !isLoading && (
-              <p className="text-xs text-amber-600 mb-2 text-center">
-                メッセージを送信すると、新しいトークルームが作成されます
-              </p>
-            )}
-        <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder={isLoading ? "送信中..." : "ハルキAIに質問する..."}
                 className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
                 className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
                 title={!input.trim() ? "メッセージを入力してください" : isLoading ? "送信中..." : "送信"}
-          >
+              >
                 <Send size={18} className="sm:w-5 sm:h-5" />
-          </button>
-        </div>
-        <p className="text-xs text-slate-400 text-center mt-2">
-              {useDify ? (
-                <>
-                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2" />
-                  Dify連携中
-                </>
-              ) : (
-                <>
-                  <span className="inline-block w-2 h-2 bg-amber-500 rounded-full mr-2" />
-                  Dify連携準備中 - 応答機能が制限されています
-                </>
-              )}
-        </p>
-      </form>
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
