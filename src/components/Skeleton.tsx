@@ -5,9 +5,10 @@ interface SkeletonProps {
 export function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 bg-[length:200%_100%] rounded ${className}`}
+      className={`animate-pulse bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 rounded ${className}`}
       style={{
         animation: 'shimmer 2s ease-in-out infinite',
+        backgroundSize: '200% 100%',
       }}
     />
   );
@@ -113,7 +114,10 @@ export function ChatMessageSkeleton() {
       {[...Array(3)].map((_, i) => (
         <div key={i} className={`flex items-start gap-3 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}>
           <Skeleton className="w-10 h-10 rounded-xl flex-shrink-0" />
-          <Skeleton className={`max-w-[75%] h-16 rounded-2xl ${i % 2 === 0 ? 'rounded-tr-none' : 'rounded-tl-none'}`} />
+          <Skeleton 
+            className={`h-16 rounded-2xl ${i % 2 === 0 ? 'rounded-tr-none' : 'rounded-tl-none'}`} 
+            style={{ maxWidth: '75%' }}
+          />
         </div>
       ))}
     </div>

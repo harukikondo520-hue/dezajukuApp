@@ -196,7 +196,7 @@ export default function Announcements() {
 
       {selectedAnnouncement && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedAnnouncement(null)}>
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl max-w-2xl w-full overflow-y-auto" style={{ maxHeight: '80vh' }} onClick={(e) => e.stopPropagation()}>
             <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {getCategoryIcon(selectedAnnouncement.category)}

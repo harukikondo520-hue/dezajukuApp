@@ -522,7 +522,7 @@ export default function MyPageContent() {
       {/* モーダル */}
       {showModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl transform transition-all duration-300 scale-100 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl transform transition-all duration-300 scale-100 overflow-y-auto" style={{ maxHeight: '90vh' }}>
             <h2 className="text-2xl font-bold text-slate-900 mb-6 sm:mb-8">
               {editingProject ? '案件を編集' : '案件を追加'}
             </h2>
@@ -597,7 +597,7 @@ export default function MyPageContent() {
       {/* 履歴モーダル */}
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-3xl p-8 max-w-3xl w-full max-h-[80vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white rounded-3xl p-8 max-w-3xl w-full overflow-y-auto shadow-2xl" style={{ maxHeight: '80vh' }}>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-slate-900">案件履歴</h2>
               <button

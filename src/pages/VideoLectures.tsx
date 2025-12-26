@@ -236,7 +236,7 @@ export default function VideoLectures() {
 
       {selectedVideo && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-2xl max-w-4xl w-full overflow-hidden" style={{ maxHeight: '90vh' }}>
             <div className="aspect-video bg-slate-900 relative">
               {selectedVideo.youtube_id ? (
                 <iframe

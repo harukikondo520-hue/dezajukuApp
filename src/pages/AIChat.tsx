@@ -380,7 +380,7 @@ AI: ${aiResponse.slice(0, 100)}`;
   ];
 
   return (
-    <div className="flex overflow-hidden max-h-[calc(100vh-80px)]" style={{ height: 'calc(100vh - 80px)' }}>
+    <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 80px)', maxHeight: 'calc(100vh - 80px)' }}>
       {/* サイドバー（モバイルはオーバーレイ） */}
       <div
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity lg:hidden ${
@@ -541,11 +541,12 @@ AI: ${aiResponse.slice(0, 100)}`;
               )}
             </div>
             <div
-              className={`max-w-[75%] rounded-2xl px-4 py-3 ${
+              className={`rounded-2xl px-4 py-3 ${
                 message.role === 'user'
                   ? 'bg-slate-900 text-white rounded-tr-none'
                   : 'bg-slate-100 text-slate-900 rounded-tl-none'
               }`}
+              style={{ maxWidth: '75%' }}
             >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {message.content}
