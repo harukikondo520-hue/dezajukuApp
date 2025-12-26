@@ -548,9 +548,9 @@ AI: ${aiResponse.slice(0, 100)}`;
       </div>
 
       {/* メインチャットエリア */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         {/* ハンバーガーメニュー（右上に配置） */}
-        <div className="lg:hidden fixed top-4 right-4 z-30">
+        <div className="lg:hidden absolute top-4 right-4 z-30">
           <button
             onClick={() => setIsSidebarOpen(true)}
             className="p-3 bg-white shadow-lg rounded-xl hover:bg-slate-50 transition border border-slate-200"
@@ -559,8 +559,8 @@ AI: ${aiResponse.slice(0, 100)}`;
           </button>
         </div>
 
-        {/* ハルキさんの今日の一言 */}
-        <div className="px-4 py-4 lg:px-6 bg-slate-50/50">
+        {/* ハルキさんの今日の一言 - スクロールで隠れる */}
+        <div className="px-4 py-4 lg:px-6 bg-slate-50/50 border-b border-slate-100">
           <div className="max-w-4xl mx-auto flex items-start gap-3">
             {/* ハルキさんのアイコン */}
             <img
@@ -651,20 +651,20 @@ AI: ${aiResponse.slice(0, 100)}`;
                     </p>
             </div>
           </div>
-              ))}
+        ))}
 
               {/* ローディングインジケーター - ストリーミング中は表示しない */}
               {isLoading && !messages.some(msg => msg.isStreaming) && (
-                <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img
                       src="/haruki_icon.jpg"
                       alt="ハルキさん"
                       className="w-full h-full object-cover"
                     />
-                  </div>
-                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
-                    <div className="flex items-center gap-1">
+            </div>
+            <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+              <div className="flex items-center gap-1">
                       <div
                         className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                         style={{ animationDelay: '0ms' }}
@@ -677,10 +677,10 @@ AI: ${aiResponse.slice(0, 100)}`;
                         className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                         style={{ animationDelay: '300ms' }}
                       />
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div ref={messagesEndRef} />
             </>
