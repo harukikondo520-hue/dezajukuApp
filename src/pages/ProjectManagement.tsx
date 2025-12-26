@@ -248,7 +248,7 @@ export default function ProjectManagement() {
 
       {/* モーダル */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn" style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}>
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl transform transition-all duration-300 scale-100">
             <h2 className="text-2xl font-bold text-slate-900 mb-8">
               {editingProject ? '案件を編集' : '案件を追加'}

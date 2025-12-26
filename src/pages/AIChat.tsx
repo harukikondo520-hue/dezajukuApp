@@ -383,9 +383,10 @@ AI: ${aiResponse.slice(0, 100)}`;
     <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 80px)', maxHeight: 'calc(100vh - 80px)' }}>
       {/* サイドバー（モバイルはオーバーレイ） */}
       <div
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity lg:hidden ${
+        className={`fixed inset-0 z-40 transition-opacity lg:hidden ${
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
         onClick={() => setIsSidebarOpen(false)}
       />
       <div
