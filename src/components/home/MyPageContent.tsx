@@ -432,6 +432,7 @@ export default function MyPageContent() {
         )}
       </div>
 
+      {/* 平均月収・累計収益 */}
       <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="relative bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-4 border border-slate-200/50 hover:border-slate-300/50 transition-all duration-300 group overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -472,6 +473,7 @@ export default function MyPageContent() {
           </div>
         </div>
 
+      {/* カリキュラム進捗 */}
       {videoProgress.total > 0 && (
         <div className="bg-white rounded-3xl p-6 mb-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center gap-3 mb-5">
