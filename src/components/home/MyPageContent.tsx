@@ -359,29 +359,8 @@ export default function MyPageContent() {
         </div>
       </div>
 
-        <div className="relative bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-6 mb-4 border border-slate-200/50 hover:border-slate-300/50 transition-all duration-300 overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="relative z-10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="p-1.5 bg-blue-100 rounded-lg">
-                      <Wallet size={16} className="text-blue-600" />
-                    </div>
-                    <span className="text-sm font-semibold text-slate-600 tracking-wide">今月の月収</span>
-                  </div>
-                  <div className="text-4xl font-black text-slate-900 mb-2 number-display">
-                    {thisMonthIncome === 0 ? (
-                      <span className="text-slate-300 tracking-wider">---</span>
-                    ) : (
-                      `￥${thisMonthIncome.toLocaleString()}`
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium">
-                    今月獲得した案件の合計金額
-                  </p>
-                </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+      {/* 平均月収・累計収益 */}
+      <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="relative bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl p-4 border border-slate-200/50 hover:border-slate-300/50 transition-all duration-300 group overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <div className="relative z-10">
@@ -420,8 +399,8 @@ export default function MyPageContent() {
             </div>
           </div>
         </div>
-      </div>
 
+      {/* カリキュラム進捗 */}
       {videoProgress.total > 0 && (
         <div className="bg-white rounded-3xl p-6 mb-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300">
           <div className="flex items-center gap-3 mb-5">
