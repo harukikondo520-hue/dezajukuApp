@@ -75,7 +75,7 @@ export default function NewHome() {
             {/* 背景のキャラクター画像（大きく配置） */}
             <div 
               className="absolute pointer-events-none"
-              style={{ bottom: '-24px', right: '14px' }}
+              style={{ bottom: '26px', right: '64px' }}
             >
               <img 
                 src="/home_character.png" 
