@@ -137,6 +137,7 @@ export default function DiagnosisResultPage() {
           challenge: exAnswers[3]?.answer || null,
           style: exAnswers[4]?.answer || null,
         } : null,
+        values: [], // 価値観診断は後で入力
       }, { onConflict: 'user_id' });
 
       // skill_diagnosisテーブルにも保存（スキルグラフ表示用）
