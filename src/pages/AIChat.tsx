@@ -631,34 +631,37 @@ AI: ${aiResponse.slice(0, 100)}`;
           </div>
         ))}
 
-              {/* ローディングインジケーター - ストリーミング中は表示しない */}
-              {isLoading && !messages.some(msg => msg.isStreaming) && (
-          <div className="flex items-start gap-3">
+              {/* ローディングインジケーター */}
+              {isLoading && (
+                <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img
                       src="/haruki_icon.jpg"
                       alt="ハルキさん"
                       className="w-full h-full object-cover"
                     />
-            </div>
-            <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
-              <div className="flex items-center gap-1">
-                      <div
-                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                        style={{ animationDelay: '0ms' }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                        style={{ animationDelay: '150ms' }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                        style={{ animationDelay: '300ms' }}
-                      />
-              </div>
-            </div>
-          </div>
-        )}
+                  </div>
+                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <div
+                          className="w-2 h-2 bg-red-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '0ms' }}
+                        />
+                        <div
+                          className="w-2 h-2 bg-red-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '150ms' }}
+                        />
+                        <div
+                          className="w-2 h-2 bg-red-400 rounded-full animate-bounce"
+                          style={{ animationDelay: '300ms' }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-500">考え中...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
         <div ref={messagesEndRef} />
             </>
@@ -666,7 +669,7 @@ AI: ${aiResponse.slice(0, 100)}`;
         </div>
 
         {/* 入力エリア - 常に下部に固定 */}
-        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 shadow-lg">
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 shadow-lg sticky bottom-0 z-10">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
         <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
           <input
