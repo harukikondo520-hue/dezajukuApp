@@ -511,7 +511,7 @@ AI: ${aiResponse.slice(0, 100)}`;
       </div>
 
       {/* メインチャットエリア */}
-      <div className="flex-1 flex flex-col min-w-0 relative h-full">
+      <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden h-full">
         {/* ヘッダー：モード切替 */}
         <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3">
           <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
@@ -562,7 +562,7 @@ AI: ${aiResponse.slice(0, 100)}`;
         )}
 
         {/* メッセージエリア - チャットのみスクロール可能 */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 pb-24 space-y-4 max-w-4xl mx-auto w-full">
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <img
@@ -668,8 +668,8 @@ AI: ${aiResponse.slice(0, 100)}`;
           )}
         </div>
 
-        {/* 入力エリア - 常に下部に固定 */}
-        <div className="fixed bottom-20 left-0 right-0 lg:left-80 border-t border-slate-200 bg-white px-4 py-3 shadow-lg z-20">
+        {/* 入力エリア - 常に下部に配置 */}
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
         <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
           <input
