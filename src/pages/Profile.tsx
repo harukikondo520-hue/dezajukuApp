@@ -384,7 +384,7 @@ export default function Profile() {
                 あなたの価値観
               </h2>
               <button
-                onClick={() => navigate('/onboarding/value-diagnosis')}
+                onClick={() => navigate('/value-diagnosis')}
                 className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                 title="価値観を更新"
               >
@@ -413,7 +413,7 @@ export default function Profile() {
                     まだ価値観診断を受けていません
                   </p>
                   <button
-                    onClick={() => navigate('/onboarding/value-diagnosis')}
+                    onClick={() => navigate('/value-diagnosis')}
                     className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     価値観診断を受ける
