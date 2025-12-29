@@ -11,7 +11,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { path: '/', label: 'ホーム', icon: Home },
-    { path: '/chat', label: '💬 AI', icon: MessageCircle },
+    { path: '/chat', label: 'AI', icon: MessageCircle },
     { path: '/profile', label: 'プロフィール', icon: User },
   ];
 

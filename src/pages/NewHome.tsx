@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageCircle, Wallet, Target, TrendingUp, Sparkles } from 'lucide-react';
+import { MessageCircle, Wallet, Video, TrendingUp, Sparkles } from 'lucide-react';
 
 export default function NewHome() {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ export default function NewHome() {
   const suggestedQuestions = [
     { id: 1, icon: TrendingUp, text: '単価を上げるには？', color: 'text-red-600' },
     { id: 2, icon: MessageCircle, text: '営業文の書き方', color: 'text-orange-600' },
-    { id: 3, icon: Target, text: '自分に合った案件は？', color: 'text-purple-600' },
+    { id: 3, icon: Wallet, text: '自分に合った案件は？', color: 'text-purple-600' },
   ];
 
   return (
@@ -21,11 +21,23 @@ export default function NewHome() {
         <div className="mb-8">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-red-500 shadow-lg relative">
-              <img
-                src={profile?.icon || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
+              {profile?.icon ? (
+                <img
+                  src={profile.icon}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // 画像読み込み失敗時のフォールバック
+                    e.currentTarget.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (profile?.name || 'default');
+                  }}
+                />
+              ) : (
+                <img
+                  src={'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (profile?.name || 'default')}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              )}
               <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
             </div>
             <div>
@@ -38,9 +50,23 @@ export default function NewHome() {
         {/* メインカード：AIへの導線 */}
         <div className="bg-white rounded-3xl p-8 mb-6 border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-start gap-4 mb-6">
-            {/* マスコットキャラクター（仮画像） */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg flex-shrink-0">
-              <Sparkles size={32} className="text-white" />
+            {/* ハルキアイコン */}
+            <div className="w-16 h-16 rounded-full overflow-hidden shadow-lg flex-shrink-0">
+              <img
+                src="/haruki_icon.jpg"
+                alt="ハルキさん"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // 画像読み込み失敗時のフォールバック
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.parentElement) {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center';
+                    fallback.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                    e.currentTarget.parentElement.appendChild(fallback);
+                  }
+                }}
+              />
             </div>
             
             <div className="flex-1">
@@ -76,16 +102,16 @@ export default function NewHome() {
               <p className="font-bold text-slate-900">記録する</p>
             </button>
 
-            {/* 自分の強みを見る */}
+            {/* 講義動画を見る */}
             <button
-              onClick={() => navigate('/profile')}
-              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-purple-200 transition-all duration-300 text-left group"
+              onClick={() => navigate('/lectures')}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300 text-left group"
             >
-              <div className="p-3 bg-purple-50 rounded-xl inline-flex mb-3 group-hover:scale-110 transition-transform duration-300">
-                <Target size={24} className="text-purple-600" />
+              <div className="p-3 bg-blue-50 rounded-xl inline-flex mb-3 group-hover:scale-110 transition-transform duration-300">
+                <Video size={24} className="text-blue-600" />
               </div>
-              <p className="font-bold text-slate-900 mb-1">自分の</p>
-              <p className="font-bold text-slate-900">強みを見る</p>
+              <p className="font-bold text-slate-900 mb-1">講義動画を</p>
+              <p className="font-bold text-slate-900">見る</p>
             </button>
           </div>
         </div>
