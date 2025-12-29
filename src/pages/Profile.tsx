@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { LogOut, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, BarChart3 } from 'lucide-react';
+import { useState } from 'react';
+import { LogOut, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, BarChart3, Heart } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +9,13 @@ import { designerTypes } from '../data/questions';
 import { skillCategoryNames } from '../data/skillQuestions';
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 import { ProfileCardSkeleton } from '../components/Skeleton';
+
+// 価値観回答の型
+interface ValueAnswer {
+  questionId: number;
+  question: string;
+  answer: string;
+}
 
 const getDesignerTypeIcon = (type: DesignerType) => {
   const iconProps = { size: 120, strokeWidth: 1.5 };
@@ -67,6 +74,10 @@ export default function Profile() {
   const loading = diagnosisLoading || skillLoading;
   const hasDiagnosis = !!diagnosis?.designer_type;
   const hasSkillDiagnosis = !!skillDiagnosis?.design_skill;
+  
+  // 価値観診断データを取得
+  const valuesData = diagnosis?.values as ValueAnswer[] | null;
+  const hasValues = valuesData && Array.isArray(valuesData) && valuesData.length > 0;
 
   const handleSignOut = async () => {
     try {
@@ -326,10 +337,11 @@ export default function Profile() {
 
       {typeInfo ? (
         <>
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <Sparkles className="text-red-500" size={24} />
+          {/* デザイナータイプ */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Sparkles className="text-red-500" size={20} />
                 デザイナータイプ
               </h2>
               <button
@@ -364,11 +376,58 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* 価値観診断セクション */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Heart className="text-pink-500" size={20} />
+                あなたの価値観
+              </h2>
+              <button
+                onClick={() => navigate('/onboarding/value-diagnosis')}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                title="価値観を更新"
+              >
+                <RefreshCw className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            {hasValues ? (
+              <div className="bg-white rounded-2xl shadow-sm p-6 space-y-5">
+                {valuesData!.map((value, index) => (
+                  <div key={value.questionId} className={index < valuesData!.length - 1 ? 'pb-5 border-b border-slate-100' : ''}>
+                    <p className="text-sm text-slate-500 mb-2 font-medium">
+                      Q{index + 1}. {value.question}
+                    </p>
+                    <p className="text-slate-900 leading-relaxed bg-slate-50 rounded-xl p-4">
+                      {value.answer}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <div className="text-center py-6">
+                  <Heart size={48} className="mx-auto text-slate-300 mb-3" />
+                  <p className="text-slate-500 font-medium mb-4">
+                    まだ価値観診断を受けていません
+                  </p>
+                  <button
+                    onClick={() => navigate('/onboarding/value-diagnosis')}
+                    className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all duration-300 shadow-md hover:shadow-lg"
+                  >
+                    価値観診断を受ける
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* スキル診断セクション */}
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <BarChart3 className="text-blue-500" size={24} />
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <BarChart3 className="text-blue-500" size={20} />
                 スキル診断
               </h2>
               {hasSkillDiagnosis && (
@@ -383,40 +442,38 @@ export default function Profile() {
             </div>
 
             {hasSkillDiagnosis && diagnosis ? (
-              <>
-                <div className="bg-white rounded-2xl shadow-sm p-6 mb-4">
-                  <h3 className="text-sm font-medium text-slate-500 mb-4 text-center">
-                    スキルマップ
-                  </h3>
-                  <div className="h-56 flex items-center justify-center p-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={[
-                        { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill },
-                        { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill },
-                        { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill },
-                        { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill },
-                        { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill },
-                      ]}>
-                        <PolarGrid stroke="#e5e7eb" />
-                        <PolarAngleAxis
-                          dataKey="skill"
-                          tick={{ fontSize: 11, fill: '#475569' }}
-                        />
-                        <Radar
-                          dataKey="value"
-                          stroke="#3b82f6"
-                          fill="#3b82f6"
-                          fillOpacity={0.4}
-                          strokeWidth={2}
-                        />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
+              <div className="bg-white rounded-2xl shadow-sm p-6">
+                <h3 className="text-sm font-medium text-slate-500 mb-4 text-center">
+                  スキルマップ
+                </h3>
+                <div className="h-56 flex items-center justify-center p-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart data={[
+                      { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill },
+                      { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill },
+                      { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill },
+                      { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill },
+                      { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill },
+                    ]}>
+                      <PolarGrid stroke="#e5e7eb" />
+                      <PolarAngleAxis
+                        dataKey="skill"
+                        tick={{ fontSize: 11, fill: '#475569' }}
+                      />
+                      <Radar
+                        dataKey="value"
+                        stroke="#3b82f6"
+                        fill="#3b82f6"
+                        fillOpacity={0.4}
+                        strokeWidth={2}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
                 </div>
-              </>
+              </div>
             ) : (
               <div className="bg-white rounded-2xl shadow-sm p-6">
-                <div className="text-center py-8">
+                <div className="text-center py-6">
                   <BarChart3 size={48} className="mx-auto text-slate-300 mb-3" />
                   <p className="text-slate-500 font-medium mb-4">
                     まだスキル診断を受けていません
@@ -434,6 +491,8 @@ export default function Profile() {
         </>
       ) : null}
 
+      {/* フッタースペース */}
+      <div className="h-24" />
     </div>
   );
 }
