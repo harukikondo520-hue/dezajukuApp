@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { Sparkles, ArrowLeft, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { valueQuestions, ValueAnswer } from '../data/valueQuestions';
@@ -186,6 +186,16 @@ export default function ValueDiagnosisPage() {
                 診断結果を見る
               </>
             )}
+          </button>
+
+          {/* ホームへ戻るボタン */}
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+          >
+            <Home size={20} />
+            ホームへ戻る
           </button>
         </form>
       </div>

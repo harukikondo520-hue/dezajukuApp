@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Home } from 'lucide-react';
 import { diagnosisQuestions } from '../data/questions';
 import { diagnosisExQuestions } from '../data/diagnosisExQuestions';
 import { DiagnosisExAnswer } from '../types/diagnosisEx';
@@ -109,13 +109,22 @@ export default function DiagnosisPage() {
         <div className="max-w-lg mx-auto px-4 py-8">
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={handleBack}
-                disabled={currentIndex === 0}
-                className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleBack}
+                  disabled={currentIndex === 0}
+                  className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={() => navigate('/')}
+                  className="p-2 rounded-full hover:bg-gray-100 text-slate-500"
+                  title="ホームへ戻る"
+                >
+                  <Home className="w-5 h-5" />
+                </button>
+              </div>
               <span className="text-sm text-gray-500">
                 {currentIndex + 1} / {diagnosisQuestions.length}
               </span>
@@ -174,12 +183,21 @@ export default function DiagnosisPage() {
       <div className="max-w-lg mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={handleBack}
-              className="p-2 rounded-full hover:bg-gray-100"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleBack}
+                className="p-2 rounded-full hover:bg-gray-100"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 rounded-full hover:bg-gray-100 text-slate-500"
+                title="ホームへ戻る"
+              >
+                <Home className="w-5 h-5" />
+              </button>
+            </div>
             <span className="text-sm text-gray-500">
               診断EX {currentIndex + 1} / {diagnosisExQuestions.length}
             </span>

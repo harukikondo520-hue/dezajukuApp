@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Sparkles, ArrowRight, Download, Share2, CheckCircle } from 'lucide-react';
+import { Sparkles, ArrowRight, Download, Share2, CheckCircle, Home } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { calculateSkillScores, determineDesignerType } from '../lib/diagnosisCalculator';
 import { designerTypes } from '../data/questions';
@@ -278,7 +278,7 @@ export default function DiagnosisResultPage() {
         )}
 
         {/* スキル診断への誘導 */}
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-200">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-200 mb-6">
           <div className="text-center">
             <CheckCircle className="w-12 h-12 text-purple-600 mx-auto mb-3" />
             <h4 className="text-lg font-bold text-purple-900 mb-2">
@@ -295,6 +295,15 @@ export default function DiagnosisResultPage() {
             </button>
           </div>
         </div>
+
+        {/* ホームへ戻るボタン */}
+        <button
+          onClick={() => navigate('/')}
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all duration-300"
+        >
+          <Home size={20} />
+          ホームへ戻る
+        </button>
 
       </div>
     </div>
