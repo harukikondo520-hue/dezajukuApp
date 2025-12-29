@@ -22,13 +22,21 @@ interface UserContext {
   clientSkill?: number;
   businessSkill?: number;
   mindsetSkill?: number;
+  values?: Array<{ question: string; answer: string }>;
+  goal?: string;
+  currentProblem?: string;
+  monthlyIncome?: number;
+  averagePrice?: number;
+  activeProjects?: number;
+  projects?: Array<{ name: string; reward: number; status: string }>;
 }
 
 export async function sendMessageToDify(
   message: string,
   conversationId?: string,
   onStream?: (text: string) => void,
-  userContext?: UserContext
+  userContext?: UserContext,
+  mode?: 'project_support' | 'self_analysis' | 'free_talk'
 ): Promise<DifyResponse> {
   const apiKey = import.meta.env.VITE_DIFY_API_KEY;
   const apiUrl = import.meta.env.VITE_DIFY_API_URL;
@@ -38,7 +46,10 @@ export async function sendMessageToDify(
   }
 
   // ユーザーコンテキストをinputsとして構築
-  const inputs: Record<string, any> = {};
+  const inputs: Record<string, any> = {
+    // モード情報を追加
+    chat_mode: mode || 'free_talk',
+  };
   
   if (userContext) {
     if (userContext.name) {
@@ -67,6 +78,37 @@ export async function sendMessageToDify(
           (userContext.mindsetSkill || 0)) / 5
       );
       inputs.average_skill = avgSkill;
+    }
+
+    // 価値観
+    if (userContext.values && userContext.values.length > 0) {
+      inputs.user_values = userContext.values.map(v => `${v.question}: ${v.answer}`).join('\n');
+    }
+
+    // 目標と悩み
+    if (userContext.goal) {
+      inputs.user_goal = userContext.goal;
+    }
+    if (userContext.currentProblem) {
+      inputs.user_problem = userContext.currentProblem;
+    }
+
+    // 収入情報
+    if (userContext.monthlyIncome !== undefined) {
+      inputs.monthly_income = userContext.monthlyIncome;
+    }
+    if (userContext.averagePrice !== undefined) {
+      inputs.average_price = userContext.averagePrice;
+    }
+    if (userContext.activeProjects !== undefined) {
+      inputs.active_projects = userContext.activeProjects;
+    }
+
+    // 案件情報
+    if (userContext.projects && userContext.projects.length > 0) {
+      inputs.projects_list = userContext.projects
+        .map(p => `${p.name}: ${p.reward.toLocaleString()}円（${p.status === 'in_progress' ? '進行中' : '完了'}）`)
+        .join('\n');
     }
   }
 

@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Send, Bot, User, Plus, MessageSquare, Trash2, Menu, X } from 'lucide-react';
+import { Send, Bot, User, Plus, MessageSquare, Trash2, Menu, X, Briefcase, Target, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
 import { useConversations, useConversationMessages, useDiagnosisData, useCreateConversation, useDeleteConversation, useUpdateConversationTitle } from '../hooks/useConversations';
 import { ConversationListSkeleton, ChatMessageSkeleton } from '../components/Skeleton';
+import { getModeLabel, getModeDescription, getModeIcon } from '../lib/aiPrompts';
 
 interface Message {
   id: string;
@@ -20,9 +21,12 @@ interface Conversation {
   id: string;
   title: string;
   dify_conversation_id: string | null;
+  mode: 'project_support' | 'self_analysis' | 'free_talk';
   created_at: string;
   updated_at: string;
 }
+
+type ChatMode = 'project_support' | 'self_analysis' | 'free_talk';
 
 export default function AIChat() {
   const location = useLocation();
@@ -31,6 +35,7 @@ export default function AIChat() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [currentMode, setCurrentMode] = useState<ChatMode>('free_talk');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // React Query フック
@@ -271,6 +276,8 @@ AI: ${aiResponse.slice(0, 100)}`;
         // ユーザーコンテキストを構築
         const userContext: any = {
           name: profile?.name,
+          goal: profile?.goal,
+          currentProblem: profile?.current_problem,
         };
 
         if (diagnosisData) {
@@ -291,6 +298,11 @@ AI: ${aiResponse.slice(0, 100)}`;
             userContext.businessSkill = diagnosisData.business_skill;
             userContext.mindsetSkill = diagnosisData.mindset_skill;
           }
+
+          // 価値観情報
+          if (diagnosisData.values && Array.isArray(diagnosisData.values)) {
+            userContext.values = diagnosisData.values;
+          }
         }
 
         // Dify APIにメッセージを送信（ストリーミング）
@@ -309,7 +321,8 @@ AI: ${aiResponse.slice(0, 100)}`;
               )
             );
           },
-          userContext
+          userContext,
+          currentMode // モード情報を渡す
         );
 
         // ストリーミング完了後、isStreamingをfalseに
@@ -492,20 +505,53 @@ AI: ${aiResponse.slice(0, 100)}`;
 
       {/* メインチャットエリア */}
       <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden h-full">
-        {/* ハンバーガーメニュー（右上に固定） */}
-        <div className="lg:hidden fixed top-4 right-4 z-50">
-          <button
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-3 bg-white shadow-lg rounded-xl hover:bg-slate-50 transition border border-slate-200"
-          >
-            <Menu size={24} className="text-slate-700" />
-          </button>
+        {/* ヘッダー：モード切替 */}
+        <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3">
+          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+            {/* ハンバーガーメニュー（モバイル） */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-slate-50 rounded-lg transition"
+            >
+              <Menu size={24} className="text-slate-700" />
+            </button>
+
+            {/* モード選択 */}
+            <div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide">
+              {(['free_talk', 'project_support', 'self_analysis'] as ChatMode[]).map((mode) => {
+                const ModeIcon = mode === 'project_support' ? Briefcase : mode === 'self_analysis' ? Target : MessageCircle;
+                const isActive = currentMode === mode;
+                
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => setCurrentMode(mode)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
+                      isActive
+                        ? 'bg-red-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    <ModeIcon size={16} />
+                    <span>{getModeLabel(mode)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* モード説明 */}
+          <div className="max-w-4xl mx-auto mt-2">
+            <p className="text-xs text-slate-500 pl-2">
+              {getModeDescription(currentMode)}
+            </p>
+          </div>
         </div>
 
         {error && (
           <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center flex-shrink-0">
             {error}
-      </div>
+          </div>
         )}
 
         {/* メッセージエリア - チャットのみスクロール可能 */}
