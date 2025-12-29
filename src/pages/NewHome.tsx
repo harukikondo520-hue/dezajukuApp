@@ -107,20 +107,20 @@ export default function NewHome() {
               {typeInfo ? (
                 <div 
                   onClick={() => navigate('/profile')}
-                  className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 w-fit cursor-pointer hover:bg-white/30 transition-all"
+                  className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit cursor-pointer hover:bg-white/30 transition-all"
                 >
-                  {getDesignerTypeIcon(typeInfo.type, 18)}
-                  <span className="font-bold">{typeInfo.name}</span>
-                  <ChevronRight size={16} className="text-white/60" />
+                  {getDesignerTypeIcon(typeInfo.type, 14)}
+                  <span className="font-medium text-sm">{typeInfo.name}</span>
+                  <ChevronRight size={12} className="text-white/60" />
                 </div>
               ) : (
                 <div 
                   onClick={() => navigate('/diagnosis')}
-                  className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 w-fit cursor-pointer hover:bg-white/30 transition-all"
+                  className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit cursor-pointer hover:bg-white/30 transition-all"
                 >
-                  <Sparkles size={18} />
-                  <span className="font-medium">診断を受けてタイプを知る</span>
-                  <ChevronRight size={16} className="text-white/60" />
+                  <Sparkles size={14} />
+                  <span className="font-medium text-sm">診断を受けてタイプを知る</span>
+                  <ChevronRight size={12} className="text-white/60" />
                 </div>
               )}
             </div>
