@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageCircle, Wallet, ChevronRight, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, User, RefreshCw } from 'lucide-react';
+import { MessageCircle, Wallet, ChevronRight, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, User, RefreshCw, Heart } from 'lucide-react';
 import { useDiagnosisResult } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
 import { DesignerType } from '../types/diagnosis';
@@ -75,7 +75,7 @@ export default function NewHome() {
             {/* 背景のキャラクター画像（大きく配置） */}
             <div 
               className="absolute pointer-events-none"
-              style={{ bottom: '-29px', right: '34px' }}
+              style={{ bottom: '-49px', right: '34px' }}
             >
               <img 
                 src="/home_character.png" 
@@ -139,33 +139,33 @@ export default function NewHome() {
             </button>
             
             <button 
-              onClick={() => navigate('/chat')}
-              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-                <MessageCircle size={20} className="text-red-600" />
-              </div>
-              <span className="text-xs text-slate-600 font-medium">AI相談</span>
-            </button>
-            
-            <button 
-              onClick={() => navigate('/profile')}
-              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                <User size={20} className="text-blue-600" />
-              </div>
-              <span className="text-xs text-slate-600 font-medium">プロフィール</span>
-            </button>
-            
-            <button 
               onClick={() => navigate('/diagnosis')}
               className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
             >
-              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
-                <RefreshCw size={20} className="text-purple-600" />
+              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                <Sparkles size={20} className="text-red-600" />
               </div>
-              <span className="text-xs text-slate-600 font-medium">再診断</span>
+              <span className="text-xs text-slate-600 font-medium">タイプ診断</span>
+            </button>
+            
+            <button 
+              onClick={() => navigate('/skill-diagnosis')}
+              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <TrendingUp size={20} className="text-blue-600" />
+              </div>
+              <span className="text-xs text-slate-600 font-medium">スキル診断</span>
+            </button>
+            
+            <button 
+              onClick={() => navigate('/onboarding/value-diagnosis')}
+              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center">
+                <Heart size={20} className="text-pink-600" />
+              </div>
+              <span className="text-xs text-slate-600 font-medium">価値観診断</span>
             </button>
           </div>
           
