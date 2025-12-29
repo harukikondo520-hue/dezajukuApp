@@ -2,14 +2,20 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { DesignerType } from '../types/diagnosis';
 
-// diagnosisテーブルの実際の構造に合わせた型
+// skill_diagnosisテーブルの構造に合わせた型
 interface DiagnosisData {
   id: string;
   user_id: string;
   designer_type: DesignerType;
-  answers: Record<string, number>;
-  ex_answers: Record<string, string> | null;
-  values: Array<{ questionId: number; question: string; answer: string }> | null;
+  design_skill: number;
+  planning_skill: number;
+  client_skill: number;
+  business_skill: number;
+  mindset_skill: number;
+  raw_answers: Record<string, number>;
+  ex_answers?: Record<string, string> | null;
+  values?: Array<{ questionId: number; question: string; answer: string }> | null;
+  diagnosed_at: string;
   created_at: string;
   updated_at: string;
 }
@@ -23,7 +29,7 @@ interface SkillDiagnosis {
 }
 
 /**
- * デザイナータイプ診断結果を取得
+ * デザイナータイプ診断結果を取得（skill_diagnosisテーブルから）
  */
 export function useDiagnosisResult(userId: string | undefined) {
   return useQuery({
@@ -32,7 +38,7 @@ export function useDiagnosisResult(userId: string | undefined) {
       if (!userId) throw new Error('User ID is required');
 
       const { data, error } = await supabase
-        .from('diagnosis')
+        .from('skill_diagnosis')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();

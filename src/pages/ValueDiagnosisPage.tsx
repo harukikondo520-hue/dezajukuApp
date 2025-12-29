@@ -43,31 +43,20 @@ export default function ValueDiagnosisPage() {
         answer: va.answer,
       }));
 
-      // 診断結果を保存（タイプ診断 + 価値観診断）
-      const { error: diagnosisError } = await supabase
-        .from('diagnosis')
-        .upsert({
-          user_id: user.id,
-          designer_type: designerType,
-          answers: answers || {},
-          ex_answers: exAnswers || null,
-          values: valuesJson,
-        }, { onConflict: 'user_id' });
-
-      if (diagnosisError) throw diagnosisError;
-
-      // スキル診断も同時に保存（タイプ診断の回答から計算済み）
+      // スキル診断テーブルに価値観を追加保存
       const skillScores = calculateSkillScores(answers);
       const { error: skillError } = await supabase
         .from('skill_diagnosis')
         .upsert({
           user_id: user.id,
+          designer_type: designerType,
           design_skill: skillScores.design,
           planning_skill: skillScores.planning,
           client_skill: skillScores.client,
           business_skill: skillScores.business,
           mindset_skill: skillScores.mindset,
-          skill_answers: answers || {},
+          raw_answers: answers || {},
+          ex_answers: exAnswers || null,
           values: valuesJson,
         }, { onConflict: 'user_id' });
 

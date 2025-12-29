@@ -125,11 +125,16 @@ export default function DiagnosisResultPage() {
   ) => {
     setSaving(true);
     try {
-      // diagnosisテーブルに保存（プロフィール表示用）
-      await supabase.from('diagnosis').upsert({
+      // skill_diagnosisテーブルに保存（デザイナータイプとスキル両方）
+      await supabase.from('skill_diagnosis').upsert({
         user_id: user!.id,
         designer_type: type,
-        answers: answers,
+        design_skill: scores.design,
+        planning_skill: scores.planning,
+        client_skill: scores.client,
+        business_skill: scores.business,
+        mindset_skill: scores.mindset,
+        raw_answers: answers,
         ex_answers: exAnswers ? {
           values: exAnswers[0]?.answer || null,
           vision: exAnswers[1]?.answer || null,
@@ -137,17 +142,7 @@ export default function DiagnosisResultPage() {
           challenge: exAnswers[3]?.answer || null,
           style: exAnswers[4]?.answer || null,
         } : null,
-        values: [], // 価値観診断は後で入力
-      }, { onConflict: 'user_id' });
-
-      // skill_diagnosisテーブルにも保存（スキルグラフ表示用）
-      await supabase.from('skill_diagnosis').upsert({
-        user_id: user!.id,
-        design_skill: scores.design,
-        planning_skill: scores.planning,
-        client_skill: scores.client,
-        business_skill: scores.business,
-        mindset_skill: scores.mindset,
+        diagnosed_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
     } catch (error) {
       console.error('診断結果の保存に失敗:', error);

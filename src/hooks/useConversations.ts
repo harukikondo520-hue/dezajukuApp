@@ -74,7 +74,7 @@ export function useDiagnosisData(userId: string | undefined) {
 
       const [diagnosisResult, skillDiagnosis] = await Promise.all([
         supabase
-          .from('diagnosis')
+          .from('skill_diagnosis')
           .select('designer_type, values')
           .eq('user_id', userId)
           .maybeSingle(),
