@@ -20,7 +20,7 @@ export function useDiagnosisResult(userId: string | undefined) {
       if (!userId) throw new Error('User ID is required');
 
       const { data, error } = await supabase
-        .from('diagnosis_results')
+        .from('diagnosis')
         .select('*')
         .eq('user_id', userId)
         .maybeSingle();
