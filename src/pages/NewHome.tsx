@@ -72,13 +72,15 @@ export default function NewHome() {
               background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
             }}
           >
-            {/* 右側のキャラクター画像 */}
-            <div className="absolute -right-4 -bottom-4 opacity-90 pointer-events-none">
+            {/* 背景のキャラクター画像（大きく配置） */}
+            <div className="absolute -right-6 -bottom-6 pointer-events-none">
               <img 
                 src="/home_character.png" 
                 alt="" 
-                className="w-40 h-auto"
-                style={{ filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))' }}
+                className="h-52 w-auto"
+                style={{ 
+                  filter: 'drop-shadow(3px 3px 10px rgba(0,0,0,0.25))'
+                }}
               />
             </div>
             
