@@ -5,7 +5,7 @@ import Layout from './components/Layout';
 import Opening from './components/Opening';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
-import Home from './pages/Home';
+import NewHome from './pages/NewHome';
 import AIChat from './pages/AIChat';
 import VideoLectures from './pages/VideoLectures';
 import Profile from './pages/Profile';
@@ -16,7 +16,7 @@ import ValueDiagnosisPage from './pages/ValueDiagnosisPage';
 import OnboardingGoalPage from './pages/OnboardingGoalPage';
 import SkillDiagnosisPage from './pages/SkillDiagnosisPage';
 import SkillDiagnosisResultPage from './pages/SkillDiagnosisResultPage';
-import ProjectManagement from './pages/ProjectManagement';
+import IncomeManagement from './pages/IncomeManagement';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
@@ -141,7 +141,7 @@ function AppRoutes() {
         path="/"
         element={
           <PrivateRoute>
-            <Home />
+            <NewHome />
           </PrivateRoute>
         }
       />
@@ -170,10 +170,10 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/projects"
+        path="/income-management"
         element={
           <PrivateRoute>
-            <ProjectManagement />
+            <IncomeManagement />
           </PrivateRoute>
         }
       />

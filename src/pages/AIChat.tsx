@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Send, Bot, User, Plus, MessageSquare, Trash2, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
@@ -24,6 +25,7 @@ interface Conversation {
 }
 
 export default function AIChat() {
+  const location = useLocation();
   const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -48,6 +50,25 @@ export default function AIChat() {
   const difyApiKey = import.meta.env.VITE_DIFY_API_KEY;
   const difyApiUrl = import.meta.env.VITE_DIFY_API_URL;
   const useDify = !!(difyApiKey && difyApiUrl);
+
+  // ホーム画面から初期質問を受け取る
+  useEffect(() => {
+    const initialQuestion = location.state?.initialQuestion;
+    if (initialQuestion && !currentConversation) {
+      // 新しい会話を作成して質問を自動送信
+      createNewConversation().then((conv) => {
+        if (conv) {
+          setInput(initialQuestion);
+          // 少し遅延してから自動送信
+          setTimeout(() => {
+            handleSubmit(new Event('submit') as any, initialQuestion);
+          }, 500);
+        }
+      });
+      // stateをクリア
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // 会話が変更されたらメッセージをロード
   useEffect(() => {
@@ -186,9 +207,10 @@ AI: ${aiResponse.slice(0, 100)}`;
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, initialQ?: string) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    const messageText = initialQ || input.trim();
+    if (!messageText || isLoading) return;
 
     setIsLoading(true);
     setError('');
@@ -215,13 +237,13 @@ AI: ${aiResponse.slice(0, 100)}`;
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: messageText,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
     
-    const userInput = input.trim();
+    const userInput = messageText;
     setInput('');
 
     // メッセージを保存
