@@ -60,8 +60,8 @@ export default function NewHome() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto py-6" style={{ width: '96%', maxWidth: '512px' }}>
+    <div className="min-h-screen bg-slate-100">
+      <div className="mx-auto pt-4 pb-6 px-2 sm:px-4" style={{ maxWidth: '512px' }}>
         
         {/* メインカード（V POINT Payスタイル） */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden mb-6">
@@ -75,7 +75,7 @@ export default function NewHome() {
             {/* 背景のキャラクター画像（大きく配置） */}
             <div 
               className="absolute pointer-events-none"
-              style={{ bottom: '-9px', right: '24px' }}
+              style={{ bottom: '-9px', right: '9px' }}
             >
               <img 
                 src="/home_character.png" 
