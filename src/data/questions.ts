@@ -32,37 +32,43 @@ export const designerTypes: Record<DesignerType, DesignerTypeInfo> = {
     type: 'artist',
     name: 'アーティスト型',
     description: '美しいものを作ることに情熱を持つタイプ。ビジュアルのクオリティに妥協せず、見る人の心を動かすデザインを生み出します。',
-    color: '#ef4444'
+    color: '#ef4444',
+    famousDesigners: ['佐藤可士和', '原研哉', '深澤直人']
   },
   strategist: {
     type: 'strategist',
     name: 'ストラテジスト型',
     description: '論理と構造で課題を解決するタイプ。「なぜそうするのか」を明確にし、目的達成に最適なデザインを設計します。',
-    color: '#3b82f6'
+    color: '#3b82f6',
+    famousDesigners: ['中村勇吾', '佐野研二郎', 'ドン・ノーマン']
   },
   partner: {
     type: 'partner',
     name: 'パートナー型',
     description: 'クライアントとの信頼関係構築が得意なタイプ。相手の本当のニーズを引き出し、期待を超える提案ができます。',
-    color: '#22c55e'
+    color: '#22c55e',
+    famousDesigners: ['水野学', '佐藤オオキ', 'ポール・ランド']
   },
   business_designer: {
     type: 'business_designer',
     name: 'ビジネスデザイナー型',
     description: 'デザイン×ビジネスで価値を生むタイプ。自分のスキルを収益に変える力があり、案件獲得や単価交渉にも強いです。',
-    color: '#f59e0b'
+    color: '#f59e0b',
+    famousDesigners: ['森本千絵', '猪子寿之', 'デビッド・カーソン']
   },
   growth: {
     type: 'growth',
     name: 'グロース型',
     description: '成長意欲と継続力で伸びていくタイプ。困難があっても諦めず、着実にスキルを積み上げていく力があります。',
-    color: '#8b5cf6'
+    color: '#8b5cf6',
+    famousDesigners: ['永井一史', '葛西薫', 'ステファン・サグマイスター']
   },
   all_rounder: {
     type: 'all_rounder',
     name: 'オールラウンダー型',
     description: 'バランスよく全体を見渡せるタイプ。どの領域も安定しており、状況に応じて柔軟に対応できる強みがあります。',
-    color: '#14b8a6'
+    color: '#14b8a6',
+    famousDesigners: ['田中一光', '亀倉雄策', 'マッシモ・ヴィネッリ']
   }
 };
 

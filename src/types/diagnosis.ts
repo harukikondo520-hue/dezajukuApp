@@ -45,4 +45,5 @@ export interface DesignerTypeInfo {
   name: string;
   description: string;
   color: string;
+  famousDesigners?: string[];
 }
