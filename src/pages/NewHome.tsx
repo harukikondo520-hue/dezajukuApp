@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageCircle, Wallet, Video, TrendingUp, Sparkles } from 'lucide-react';
+import { MessageCircle, Wallet, TrendingUp, Sparkles } from 'lucide-react';
 
 export default function NewHome() {
   const navigate = useNavigate();
@@ -89,31 +89,21 @@ export default function NewHome() {
           <h2 className="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4">
             クイックアクション
           </h2>
-          <div className="grid grid-cols-2 gap-4">
-            {/* 収入を記録する */}
-            <button
-              onClick={() => navigate('/income-management')}
-              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-red-200 transition-all duration-300 text-left group"
-            >
-              <div className="p-3 bg-red-50 rounded-xl inline-flex mb-3 group-hover:scale-110 transition-transform duration-300">
+          {/* 収入を記録する */}
+          <button
+            onClick={() => navigate('/income-management')}
+            className="w-full bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-red-200 transition-all duration-300 text-left group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-50 rounded-xl inline-flex group-hover:scale-110 transition-transform duration-300">
                 <Wallet size={24} className="text-red-600" />
               </div>
-              <p className="font-bold text-slate-900 mb-1">収入を</p>
-              <p className="font-bold text-slate-900">記録する</p>
-            </button>
-
-            {/* 講義動画を見る */}
-            <button
-              onClick={() => navigate('/lectures')}
-              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300 text-left group"
-            >
-              <div className="p-3 bg-blue-50 rounded-xl inline-flex mb-3 group-hover:scale-110 transition-transform duration-300">
-                <Video size={24} className="text-blue-600" />
+              <div>
+                <p className="font-bold text-slate-900 text-lg">収入を記録する</p>
+                <p className="text-sm text-slate-500 mt-1">案件の収入を管理しましょう</p>
               </div>
-              <p className="font-bold text-slate-900 mb-1">講義動画を</p>
-              <p className="font-bold text-slate-900">見る</p>
-            </button>
-          </div>
+            </div>
+          </button>
         </div>
 
         {/* ハルキAIに聞いてみよう */}
