@@ -75,7 +75,7 @@ export default function NewHome() {
             {/* 背景のキャラクター画像（大きく配置） */}
             <div 
               className="absolute pointer-events-none"
-              style={{ bottom: '-49px', right: '34px' }}
+              style={{ bottom: '-34px', right: '34px' }}
             >
               <img 
                 src="/home_character.png" 
@@ -159,7 +159,7 @@ export default function NewHome() {
             </button>
             
             <button 
-              onClick={() => navigate('/onboarding/value-diagnosis')}
+              onClick={() => navigate('/value-diagnosis')}
               className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
             >
               <div className="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center">
