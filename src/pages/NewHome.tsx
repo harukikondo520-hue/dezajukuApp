@@ -60,8 +60,8 @@ export default function NewHome() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <div className="mx-auto pt-4 pb-6 px-2 sm:px-4" style={{ maxWidth: '512px' }}>
+    <div className="min-h-screen bg-white">
+      <div className="mx-auto pt-4 pb-6 px-2 sm:px-4 bg-white" style={{ maxWidth: '512px' }}>
         
         {/* メインカード（V POINT Payスタイル） */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden mb-6">
@@ -75,7 +75,7 @@ export default function NewHome() {
             {/* 背景のキャラクター画像（大きく配置） */}
             <div 
               className="absolute pointer-events-none"
-              style={{ bottom: '-9px', right: '9px' }}
+              style={{ bottom: '-14px', right: '4px' }}
             >
               <img 
                 src="/home_character.png" 
@@ -189,26 +189,6 @@ export default function NewHome() {
               <p className="text-xs text-slate-500">案件・スキル・キャリアの悩みを解決</p>
             </div>
             <ChevronRight size={20} className="text-slate-400" />
-          </div>
-        </div>
-
-        {/* 今日の一言カード */}
-        <div className="bg-white rounded-2xl p-5 mb-6 border border-slate-200 shadow-sm">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-red-100">
-              <img
-                src="/haruki_icon.jpg"
-                alt="ハルキ"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full bg-red-500 flex items-center justify-center"><span class="text-white font-bold text-sm">H</span></div>';
-                }}
-              />
-            </div>
-            <div className="flex-1">
-              <p className="text-xs text-slate-500 font-medium mb-1">📢 今日の一言</p>
-              <p className="text-slate-900 font-bold text-lg">{getTodayQuote()}</p>
-            </div>
           </div>
         </div>
 
