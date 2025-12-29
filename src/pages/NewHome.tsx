@@ -73,11 +73,11 @@ export default function NewHome() {
             }}
           >
             {/* 背景のキャラクター画像（大きく配置） */}
-            <div className="absolute -right-6 -bottom-6 pointer-events-none">
+            <div className="absolute -right-4 -bottom-16 pointer-events-none">
               <img 
                 src="/home_character.png" 
                 alt="" 
-                className="h-52 w-auto"
+                className="h-48 w-auto"
                 style={{ 
                   filter: 'drop-shadow(3px 3px 10px rgba(0,0,0,0.25))'
                 }}
