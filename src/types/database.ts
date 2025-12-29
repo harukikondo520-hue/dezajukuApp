@@ -25,6 +25,8 @@ export interface Database {
           age: number | null;
           occupation: string | null;
           gender: string | null;
+          goal: string | null;
+          current_problem: string | null;
         };
         Insert: {
           id: string;
@@ -41,6 +43,8 @@ export interface Database {
           age?: number | null;
           occupation?: string | null;
           gender?: string | null;
+          goal?: string | null;
+          current_problem?: string | null;
         };
         Update: {
           id?: string;
@@ -57,6 +61,8 @@ export interface Database {
           age?: number | null;
           occupation?: string | null;
           gender?: string | null;
+          goal?: string | null;
+          current_problem?: string | null;
         };
       };
       projects: {
@@ -292,6 +298,131 @@ export interface Database {
           last_watched_at?: string;
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      diagnosis: {
+        Row: {
+          id: string;
+          user_id: string;
+          designer_type: string;
+          answers: Json;
+          ex_answers: Json | null;
+          values: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          designer_type: string;
+          answers?: Json;
+          ex_answers?: Json | null;
+          values?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          designer_type?: string;
+          answers?: Json;
+          ex_answers?: Json | null;
+          values?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      skill_diagnosis: {
+        Row: {
+          id: string;
+          user_id: string;
+          design_skill: number;
+          planning_skill: number;
+          client_skill: number;
+          business_skill: number;
+          mindset_skill: number;
+          skill_answers: Json | null;
+          values: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          design_skill?: number;
+          planning_skill?: number;
+          client_skill?: number;
+          business_skill?: number;
+          mindset_skill?: number;
+          skill_answers?: Json | null;
+          values?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          design_skill?: number;
+          planning_skill?: number;
+          client_skill?: number;
+          business_skill?: number;
+          mindset_skill?: number;
+          skill_answers?: Json | null;
+          values?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      conversations: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          dify_conversation_id: string | null;
+          mode: 'project_support' | 'self_analysis' | 'free_talk';
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title?: string;
+          dify_conversation_id?: string | null;
+          mode?: 'project_support' | 'self_analysis' | 'free_talk';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          dify_conversation_id?: string | null;
+          mode?: 'project_support' | 'self_analysis' | 'free_talk';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      conversation_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          role: 'user' | 'assistant';
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          conversation_id: string;
+          role: 'user' | 'assistant';
+          content: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          conversation_id?: string;
+          role?: 'user' | 'assistant';
+          content?: string;
+          created_at?: string;
         };
       };
     };

@@ -12,6 +12,8 @@ import Profile from './pages/Profile';
 import Onboarding from './pages/Onboarding';
 import DiagnosisPage from './pages/DiagnosisPage';
 import DiagnosisResultPage from './pages/DiagnosisResultPage';
+import ValueDiagnosisPage from './pages/ValueDiagnosisPage';
+import OnboardingGoalPage from './pages/OnboardingGoalPage';
 import SkillDiagnosisPage from './pages/SkillDiagnosisPage';
 import SkillDiagnosisResultPage from './pages/SkillDiagnosisResultPage';
 import ProjectManagement from './pages/ProjectManagement';
@@ -204,6 +206,22 @@ function AppRoutes() {
         element={
           <AuthenticatedRoute>
             <SkillDiagnosisResultPage />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/value-diagnosis"
+        element={
+          <AuthenticatedRoute>
+            <ValueDiagnosisPage />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/goal"
+        element={
+          <AuthenticatedRoute>
+            <OnboardingGoalPage />
           </AuthenticatedRoute>
         }
       />

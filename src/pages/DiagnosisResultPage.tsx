@@ -38,10 +38,23 @@ export default function DiagnosisResultPage() {
   }, [location.state, user]);
 
   const handleNext = () => {
-    if (profile?.onboarding_completed) {
-      navigate('/');
+    // 価値観診断がまだの場合は価値観診断へ
+    const fromValueDiagnosis = location.state?.fromValueDiagnosis;
+    
+    if (!fromValueDiagnosis) {
+      // 価値観診断へ遷移
+      const answers = location.state?.answers;
+      const exAnswers = location.state?.exAnswers;
+      navigate('/value-diagnosis', {
+        state: {
+          answers,
+          exAnswers,
+          designerType: designerType?.id,
+        }
+      });
     } else {
-      navigate('/onboarding');
+      // オンボーディング（目標・悩み入力）へ
+      navigate('/onboarding/goal');
     }
   };
 
@@ -56,7 +69,15 @@ export default function DiagnosisResultPage() {
   };
 
   const handleSkipExDiagnosis = () => {
-    handleNext();
+    // 価値観診断へ遷移
+    const answers = location.state?.answers;
+    navigate('/value-diagnosis', {
+      state: {
+        answers,
+        exAnswers: null,
+        designerType: designerType?.id,
+      }
+    });
   };
 
   const saveDiagnosis = async (
