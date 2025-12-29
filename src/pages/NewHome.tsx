@@ -65,18 +65,21 @@ export default function NewHome() {
         
         {/* メインカード（V POINT Payスタイル） */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden mb-6">
-          {/* ヘッダー部分（グラデーション背景） */}
+          {/* ヘッダー部分（赤背景 + キャラクター） */}
           <div 
-            className="px-6 pt-6 pb-8 text-white relative"
+            className="px-6 pt-6 pb-8 text-white relative overflow-hidden"
             style={{ 
-              background: typeInfo 
-                ? getTypeGradient(typeInfo.type) 
-                : 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
+              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
             }}
           >
-            {/* 右上の装飾アイコン */}
-            <div className="absolute top-4 right-4 opacity-10">
-              {typeInfo ? getDesignerTypeIcon(typeInfo.type, 80) : <Sparkles size={80} />}
+            {/* 右側のキャラクター画像 */}
+            <div className="absolute -right-4 -bottom-4 opacity-90 pointer-events-none">
+              <img 
+                src="/home_character.png" 
+                alt="" 
+                className="w-40 h-auto"
+                style={{ filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.2))' }}
+              />
             </div>
             
             {/* プロフィール情報 */}
