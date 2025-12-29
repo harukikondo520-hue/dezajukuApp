@@ -385,13 +385,13 @@ AI: ${aiResponse.slice(0, 100)}`;
     } else {
       // Dify未設定の場合はプレースホルダー
       setTimeout(async () => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
           content: 'Dify APIが設定されていません。.envファイルにVITE_DIFY_API_KEYとVITE_DIFY_API_URLを設定してください。',
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
 
         try {
           await saveMessage('assistant', assistantMessage.content, conversationId);
@@ -399,8 +399,8 @@ AI: ${aiResponse.slice(0, 100)}`;
           console.error('メッセージ保存エラー:', err);
         }
 
-        setIsLoading(false);
-      }, 1000);
+      setIsLoading(false);
+    }, 1000);
     }
   };
 
@@ -421,7 +421,7 @@ AI: ${aiResponse.slice(0, 100)}`;
     '営業文の書き方',
   ];
 
-  return (
+    return (
     <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 80px)', maxHeight: 'calc(100vh - 80px)' }}>
       {/* サイドバー（モバイルはオーバーレイ） */}
       <div
@@ -528,8 +528,8 @@ AI: ${aiResponse.slice(0, 100)}`;
               {(['free_talk', 'project_support', 'self_analysis'] as ChatMode[]).map((mode) => {
                 const ModeIcon = mode === 'project_support' ? Briefcase : mode === 'self_analysis' ? Target : MessageCircle;
                 const isActive = currentMode === mode;
-                
-                return (
+
+  return (
                   <button
                     key={mode}
                     onClick={() => setCurrentMode(mode)}
@@ -558,7 +558,7 @@ AI: ${aiResponse.slice(0, 100)}`;
         {error && (
           <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center flex-shrink-0">
             {error}
-          </div>
+      </div>
         )}
 
         {/* メッセージエリア - チャットのみスクロール可能 */}
@@ -631,45 +631,45 @@ AI: ${aiResponse.slice(0, 100)}`;
           </div>
         ))}
 
-              {/* ローディングインジケーター */}
-              {isLoading && (
-                <div className="flex items-start gap-3">
+              {/* ローディングインジケーター - ストリーミング中は表示しない */}
+              {isLoading && !messages.some(msg => msg.isStreaming) && (
+          <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img
                       src="/haruki_icon.jpg"
                       alt="ハルキさん"
                       className="w-full h-full object-cover"
                     />
-                  </div>
-                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+            </div>
+            <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1">
                         <div
-                          className="w-2 h-2 bg-red-400 rounded-full animate-bounce"
+                          className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                           style={{ animationDelay: '0ms' }}
                         />
                         <div
-                          className="w-2 h-2 bg-red-400 rounded-full animate-bounce"
+                          className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                           style={{ animationDelay: '150ms' }}
                         />
                         <div
-                          className="w-2 h-2 bg-red-400 rounded-full animate-bounce"
+                          className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
                           style={{ animationDelay: '300ms' }}
                         />
                       </div>
                       <span className="text-xs text-slate-500">考え中...</span>
-                    </div>
-                  </div>
-                </div>
-              )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div ref={messagesEndRef} />
             </>
           )}
         </div>
 
-        {/* 入力エリア - 常に下部に配置 */}
-        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3">
+        {/* 入力エリア - 常に下部に固定 */}
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 sticky bottom-0">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
         <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
           <input
@@ -686,10 +686,10 @@ AI: ${aiResponse.slice(0, 100)}`;
                 className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
                 title={!input.trim() ? "メッセージを入力してください" : isLoading ? "送信中..." : "送信"}
           >
-                <Send size={20} />
+            <Send size={20} />
           </button>
-            </div>
-          </form>
+        </div>
+      </form>
         </div>
       </div>
     </div>
