@@ -123,7 +123,7 @@ export default function ValueDiagnosisPage() {
               <Sparkles size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-slate-900">価値観診断</h1>
+              <h1 className="text-3xl font-bold text-slate-900">価値観診断</h1>
               <p className="text-slate-600 mt-1">あなたの価値観を教えてください</p>
             </div>
           </div>
