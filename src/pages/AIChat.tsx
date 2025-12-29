@@ -179,14 +179,14 @@ AI: ${aiResponse.slice(0, 100)}`;
     }
   };
 
-  const saveMessage = async (role: 'user' | 'assistant', content: string, isFirstMessage: boolean = false) => {
-    if (!currentConversation) return;
+  const saveMessage = async (role: 'user' | 'assistant', content: string, conversationId: string) => {
+    if (!conversationId) return;
 
     const { error } = await supabase
       .from('conversation_messages')
       .insert([
         {
-          conversation_id: currentConversation.id,
+          conversation_id: conversationId,
           role,
           content,
         },
@@ -200,7 +200,7 @@ AI: ${aiResponse.slice(0, 100)}`;
     await supabase
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
-      .eq('id', currentConversation.id);
+      .eq('id', conversationId);
   };
 
 
@@ -251,19 +251,24 @@ AI: ${aiResponse.slice(0, 100)}`;
     const userInput = messageText;
     setInput('');
 
+    // 現在の会話ID
+    const conversationId = conversation.id;
+
     // メッセージを保存
     try {
-      await saveMessage('user', userInput);
+      await saveMessage('user', userInput, conversationId);
     } catch (err) {
       console.error('メッセージ保存エラー:', err);
-      setError('メッセージの保存に失敗しました');
     }
+
+    // ストリーミング用のメッセージID（エラーハンドリング用に外で宣言）
+    let streamingMessageId = '';
 
     // Dify APIが設定されている場合
     if (useDify) {
       try {
         // ストリーミング用のメッセージを追加
-        const streamingMessageId = (Date.now() + 1).toString();
+        streamingMessageId = (Date.now() + 1).toString();
         const streamingMessage: Message = {
           id: streamingMessageId,
           role: 'assistant',
@@ -337,11 +342,11 @@ AI: ${aiResponse.slice(0, 100)}`;
         // AIの応答をDBに保存
         const assistantContent = response.answer || streamedContent;
         if (assistantContent) {
-          await saveMessage('assistant', assistantContent);
+          await saveMessage('assistant', assistantContent, conversationId);
         }
 
         // タイトルが「新しい会話」の場合、AIでタイトルを生成
-        if (conversation.title === '新しい会話') {
+        if (conversation.title === '新しい会話' && assistantContent) {
           await generateConversationTitle(userInput, assistantContent);
         }
 
@@ -362,7 +367,9 @@ AI: ${aiResponse.slice(0, 100)}`;
         setError(errorMsg);
         
         // エラー時、ストリーミング中のメッセージを削除
-        setMessages((prev) => prev.filter(msg => msg.id !== streamingMessageId));
+        if (streamingMessageId) {
+          setMessages((prev) => prev.filter(msg => msg.id !== streamingMessageId));
+        }
         
         // ユーザーフレンドリーなエラーメッセージを追加
         const errorMessage: Message = {
@@ -378,22 +385,22 @@ AI: ${aiResponse.slice(0, 100)}`;
     } else {
       // Dify未設定の場合はプレースホルダー
       setTimeout(async () => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
           content: 'Dify APIが設定されていません。.envファイルにVITE_DIFY_API_KEYとVITE_DIFY_API_URLを設定してください。',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
 
         try {
-          await saveMessage('assistant', assistantMessage.content);
+          await saveMessage('assistant', assistantMessage.content, conversationId);
         } catch (err) {
           console.error('メッセージ保存エラー:', err);
         }
 
-      setIsLoading(false);
-    }, 1000);
+        setIsLoading(false);
+      }, 1000);
     }
   };
 
