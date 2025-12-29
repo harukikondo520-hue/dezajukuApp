@@ -58,7 +58,10 @@ export default function ValueDiagnosisPage() {
           raw_answers: answers || {},
           ex_answers: exAnswers || null,
           values: valuesJson,
-        }, { onConflict: 'user_id' });
+        }, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
+        });
 
       if (skillError) throw skillError;
 

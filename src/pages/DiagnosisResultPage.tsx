@@ -126,7 +126,7 @@ export default function DiagnosisResultPage() {
     setSaving(true);
     try {
       // skill_diagnosisテーブルに保存（デザイナータイプとスキル両方）
-      await supabase.from('skill_diagnosis').upsert({
+      const { error } = await supabase.from('skill_diagnosis').upsert({
         user_id: user!.id,
         designer_type: type,
         design_skill: scores.design,
@@ -143,7 +143,14 @@ export default function DiagnosisResultPage() {
           style: exAnswers[4]?.answer || null,
         } : null,
         diagnosed_at: new Date().toISOString()
-      }, { onConflict: 'user_id' });
+      }, { 
+        onConflict: 'user_id',
+        ignoreDuplicates: false 
+      });
+      
+      if (error) {
+        console.error('診断結果の保存エラー:', error);
+      }
     } catch (error) {
       console.error('診断結果の保存に失敗:', error);
     } finally {

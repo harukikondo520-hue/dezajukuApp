@@ -32,14 +32,23 @@ export default function SkillDiagnosisResultPage() {
   const saveSkillDiagnosis = async (scores: any, answers: Record<number, number>) => {
     setSaving(true);
     try {
+      // 既存のデータを取得（designer_typeを引き継ぐため）
+      const { data: existing } = await supabase
+        .from('skill_diagnosis')
+        .select('designer_type, raw_answers')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+
       // skill_diagnosisテーブルを更新
       const { error } = await supabase.from('skill_diagnosis').upsert({
         user_id: user!.id,
+        designer_type: existing?.designer_type || 'all_rounder', // デフォルト値
         design_skill: scores.design,
         planning_skill: scores.planning,
         client_skill: scores.client,
         business_skill: scores.business,
         mindset_skill: scores.mindset,
+        raw_answers: existing?.raw_answers || {},
         skill_answers: answers,
         diagnosed_at: new Date().toISOString()
       }, { 
