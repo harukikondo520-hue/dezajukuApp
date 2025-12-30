@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  MessageCircle, Wallet, ChevronRight, Sparkles, 
+  Wallet, ChevronRight, Sparkles, 
   Settings, LogOut, RefreshCw, BarChart3
 } from 'lucide-react';
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
@@ -50,7 +50,6 @@ export default function NewHome() {
   // 機能グリッド
   const features = [
     { icon: Wallet, label: '収入記録', color: 'bg-emerald-500', path: '/income-management' },
-    { icon: MessageCircle, label: 'AI相談', color: 'bg-red-500', path: '/chat' },
     { icon: Sparkles, label: '総合診断', color: 'bg-gradient-to-br from-red-500 to-orange-500', path: '/comprehensive-diagnosis' },
   ];
 
@@ -196,31 +195,9 @@ export default function NewHome() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">アクション</p>
           </div>
 
-          {/* AIバナー */}
-          <div 
-            className="mx-4 rounded-2xl overflow-hidden cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
-            onClick={() => navigate('/chat')}
-          >
-            <div className="px-5 py-5 flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white shadow-md flex-shrink-0">
-                <img
-                  src="/haruki_icon.jpg"
-                  alt="ハルキ"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-red-900">ハルキAIに相談する</p>
-                <p className="text-sm text-red-700/70">キャリア・案件・スキルの悩みを解決</p>
-              </div>
-              <ChevronRight size={20} className="text-red-400" />
-            </div>
-          </div>
-
-          {/* 機能グリッド（3列） */}
-          <div className="mx-4 mt-4 bg-slate-50 rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-3 gap-0">
+          {/* 機能グリッド（2列） */}
+          <div className="mx-4 bg-slate-50 rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-2 gap-0">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 const isNotLastColumn = index < features.length - 1;
