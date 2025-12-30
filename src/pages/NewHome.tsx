@@ -1,96 +1,82 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageCircle, Wallet, ChevronRight, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, User, RefreshCw, Heart } from 'lucide-react';
+import { 
+  MessageCircle, Wallet, ChevronRight, Sparkles, TrendingUp, Heart, 
+  User, Settings, LogOut, PlayCircle, Bell
+} from 'lucide-react';
 import { useDiagnosisResult } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
 import { DesignerType } from '../types/diagnosis';
-
-// 今日の一言データ（今後追加予定）
-const dailyQuotes = [
-  '本日もぶち上げ。',
-];
-
-// 今日の一言を取得（日付ベースで固定）
-const getTodayQuote = () => {
-  const today = new Date();
-  const index = today.getDate() % dailyQuotes.length;
-  return dailyQuotes[index];
-};
 
 // デザイナータイプアイコン
 const getDesignerTypeIcon = (type: DesignerType, size = 24) => {
   const iconProps = { size, strokeWidth: 2 };
   switch (type) {
-    case 'artist': return <Palette {...iconProps} />;
-    case 'strategist': return <Lightbulb {...iconProps} />;
-    case 'partner': return <Handshake {...iconProps} />;
-    case 'business_designer': return <TrendingUp {...iconProps} />;
-    case 'growth': return <Rocket {...iconProps} />;
-    case 'all_rounder': return <Star {...iconProps} />;
-    default: return <Star {...iconProps} />;
-  }
-};
-
-// タイプ別グラデーション
-const getTypeGradient = (type: DesignerType) => {
-  switch (type) {
-    case 'artist': return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-    case 'strategist': return 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
-    case 'partner': return 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
-    case 'business_designer': return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-    case 'growth': return 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
-    case 'all_rounder': return 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)';
-    default: return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+    case 'artist': return '🎨';
+    case 'strategist': return '💡';
+    case 'partner': return '🤝';
+    case 'business_designer': return '📈';
+    case 'growth': return '🚀';
+    case 'all_rounder': return '⭐';
+    default: return '⭐';
   }
 };
 
 export default function NewHome() {
   const navigate = useNavigate();
-  const { profile, user } = useAuth();
+  const { profile, user, signOut } = useAuth();
   
   // 診断結果を取得
   const { data: diagnosis } = useDiagnosisResult(user?.id);
   const typeInfo = diagnosis?.designer_type ? designerTypes[diagnosis.designer_type as DesignerType] : null;
 
-  // 提案された質問
-  const suggestedQuestions = [
-    { id: 1, text: '単価を上げるには？' },
-    { id: 2, text: '営業文の書き方' },
-    { id: 3, text: '自分に合った案件は？' },
+  const handleLogout = async () => {
+    if (confirm('ログアウトしますか？')) {
+      await signOut();
+      navigate('/login');
+    }
+  };
+
+  // 機能グリッド（2行3列）
+  const features = [
+    { icon: Wallet, label: '収入記録', color: 'bg-emerald-500', path: '/income-management' },
+    { icon: MessageCircle, label: 'AI相談', color: 'bg-red-500', path: '/chat' },
+    { icon: Sparkles, label: 'タイプ診断', color: 'bg-orange-500', path: '/diagnosis' },
+    { icon: TrendingUp, label: 'スキル診断', color: 'bg-blue-500', path: '/skill-diagnosis' },
+    { icon: Heart, label: '価値観診断', color: 'bg-pink-500', path: '/value-diagnosis' },
+    { icon: User, label: 'プロフィール', color: 'bg-purple-500', path: '/profile' },
+  ];
+
+  // リストメニュー
+  const menuItems = [
+    { icon: PlayCircle, label: '講義動画', path: '/videos' },
+    { icon: Bell, label: 'お知らせ', path: '/announcements' },
+    { icon: Settings, label: '設定', path: '/settings' },
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto pt-4 pb-6 px-2 sm:px-4 bg-white" style={{ maxWidth: '512px' }}>
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto pb-8" style={{ maxWidth: '512px' }}>
         
-        {/* メインカード（V POINT Payスタイル） */}
-        <div className="bg-white rounded-3xl shadow-lg overflow-hidden mb-6">
-          {/* ヘッダー部分（赤背景 + キャラクター） */}
-          <div 
-            className="px-6 pt-6 pb-8 text-white relative overflow-hidden"
-            style={{ 
-              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)'
-            }}
-          >
-            {/* 背景のキャラクター画像（大きく配置） */}
-            <div 
-              className="absolute pointer-events-none"
-              style={{ bottom: '-19px', right: '-6px' }}
+        {/* ヘッダー */}
+        <div className="flex items-center justify-between px-4 py-4 bg-white border-b border-slate-100">
+          <h1 className="text-xl font-bold text-slate-900">マイページ</h1>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleLogout}
+              className="p-2 hover:bg-slate-100 rounded-full transition-all"
             >
-              <img 
-                src="/home_character.png" 
-                alt="" 
-                className="h-48 w-auto"
-                style={{ 
-                  filter: 'drop-shadow(3px 3px 10px rgba(0,0,0,0.25))'
-                }}
-              />
-            </div>
-            
-            {/* プロフィール情報 */}
-            <div className="relative z-10">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden ring-4 ring-white/30">
+              <LogOut size={20} className="text-slate-500" />
+            </button>
+          </div>
+        </div>
+
+        {/* プロフィールカード */}
+        <div className="mx-4 mt-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="px-5 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-slate-200">
                   <img
                     src="/dezajuku_icon_0531_1-05 copy.png"
                     alt="Profile"
@@ -98,132 +84,130 @@ export default function NewHome() {
                   />
                 </div>
                 <div>
-                  <p className="text-white/70 text-sm">こんにちは</p>
-                  <h1 className="text-2xl font-bold">{profile?.name || 'ゲスト'}さん</h1>
+                  <h2 className="text-lg font-bold text-slate-900">{profile?.name || 'ゲスト'}</h2>
+                  {typeInfo ? (
+                    <p className="text-sm text-slate-500 flex items-center gap-1">
+                      <span>{getDesignerTypeIcon(typeInfo.type, 14)}</span>
+                      {typeInfo.name}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-slate-400">タイプ未診断</p>
+                  )}
                 </div>
               </div>
-              
-              {/* デザイナータイプ表示 */}
-              {typeInfo ? (
-                <div 
-                  onClick={() => navigate('/profile')}
-                  className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit cursor-pointer hover:bg-white/30 transition-all"
-                >
-                  {getDesignerTypeIcon(typeInfo.type, 14)}
-                  <span className="font-medium text-sm">{typeInfo.name}</span>
-                  <ChevronRight size={12} className="text-white/60" />
-                </div>
-              ) : (
-                <div 
-                  onClick={() => navigate('/diagnosis')}
-                  className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit cursor-pointer hover:bg-white/30 transition-all"
-                >
-                  <Sparkles size={14} />
-                  <span className="font-medium text-sm">診断を受けてタイプを知る</span>
-                  <ChevronRight size={12} className="text-white/60" />
-                </div>
-              )}
+              <button 
+                onClick={() => navigate('/profile')}
+                className="text-sm text-red-600 font-medium"
+              >
+                詳細
+              </button>
             </div>
           </div>
-          
-          {/* アクションボタン（4列グリッド） */}
-          <div className="grid grid-cols-4 gap-2 px-4 py-4 border-b border-slate-100">
-            <button 
-              onClick={() => navigate('/income-management')}
-              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center">
-                <Wallet size={20} className="text-emerald-600" />
+        </div>
+
+        {/* 収入サマリーカード */}
+        <div 
+          className="mx-4 mt-3 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate('/income-management')}
+        >
+          <div className="px-5 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <Wallet size={22} className="text-emerald-600" />
               </div>
-              <span className="text-xs text-slate-600 font-medium">収入記録</span>
-            </button>
-            
-            <button 
-              onClick={() => navigate('/diagnosis')}
-              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
-                <Sparkles size={20} className="text-red-600" />
+              <div>
+                <p className="text-xs text-slate-500">今月の収入</p>
+                <p className="text-lg font-bold text-slate-900">---</p>
               </div>
-              <span className="text-xs text-slate-600 font-medium">タイプ診断</span>
-            </button>
-            
-            <button 
-              onClick={() => navigate('/skill-diagnosis')}
-              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                <TrendingUp size={20} className="text-blue-600" />
-              </div>
-              <span className="text-xs text-slate-600 font-medium">スキル診断</span>
-            </button>
-            
-            <button 
-              onClick={() => navigate('/value-diagnosis')}
-              className="flex flex-col items-center gap-2 py-3 hover:bg-slate-50 rounded-xl transition-all"
-            >
-              <div className="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center">
-                <Heart size={20} className="text-pink-600" />
-              </div>
-              <span className="text-xs text-slate-600 font-medium">価値観診断</span>
+            </div>
+            <button className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-full hover:bg-red-700 transition-colors">
+              記録する
             </button>
           </div>
-          
-          {/* ハルキAIに相談するボタン */}
-          <div 
-            onClick={() => navigate('/chat')}
-            className="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-slate-50 transition-all"
-          >
-            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-red-100">
+        </div>
+
+        {/* AIバナー */}
+        <div 
+          className="mx-4 mt-3 rounded-2xl overflow-hidden cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)' }}
+          onClick={() => navigate('/chat')}
+        >
+          <div className="px-5 py-5 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-white shadow-md flex-shrink-0">
               <img
                 src="/haruki_icon.jpg"
                 alt="ハルキ"
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full bg-red-500 flex items-center justify-center"><span class="text-white font-bold">H</span></div>';
-                }}
               />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-slate-900">ハルキAIに相談する</p>
-              <p className="text-xs text-slate-500">案件・スキル・キャリアの悩みを解決</p>
+              <p className="font-bold text-red-900">ハルキAIに相談する</p>
+              <p className="text-sm text-red-700/70">キャリア・案件・スキルの悩みを解決</p>
             </div>
-            <ChevronRight size={20} className="text-slate-400" />
+            <ChevronRight size={20} className="text-red-400" />
           </div>
         </div>
 
-        {/* おすすめの質問 */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-slate-900 font-bold">こんな相談ができます</h2>
-            <button 
-              onClick={() => navigate('/chat')}
-              className="text-sm text-red-600 font-medium hover:underline"
-            >
-              すべて見る
-            </button>
+        {/* 機能グリッド（2行3列） */}
+        <div className="mx-4 mt-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="grid grid-cols-3 gap-0">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              const isLastRow = index >= 3;
+              const isNotLastColumn = (index + 1) % 3 !== 0;
+              
+              return (
+                <button
+                  key={feature.label}
+                  onClick={() => navigate(feature.path)}
+                  className={`flex flex-col items-center gap-2 py-5 hover:bg-slate-50 transition-all ${
+                    isNotLastColumn ? 'border-r border-slate-100' : ''
+                  } ${!isLastRow ? 'border-b border-slate-100' : ''}`}
+                >
+                  <div className={`w-11 h-11 rounded-2xl ${feature.color} flex items-center justify-center shadow-sm`}>
+                    <Icon size={22} className="text-white" />
+                  </div>
+                  <span className="text-xs text-slate-600 font-medium">{feature.label}</span>
+                </button>
+              );
+            })}
           </div>
-          
-          <div className="space-y-2">
-            {suggestedQuestions.map((q) => (
+        </div>
+
+        {/* リストメニュー */}
+        <div className="mx-4 mt-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            const isLast = index === menuItems.length - 1;
+            
+            return (
               <button
-                key={q.id}
-                onClick={() => navigate('/chat', { state: { initialQuestion: q.text } })}
-                className="w-full bg-white rounded-xl p-4 border border-slate-200 hover:border-red-200 hover:shadow-md transition-all duration-300 flex items-center gap-3 group"
+                key={item.label}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-all ${
+                  !isLast ? 'border-b border-slate-100' : ''
+                }`}
               >
-                <span className="flex-1 text-left font-medium text-slate-700 group-hover:text-slate-900">
-                  {q.text}
-                </span>
-                <ChevronRight size={18} className="text-slate-300 group-hover:text-red-500 transition-colors" />
+                <Icon size={20} className="text-slate-400" />
+                <span className="flex-1 text-left text-slate-700 font-medium">{item.label}</span>
+                <ChevronRight size={18} className="text-slate-300" />
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
 
-        {/* フッタースペース */}
-        <div className="h-24" />
+        {/* ログアウトボタン */}
+        <div className="mx-4 mt-4">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2 py-4 text-slate-500 hover:text-red-600 transition-colors"
+          >
+            <LogOut size={18} />
+            <span className="font-medium">ログアウト</span>
+          </button>
+        </div>
+
       </div>
     </div>
   );
 }
-
