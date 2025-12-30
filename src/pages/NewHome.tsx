@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   MessageCircle, Wallet, ChevronRight, Sparkles, TrendingUp, Heart, 
-  User, Settings, LogOut, PlayCircle, Bell
+  User, Settings, LogOut
 } from 'lucide-react';
 import { useDiagnosisResult } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
@@ -49,8 +49,6 @@ export default function NewHome() {
 
   // リストメニュー
   const menuItems = [
-    { icon: PlayCircle, label: '講義動画', path: '/videos' },
-    { icon: Bell, label: 'お知らせ', path: '/announcements' },
     { icon: Settings, label: '設定', path: '/settings' },
   ];
 
@@ -102,27 +100,6 @@ export default function NewHome() {
                 詳細
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* 収入サマリーカード */}
-        <div 
-          className="mx-4 mt-3 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-          onClick={() => navigate('/income-management')}
-        >
-          <div className="px-5 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <Wallet size={22} className="text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500">今月の収入</p>
-                <p className="text-lg font-bold text-slate-900">---</p>
-              </div>
-            </div>
-            <button className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-full hover:bg-red-700 transition-colors">
-              記録する
-            </button>
           </div>
         </div>
 
