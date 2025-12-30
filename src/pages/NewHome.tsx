@@ -2,15 +2,22 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   MessageCircle, Wallet, ChevronRight, Sparkles, 
-  User, Settings, LogOut
+  User, Settings, LogOut, RefreshCw, BarChart3
 } from 'lucide-react';
-import { useDiagnosisResult } from '../hooks/useDiagnosis';
+import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
+import { skillCategoryNames } from '../data/skillQuestions';
 import { DesignerType } from '../types/diagnosis';
+import {
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  Radar,
+  ResponsiveContainer,
+} from 'recharts';
 
-// デザイナータイプアイコン
-const getDesignerTypeIcon = (type: DesignerType, size = 24) => {
-  const iconProps = { size, strokeWidth: 2 };
+// デザイナータイプアイコン（絵文字版）
+const getDesignerTypeEmoji = (type: DesignerType) => {
   switch (type) {
     case 'artist': return '🎨';
     case 'strategist': return '💡';
@@ -22,13 +29,29 @@ const getDesignerTypeIcon = (type: DesignerType, size = 24) => {
   }
 };
 
+// タイプ別グラデーション
+const getTypeGradient = (type: DesignerType) => {
+  switch (type) {
+    case 'artist': return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+    case 'strategist': return 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+    case 'partner': return 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+    case 'business_designer': return 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+    case 'growth': return 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)';
+    case 'all_rounder': return 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)';
+    default: return 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+  }
+};
+
 export default function NewHome() {
   const navigate = useNavigate();
   const { profile, user, signOut } = useAuth();
   
   // 診断結果を取得
   const { data: diagnosis } = useDiagnosisResult(user?.id);
+  const { data: skillDiagnosis } = useSkillDiagnosis(user?.id);
+  
   const typeInfo = diagnosis?.designer_type ? designerTypes[diagnosis.designer_type as DesignerType] : null;
+  const hasSkillDiagnosis = !!skillDiagnosis?.design_skill;
 
   const handleLogout = async () => {
     if (confirm('ログアウトしますか？')) {
@@ -49,6 +72,15 @@ export default function NewHome() {
   const menuItems = [
     { icon: Settings, label: '設定', path: '/settings' },
   ];
+
+  // スキルレーダーチャートデータ
+  const skillData = hasSkillDiagnosis ? [
+    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0 },
+    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0 },
+    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0 },
+    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0 },
+    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0 },
+  ] : null;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -83,7 +115,7 @@ export default function NewHome() {
                   <h2 className="text-lg font-bold text-slate-900">{profile?.name || 'ゲスト'}</h2>
                   {typeInfo ? (
                     <p className="text-sm text-slate-500 flex items-center gap-1">
-                      <span>{getDesignerTypeIcon(typeInfo.type, 14)}</span>
+                      <span>{getDesignerTypeEmoji(typeInfo.type)}</span>
                       {typeInfo.name}
                     </p>
                   ) : (
@@ -95,11 +127,82 @@ export default function NewHome() {
                 onClick={() => navigate('/profile')}
                 className="text-sm text-red-600 font-medium"
               >
-                詳細
+                編集
               </button>
             </div>
           </div>
         </div>
+
+        {/* デザイナータイプカード */}
+        {typeInfo ? (
+          <div className="mx-4 mt-3">
+            <div
+              className="p-5 rounded-2xl text-white relative overflow-hidden cursor-pointer"
+              style={{ background: getTypeGradient(typeInfo.type) }}
+              onClick={() => navigate('/comprehensive-diagnosis')}
+            >
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-6xl opacity-20">
+                {getDesignerTypeEmoji(typeInfo.type)}
+              </div>
+              <div className="relative z-10">
+                <p className="text-white/70 text-xs mb-1">あなたのタイプ</p>
+                <h3 className="text-xl font-bold mb-1">{typeInfo.name}</h3>
+                <p className="text-white/80 text-xs line-clamp-2">{typeInfo.description}</p>
+              </div>
+              <div className="absolute bottom-3 right-3">
+                <RefreshCw size={16} className="text-white/50" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div 
+            className="mx-4 mt-3 p-5 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white cursor-pointer"
+            onClick={() => navigate('/comprehensive-diagnosis')}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/80 text-sm mb-1">まずは診断を受けよう</p>
+                <h3 className="text-lg font-bold">デザイナー総合診断</h3>
+              </div>
+              <Sparkles size={32} className="text-white/80" />
+            </div>
+          </div>
+        )}
+
+        {/* スキルグラフ（診断済みの場合） */}
+        {hasSkillDiagnosis && skillData && (
+          <div className="mx-4 mt-3 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-5 py-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <BarChart3 size={18} className="text-blue-500" />
+                  スキルバランス
+                </h3>
+                <button
+                  onClick={() => navigate('/comprehensive-diagnosis')}
+                  className="p-1 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <RefreshCw size={16} className="text-slate-400" />
+                </button>
+              </div>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={skillData}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis dataKey="skill" tick={{ fill: '#64748b', fontSize: 10 }} />
+                    <Radar
+                      dataKey="value"
+                      stroke={typeInfo ? typeInfo.color : '#3b82f6'}
+                      fill={typeInfo ? typeInfo.color : '#3b82f6'}
+                      fillOpacity={0.3}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* AIバナー */}
         <div 
