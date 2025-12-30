@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   MessageCircle, Wallet, ChevronRight, Sparkles, 
-  User, Settings, LogOut, RefreshCw, BarChart3
+  Settings, LogOut, RefreshCw, BarChart3
 } from 'lucide-react';
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
@@ -65,7 +65,6 @@ export default function NewHome() {
     { icon: Wallet, label: '収入記録', color: 'bg-emerald-500', path: '/income-management' },
     { icon: MessageCircle, label: 'AI相談', color: 'bg-red-500', path: '/chat' },
     { icon: Sparkles, label: '総合診断', color: 'bg-gradient-to-br from-red-500 to-orange-500', path: '/comprehensive-diagnosis' },
-    { icon: User, label: 'プロフィール', color: 'bg-purple-500', path: '/profile' },
   ];
 
   // リストメニュー
@@ -226,13 +225,12 @@ export default function NewHome() {
           </div>
         </div>
 
-        {/* 機能グリッド（2行2列） */}
+        {/* 機能グリッド（3列） */}
         <div className="mx-4 mt-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="grid grid-cols-2 gap-0">
+          <div className="grid grid-cols-3 gap-0">
             {features.map((feature, index) => {
               const Icon = feature.icon;
-              const isLastRow = index >= 2;
-              const isNotLastColumn = (index + 1) % 2 !== 0;
+              const isNotLastColumn = index < features.length - 1;
               
               return (
                 <button
@@ -240,7 +238,7 @@ export default function NewHome() {
                   onClick={() => navigate(feature.path)}
                   className={`flex flex-col items-center gap-2 py-5 hover:bg-slate-50 transition-all ${
                     isNotLastColumn ? 'border-r border-slate-100' : ''
-                  } ${!isLastRow ? 'border-b border-slate-100' : ''}`}
+                  }`}
                 >
                   <div className={`w-11 h-11 rounded-2xl ${feature.color} flex items-center justify-center shadow-sm`}>
                     <Icon size={22} className="text-white" />
