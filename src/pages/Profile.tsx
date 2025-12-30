@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, BarChart3, Heart } from 'lucide-react';
+import { LogOut, Edit2, Check, X, RefreshCw, Sparkles, Palette, Lightbulb, Handshake, TrendingUp, Rocket, Star, BarChart3, Heart, ArrowLeft } from 'lucide-react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -164,16 +164,29 @@ export default function Profile() {
   const typeInfo = diagnosis ? designerTypes[diagnosis.designer_type] : null;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-slate-50">
+      {/* ヘッダー */}
+      <div className="bg-white border-b border-slate-100 px-4 py-3 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <button
+            onClick={() => navigate('/')}
+            className="p-2 hover:bg-slate-100 rounded-lg transition"
+          >
+            <ArrowLeft size={24} className="text-slate-700" />
+          </button>
+          <h1 className="font-bold text-slate-900">プロフィール</h1>
+          <button
+            onClick={handleSignOut}
+            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            title="ログアウト"
+          >
+            <LogOut size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-4">
       <div className="bg-white rounded-2xl shadow-sm pt-4 px-6 pb-6 mb-4 relative">
-        {/* ログアウトボタン - 右上 */}
-        <button
-          onClick={handleSignOut}
-          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-          title="ログアウト"
-        >
-          <LogOut size={20} />
-        </button>
 
         <div className="flex flex-col items-center gap-3">
           <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-red-500 shadow-lg">
@@ -493,6 +506,7 @@ export default function Profile() {
 
       {/* フッタースペース */}
       <div className="h-24" />
+      </div>
     </div>
   );
 }

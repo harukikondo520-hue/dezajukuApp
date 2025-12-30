@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Send, Bot, User, Plus, MessageSquare, Trash2, Menu, X, Briefcase, Target, MessageCircle } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Send, Bot, User, Plus, MessageSquare, Trash2, Menu, X, Briefcase, Target, MessageCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
@@ -30,6 +30,7 @@ type ChatMode = 'project_support' | 'self_analysis' | 'free_talk';
 
 export default function AIChat() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -515,6 +516,14 @@ AI: ${aiResponse.slice(0, 100)}`;
         {/* ヘッダー：モード切替 */}
         <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3">
           <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+            {/* 戻るボタン */}
+            <button
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-slate-50 rounded-lg transition"
+            >
+              <ArrowLeft size={24} className="text-slate-700" />
+            </button>
+            
             {/* ハンバーガーメニュー（モバイル） */}
             <button
               onClick={() => setIsSidebarOpen(true)}
