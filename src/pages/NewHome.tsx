@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  MessageCircle, Wallet, ChevronRight, Sparkles, TrendingUp, Heart, 
+  MessageCircle, Wallet, ChevronRight, Sparkles, 
   User, Settings, LogOut
 } from 'lucide-react';
 import { useDiagnosisResult } from '../hooks/useDiagnosis';
@@ -37,13 +37,11 @@ export default function NewHome() {
     }
   };
 
-  // 機能グリッド（2行3列）
+  // 機能グリッド（2行2列）
   const features = [
     { icon: Wallet, label: '収入記録', color: 'bg-emerald-500', path: '/income-management' },
     { icon: MessageCircle, label: 'AI相談', color: 'bg-red-500', path: '/chat' },
-    { icon: Sparkles, label: 'タイプ診断', color: 'bg-orange-500', path: '/diagnosis' },
-    { icon: TrendingUp, label: 'スキル診断', color: 'bg-blue-500', path: '/skill-diagnosis' },
-    { icon: Heart, label: '価値観診断', color: 'bg-pink-500', path: '/value-diagnosis' },
+    { icon: Sparkles, label: '総合診断', color: 'bg-gradient-to-br from-red-500 to-orange-500', path: '/comprehensive-diagnosis' },
     { icon: User, label: 'プロフィール', color: 'bg-purple-500', path: '/profile' },
   ];
 
@@ -125,13 +123,13 @@ export default function NewHome() {
           </div>
         </div>
 
-        {/* 機能グリッド（2行3列） */}
+        {/* 機能グリッド（2行2列） */}
         <div className="mx-4 mt-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="grid grid-cols-3 gap-0">
+          <div className="grid grid-cols-2 gap-0">
             {features.map((feature, index) => {
               const Icon = feature.icon;
-              const isLastRow = index >= 3;
-              const isNotLastColumn = (index + 1) % 3 !== 0;
+              const isLastRow = index >= 2;
+              const isNotLastColumn = (index + 1) % 2 !== 0;
               
               return (
                 <button
