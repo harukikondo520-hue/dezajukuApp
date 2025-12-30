@@ -459,8 +459,8 @@ export default function Profile() {
                 <h3 className="text-sm font-medium text-slate-500 mb-4 text-center">
                   スキルマップ
                 </h3>
-                <div className="h-56 flex items-center justify-center p-2" style={{ minHeight: 200, minWidth: 200 }}>
-                  <ResponsiveContainer width="100%" height="100%" minWidth={200} minHeight={200}>
+                <div style={{ width: '100%', height: 220 }}>
+                  <ResponsiveContainer width="100%" height={220}>
                     <RadarChart data={[
                       { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill },
                       { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill },

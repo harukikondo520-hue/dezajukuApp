@@ -117,8 +117,8 @@ export default function SkillDiagnosisResultPage() {
             スキルマップ
           </h2>
 
-          <div className="h-64" style={{ minHeight: 240, minWidth: 240 }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={240} minHeight={240}>
+          <div style={{ width: '100%', height: 256 }}>
+            <ResponsiveContainer width="100%" height={256}>
               <RadarChart data={chartData}>
                 <PolarGrid stroke="#e5e7eb" />
                 <PolarAngleAxis

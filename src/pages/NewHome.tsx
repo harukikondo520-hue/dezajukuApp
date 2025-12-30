@@ -165,8 +165,8 @@ export default function NewHome() {
                       <RefreshCw size={16} className="text-slate-400" />
                     </button>
                   </div>
-                  <div className="h-48" style={{ minHeight: 180, minWidth: 180 }}>
-                    <ResponsiveContainer width="100%" height="100%" minWidth={180} minHeight={180}>
+                  <div style={{ width: '100%', height: 200 }}>
+                    <ResponsiveContainer width="100%" height={200}>
                       <RadarChart data={skillData}>
                         <PolarGrid stroke="#cbd5e1" />
                         <PolarAngleAxis dataKey="skill" tick={{ fill: '#64748b', fontSize: 10 }} />

@@ -452,8 +452,8 @@ export default function ComprehensiveDiagnosis() {
         {/* スキルグラフ */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-4">
           <h3 className="font-bold text-slate-900 mb-4">スキルバランス</h3>
-          <div className="h-64" style={{ minHeight: 240, minWidth: 240 }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={240} minHeight={240}>
+          <div style={{ width: '100%', height: 256 }}>
+            <ResponsiveContainer width="100%" height={256}>
               <RadarChart data={radarData}>
                 <PolarGrid stroke="#e2e8f0" />
                 <PolarAngleAxis dataKey="skill" tick={{ fill: '#64748b', fontSize: 12 }} />
