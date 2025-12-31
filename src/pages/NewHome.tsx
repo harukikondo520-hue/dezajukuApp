@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Wallet, ChevronRight, Sparkles, 
-  Settings, LogOut, RefreshCw, BarChart3
+  Settings, LogOut, RefreshCw, BarChart3, Image, MessageCircle
 } from 'lucide-react';
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
@@ -29,17 +29,49 @@ const getTypeGradient = (type: DesignerType) => {
   }
 };
 
-// スキル名からスキルタイプを取得
-const getSkillTypeFromName = (skillName: string): string => {
-  switch (skillName) {
-    case skillCategoryNames.design: return 'design';
-    case skillCategoryNames.planning: return 'planning';
-    case skillCategoryNames.client: return 'client';
-    case skillCategoryNames.business: return 'business';
-    case skillCategoryNames.mindset: return 'mindset';
-    default: return 'design';
-  }
-};
+// スキル診断カードの設定
+const skillCards = [
+  { 
+    key: 'design', 
+    name: skillCategoryNames.design, 
+    type: 'image' as const,
+    icon: Image,
+    color: 'bg-rose-500',
+    description: 'デザイン作品で診断'
+  },
+  { 
+    key: 'planning', 
+    name: skillCategoryNames.planning, 
+    type: 'image' as const,
+    icon: Image,
+    color: 'bg-blue-500',
+    description: '設計資料で診断'
+  },
+  { 
+    key: 'client', 
+    name: skillCategoryNames.client, 
+    type: 'chat' as const,
+    icon: MessageCircle,
+    color: 'bg-amber-500',
+    description: 'AIと対話で診断'
+  },
+  { 
+    key: 'business', 
+    name: skillCategoryNames.business, 
+    type: 'chat' as const,
+    icon: MessageCircle,
+    color: 'bg-emerald-500',
+    description: 'AIと対話で診断'
+  },
+  { 
+    key: 'mindset', 
+    name: skillCategoryNames.mindset, 
+    type: 'chat' as const,
+    icon: MessageCircle,
+    color: 'bg-purple-500',
+    description: 'AIと対話で診断'
+  },
+];
 
 export default function NewHome() {
   const navigate = useNavigate();
@@ -65,10 +97,17 @@ export default function NewHome() {
     }
   };
 
-  // スキルラベルクリック時の処理
-  const handleSkillClick = (skillName: string) => {
-    const skillType = getSkillTypeFromName(skillName);
-    navigate(`/skill-diagnosis/${skillType}`);
+  // スキルスコアを取得
+  const getSkillScore = (key: string): number | null => {
+    if (!skillDiagnosis) return null;
+    switch (key) {
+      case 'design': return skillDiagnosis.design_skill;
+      case 'planning': return skillDiagnosis.planning_skill;
+      case 'client': return skillDiagnosis.client_skill;
+      case 'business': return skillDiagnosis.business_skill;
+      case 'mindset': return skillDiagnosis.mindset_skill;
+      default: return null;
+    }
   };
 
   // 機能グリッド
@@ -82,61 +121,14 @@ export default function NewHome() {
     { icon: Settings, label: '設定', path: '/settings' },
   ];
 
-  // スキルレーダーチャートデータ（常に表示、未診断は0）
+  // スキルレーダーチャートデータ
   const skillData = [
-    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0, key: 'design' },
-    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0, key: 'planning' },
-    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0, key: 'client' },
-    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0, key: 'business' },
-    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0, key: 'mindset' },
+    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0 },
+    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0 },
+    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0 },
+    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0 },
+    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0 },
   ];
-
-  // カスタムラベルコンポーネント
-  const CustomTick = (props: any) => {
-    const { x, y, payload } = props;
-    const skillName = payload.value;
-    const skillType = getSkillTypeFromName(skillName);
-    const score = skillData.find(s => s.skill === skillName)?.value || 0;
-    const isDiagnosed = score > 0;
-    
-    return (
-      <g 
-        transform={`translate(${x},${y})`}
-        onClick={() => handleSkillClick(skillName)}
-        style={{ cursor: 'pointer' }}
-      >
-        {/* タップエリアを広げるための透明な矩形 */}
-        <rect
-          x={-40}
-          y={-12}
-          width={80}
-          height={40}
-          fill="transparent"
-        />
-        <text
-          x={0}
-          y={0}
-          dy={0}
-          textAnchor="middle"
-          fill={isDiagnosed ? '#374151' : '#6b7280'}
-          fontSize={12}
-          fontWeight={isDiagnosed ? 700 : 500}
-        >
-          {skillName}
-        </text>
-        <text
-          x={0}
-          y={16}
-          textAnchor="middle"
-          fill={isDiagnosed ? '#ef4444' : '#9ca3af'}
-          fontSize={11}
-          fontWeight={600}
-        >
-          {isDiagnosed ? `${score}点` : 'タップ'}
-        </text>
-      </g>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -219,25 +211,23 @@ export default function NewHome() {
             </div>
           )}
 
-          {/* スキルグラフ（常に表示） */}
+          {/* スキルグラフ */}
           <div className="px-4 mt-4">
             <div className="bg-slate-50 rounded-2xl overflow-hidden">
-              <div className="px-4 py-4">
-                <div className="flex items-center justify-between mb-2">
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-slate-900 flex items-center gap-2">
                     <BarChart3 size={18} className="text-blue-500" />
                     スキルバランス
                   </h3>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">各項目をタップして診断</p>
-                <div style={{ width: '100%', height: 320 }}>
-                  <ResponsiveContainer width="100%" height={320}>
-                    <RadarChart data={skillData} outerRadius={100}>
+                <div style={{ width: '100%', height: 200 }}>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <RadarChart data={skillData} outerRadius={70}>
                       <PolarGrid stroke="#cbd5e1" />
                       <PolarAngleAxis 
                         dataKey="skill" 
-                        tick={<CustomTick />}
-                        tickLine={false}
+                        tick={{ fill: '#64748b', fontSize: 10 }}
                       />
                       <Radar
                         dataKey="value"
@@ -250,6 +240,41 @@ export default function NewHome() {
                   </ResponsiveContainer>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* スキル診断カード */}
+          <div className="px-4 mt-4">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">スキル診断</p>
+            <div className="space-y-2">
+              {skillCards.map((card) => {
+                const Icon = card.icon;
+                const score = getSkillScore(card.key);
+                const isDiagnosed = score !== null && score > 0;
+                
+                return (
+                  <button
+                    key={card.key}
+                    onClick={() => navigate(`/skill-diagnosis/${card.key}`)}
+                    className="w-full bg-white rounded-xl p-4 flex items-center gap-4 hover:bg-slate-50 transition-all border border-slate-100"
+                  >
+                    <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center`}>
+                      <Icon size={20} className="text-white" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold text-slate-800">{card.name}</p>
+                      <p className="text-xs text-slate-500">{card.description}</p>
+                    </div>
+                    {isDiagnosed ? (
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-red-600">{score}点</p>
+                      </div>
+                    ) : (
+                      <ChevronRight size={20} className="text-slate-300" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
