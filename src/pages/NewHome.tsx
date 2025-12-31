@@ -29,6 +29,18 @@ const getTypeGradient = (type: DesignerType) => {
   }
 };
 
+// スキル名からスキルタイプを取得
+const getSkillTypeFromName = (skillName: string): string => {
+  switch (skillName) {
+    case skillCategoryNames.design: return 'design';
+    case skillCategoryNames.planning: return 'planning';
+    case skillCategoryNames.client: return 'client';
+    case skillCategoryNames.business: return 'business';
+    case skillCategoryNames.mindset: return 'mindset';
+    default: return 'design';
+  }
+};
+
 export default function NewHome() {
   const navigate = useNavigate();
   const { profile, user, signOut } = useAuth();
@@ -38,13 +50,25 @@ export default function NewHome() {
   const { data: skillDiagnosis } = useSkillDiagnosis(user?.id);
   
   const typeInfo = diagnosis?.designer_type ? designerTypes[diagnosis.designer_type as DesignerType] : null;
-  const hasSkillDiagnosis = !!skillDiagnosis?.design_skill;
+  const hasAnySkillDiagnosis = !!(
+    skillDiagnosis?.design_skill ||
+    skillDiagnosis?.planning_skill ||
+    skillDiagnosis?.client_skill ||
+    skillDiagnosis?.business_skill ||
+    skillDiagnosis?.mindset_skill
+  );
 
   const handleLogout = async () => {
     if (confirm('ログアウトしますか？')) {
       await signOut();
       navigate('/login');
     }
+  };
+
+  // スキルラベルクリック時の処理
+  const handleSkillClick = (skillName: string) => {
+    const skillType = getSkillTypeFromName(skillName);
+    navigate(`/skill-diagnosis/${skillType}`);
   };
 
   // 機能グリッド
@@ -58,14 +82,54 @@ export default function NewHome() {
     { icon: Settings, label: '設定', path: '/settings' },
   ];
 
-  // スキルレーダーチャートデータ
-  const skillData = hasSkillDiagnosis ? [
-    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0 },
-    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0 },
-    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0 },
-    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0 },
-    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0 },
-  ] : null;
+  // スキルレーダーチャートデータ（常に表示、未診断は0）
+  const skillData = [
+    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0, key: 'design' },
+    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0, key: 'planning' },
+    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0, key: 'client' },
+    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0, key: 'business' },
+    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0, key: 'mindset' },
+  ];
+
+  // カスタムラベルコンポーネント
+  const CustomTick = (props: any) => {
+    const { x, y, payload } = props;
+    const skillName = payload.value;
+    const skillType = getSkillTypeFromName(skillName);
+    const score = skillData.find(s => s.skill === skillName)?.value || 0;
+    const isDiagnosed = score > 0;
+    
+    return (
+      <g 
+        transform={`translate(${x},${y})`}
+        onClick={() => handleSkillClick(skillName)}
+        style={{ cursor: 'pointer' }}
+      >
+        <text
+          x={0}
+          y={0}
+          dy={0}
+          textAnchor="middle"
+          fill={isDiagnosed ? '#374151' : '#9ca3af'}
+          fontSize={10}
+          fontWeight={isDiagnosed ? 600 : 400}
+          className="hover:fill-red-600 transition-colors"
+        >
+          {skillName}
+        </text>
+        <text
+          x={0}
+          y={12}
+          textAnchor="middle"
+          fill={isDiagnosed ? '#ef4444' : '#d1d5db'}
+          fontSize={9}
+          fontWeight={600}
+        >
+          {isDiagnosed ? `${score}点` : 'タップで診断'}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -148,42 +212,39 @@ export default function NewHome() {
             </div>
           )}
 
-          {/* スキルグラフ（診断済みの場合） */}
-          {hasSkillDiagnosis && skillData && (
-            <div className="px-4 mt-4">
-              <div className="bg-slate-50 rounded-2xl overflow-hidden">
-                <div className="px-5 py-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                      <BarChart3 size={18} className="text-blue-500" />
-                      スキルバランス
-                    </h3>
-                    <button
-                      onClick={() => navigate('/comprehensive-diagnosis')}
-                      className="p-1 hover:bg-slate-200 rounded-full transition-colors"
-                    >
-                      <RefreshCw size={16} className="text-slate-400" />
-                    </button>
-                  </div>
-                  <div style={{ width: '100%', height: 200 }}>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <RadarChart data={skillData}>
-                        <PolarGrid stroke="#cbd5e1" />
-                        <PolarAngleAxis dataKey="skill" tick={{ fill: '#64748b', fontSize: 10 }} />
-                        <Radar
-                          dataKey="value"
-                          stroke={typeInfo ? typeInfo.color : '#3b82f6'}
-                          fill={typeInfo ? typeInfo.color : '#3b82f6'}
-                          fillOpacity={0.3}
-                          strokeWidth={2}
-                        />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
+          {/* スキルグラフ（常に表示） */}
+          <div className="px-4 mt-4">
+            <div className="bg-slate-50 rounded-2xl overflow-hidden">
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                    <BarChart3 size={18} className="text-blue-500" />
+                    スキルバランス
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500 mb-3">各項目をタップして診断</p>
+                <div style={{ width: '100%', height: 220 }}>
+                  <ResponsiveContainer width="100%" height={220}>
+                    <RadarChart data={skillData} outerRadius={70}>
+                      <PolarGrid stroke="#cbd5e1" />
+                      <PolarAngleAxis 
+                        dataKey="skill" 
+                        tick={<CustomTick />}
+                        tickLine={false}
+                      />
+                      <Radar
+                        dataKey="value"
+                        stroke={typeInfo ? typeInfo.color : '#3b82f6'}
+                        fill={typeInfo ? typeInfo.color : '#3b82f6'}
+                        fillOpacity={hasAnySkillDiagnosis ? 0.3 : 0.1}
+                        strokeWidth={2}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
 
         {/* === セクション区切り === */}
