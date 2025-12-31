@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Wallet, ChevronRight, Sparkles, 
-  Settings, LogOut, RefreshCw, BarChart3
+  Settings, LogOut, RefreshCw, BarChart3, User
 } from 'lucide-react';
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
@@ -75,14 +75,11 @@ export default function NewHome() {
     }
   };
 
-  // 機能グリッド
-  const features = [
-    { icon: Wallet, label: '収入記録', color: 'bg-emerald-500', path: '/income-management' },
-    { icon: Sparkles, label: '総合診断', color: 'bg-gradient-to-br from-red-500 to-orange-500', path: '/comprehensive-diagnosis' },
-  ];
-
-  // リストメニュー
-  const menuItems = [
+  // アクションボタン
+  const actionButtons = [
+    { icon: Wallet, label: '収入記録', path: '/income-management' },
+    { icon: Sparkles, label: '総合診断', path: '/comprehensive-diagnosis' },
+    { icon: User, label: 'プロフィール', path: '/profile' },
     { icon: Settings, label: '設定', path: '/settings' },
   ];
 
@@ -99,10 +96,11 @@ export default function NewHome() {
     <div className="min-h-screen bg-slate-100">
       <div className="mx-auto pb-8" style={{ maxWidth: '512px' }}>
         
-        {/* ヘッダー */}
-        <div className="flex items-center justify-between px-4 py-4 bg-white border-b border-slate-100">
-          <h1 className="text-xl font-bold text-slate-900">マイページ</h1>
-          <div className="flex items-center gap-2">
+        {/* === 上部：アクションカード === */}
+        <div className="bg-white rounded-b-3xl shadow-sm pb-6">
+          {/* ヘッダー */}
+          <div className="flex items-center justify-between px-4 py-4">
+            <h1 className="text-xl font-bold text-slate-900">マイページ</h1>
             <button 
               onClick={handleLogout}
               className="p-2 hover:bg-slate-100 rounded-full transition-all"
@@ -110,203 +108,152 @@ export default function NewHome() {
               <LogOut size={20} className="text-slate-500" />
             </button>
           </div>
-        </div>
 
-        {/* === 個人情報セクション === */}
-        <div className="bg-white pb-4">
-          {/* プロフィールカード */}
-          <div className="px-4 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-slate-200">
-                  <img
-                    src="/dezajuku_icon_0531_1-05 copy.png"
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">{profile?.name || 'ゲスト'}</h2>
-                  {typeInfo ? (
-                    <p className="text-sm text-slate-500">{typeInfo.name}</p>
-                  ) : (
-                    <p className="text-sm text-slate-400">タイプ未診断</p>
-                  )}
-                </div>
+          {/* メインカード */}
+          <div className="mx-4 bg-slate-50 rounded-2xl p-5">
+            {/* プロフィール情報 */}
+            <div className="flex items-center gap-4 mb-5 pb-4 border-b border-slate-200">
+              <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-slate-200">
+                <img
+                  src="/dezajuku_icon_0531_1-05 copy.png"
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <button 
-                onClick={() => navigate('/profile')}
-                className="text-sm text-red-600 font-medium"
-              >
-                編集
-              </button>
-            </div>
-          </div>
-
-          {/* デザイナータイプカード */}
-          {typeInfo ? (
-            <div className="px-4 mt-4">
-              <div
-                className="p-5 rounded-2xl text-white relative overflow-hidden cursor-pointer"
-                style={{ background: getTypeGradient(typeInfo.type) }}
-                onClick={() => navigate('/comprehensive-diagnosis')}
-              >
-                <div className="relative z-10">
-                  <p className="text-white/70 text-xs mb-1">あなたのタイプ</p>
-                  <h3 className="text-xl font-bold mb-1">{typeInfo.name}</h3>
-                  <p className="text-white/80 text-xs line-clamp-2">{typeInfo.description}</p>
-                </div>
-                <div className="absolute bottom-3 right-3">
-                  <RefreshCw size={16} className="text-white/50" />
-                </div>
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-slate-900">{profile?.name || 'ゲスト'}</h2>
+                {typeInfo ? (
+                  <p className="text-sm text-slate-500">{typeInfo.name}</p>
+                ) : (
+                  <p className="text-sm text-slate-400">タイプ未診断</p>
+                )}
               </div>
             </div>
-          ) : (
-            <div 
-              className="mx-4 mt-4 p-5 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white cursor-pointer"
-              onClick={() => navigate('/comprehensive-diagnosis')}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm mb-1">まずは診断を受けよう</p>
-                  <h3 className="text-lg font-bold">デザイナー総合診断</h3>
-                </div>
-                <Sparkles size={32} className="text-white/80" />
-              </div>
-            </div>
-          )}
 
-          {/* スキルグラフ */}
-          <div className="px-4 mt-4">
-            <div className="bg-slate-50 rounded-2xl overflow-hidden">
-              <div className="px-2 py-4">
-                <div className="flex items-center justify-center mb-2">
-                  <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                    <BarChart3 size={18} className="text-blue-500" />
-                    スキルバランス
-                  </h3>
-                </div>
-                <div style={{ width: '100%', height: 280 }}>
-                  <ResponsiveContainer width="100%" height={280}>
-                    <RadarChart data={skillData} outerRadius={100}>
-                      <PolarGrid stroke="#e2e8f0" />
-                      <PolarAngleAxis 
-                        dataKey="skill" 
-                        tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
-                      />
-                      <Radar
-                        dataKey="value"
-                        stroke={typeInfo ? typeInfo.color : '#6366f1'}
-                        fill={typeInfo ? typeInfo.color : '#6366f1'}
-                        fillOpacity={hasAnySkillDiagnosis ? 0.25 : 0.1}
-                        strokeWidth={2}
-                      />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* スキル診断カード（横スクロール） */}
-          <div className="mt-4">
-            <div className="px-4 mb-3">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">スキル診断</p>
-            </div>
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-2 px-4 pb-2" style={{ width: 'max-content' }}>
-                {skillCards.map((card) => {
-                  const score = getSkillScore(card.key);
-                  const isDiagnosed = score !== null && score > 0;
-                  
-                  return (
-                    <button
-                      key={card.key}
-                      onClick={() => navigate(`/skill-diagnosis/${card.key}`)}
-                      className="flex-shrink-0 w-20 rounded-2xl p-3 text-white transition-all hover:opacity-90 hover:scale-105"
-                      style={{ background: card.gradient }}
-                    >
-                      <p className="text-xs font-bold text-white/90 mb-1 truncate">{card.name}</p>
-                      {isDiagnosed ? (
-                        <p className="text-lg font-black">{score}<span className="text-xs">点</span></p>
-                      ) : (
-                        <p className="text-xs font-semibold text-white/80">診断 →</p>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* === セクション区切り === */}
-        <div className="h-3 bg-slate-100" />
-
-        {/* === アクションセクション === */}
-        <div className="bg-white pt-4 pb-4">
-          <div className="px-4 mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">アクション</p>
-          </div>
-
-          {/* 機能グリッド（2列） */}
-          <div className="mx-4 bg-slate-50 rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-2 gap-0">
-              {features.map((feature, index) => {
-                const Icon = feature.icon;
-                const isNotLastColumn = index < features.length - 1;
-                
+            {/* アクションボタン（4つ横並び） */}
+            <div className="grid grid-cols-4 gap-2">
+              {actionButtons.map((action) => {
+                const Icon = action.icon;
                 return (
                   <button
-                    key={feature.label}
-                    onClick={() => navigate(feature.path)}
-                    className={`flex flex-col items-center gap-2 py-5 hover:bg-slate-100 transition-all ${
-                      isNotLastColumn ? 'border-r border-slate-200' : ''
-                    }`}
+                    key={action.label}
+                    onClick={() => navigate(action.path)}
+                    className="flex flex-col items-center gap-2 py-3 rounded-xl hover:bg-slate-100 transition-all"
                   >
-                    <div className={`w-11 h-11 rounded-2xl ${feature.color} flex items-center justify-center shadow-sm`}>
-                      <Icon size={22} className="text-white" />
+                    <div className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center">
+                      <Icon size={20} className="text-slate-600" />
                     </div>
-                    <span className="text-xs text-slate-600 font-medium">{feature.label}</span>
+                    <span className="text-xs text-slate-600 font-medium">{action.label}</span>
                   </button>
                 );
               })}
             </div>
           </div>
+        </div>
 
-          {/* リストメニュー */}
-          <div className="mx-4 mt-4 bg-slate-50 rounded-2xl overflow-hidden">
-            {menuItems.map((item, index) => {
-              const Icon = item.icon;
-              const isLast = index === menuItems.length - 1;
-              
-              return (
-                <button
-                  key={item.label}
-                  onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center gap-4 px-5 py-4 hover:bg-slate-100 transition-all ${
-                    !isLast ? 'border-b border-slate-200' : ''
-                  }`}
-                >
-                  <Icon size={20} className="text-slate-400" />
-                  <span className="flex-1 text-left text-slate-700 font-medium">{item.label}</span>
-                  <ChevronRight size={18} className="text-slate-300" />
-                </button>
-              );
-            })}
+        {/* === 下部：マイ情報セクション === */}
+        <div className="px-4 pt-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">マイ情報</p>
+        </div>
+
+        {/* デザイナータイプカード */}
+        {typeInfo ? (
+          <div className="px-4">
+            <div
+              className="p-5 rounded-2xl text-white relative overflow-hidden cursor-pointer"
+              style={{ background: getTypeGradient(typeInfo.type) }}
+              onClick={() => navigate('/comprehensive-diagnosis')}
+            >
+              <div className="relative z-10">
+                <p className="text-white/70 text-xs mb-1">あなたのタイプ</p>
+                <h3 className="text-xl font-bold mb-1">{typeInfo.name}</h3>
+                <p className="text-white/80 text-xs line-clamp-2">{typeInfo.description}</p>
+              </div>
+              <div className="absolute bottom-3 right-3">
+                <RefreshCw size={16} className="text-white/50" />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div 
+            className="mx-4 p-5 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white cursor-pointer"
+            onClick={() => navigate('/comprehensive-diagnosis')}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white/80 text-sm mb-1">まずは診断を受けよう</p>
+                <h3 className="text-lg font-bold">デザイナー総合診断</h3>
+              </div>
+              <Sparkles size={32} className="text-white/80" />
+            </div>
+          </div>
+        )}
+
+        {/* スキルグラフ */}
+        <div className="px-4 mt-4">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+            <div className="px-2 py-4">
+              <div className="flex items-center justify-center mb-2">
+                <h3 className="font-bold text-slate-900 flex items-center gap-2">
+                  <BarChart3 size={18} className="text-blue-500" />
+                  スキルバランス
+                </h3>
+              </div>
+              <div style={{ width: '100%', height: 280 }}>
+                <ResponsiveContainer width="100%" height={280}>
+                  <RadarChart data={skillData} outerRadius={100}>
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis 
+                      dataKey="skill" 
+                      tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
+                    />
+                    <Radar
+                      dataKey="value"
+                      stroke={typeInfo ? typeInfo.color : '#6366f1'}
+                      fill={typeInfo ? typeInfo.color : '#6366f1'}
+                      fillOpacity={hasAnySkillDiagnosis ? 0.25 : 0.1}
+                      strokeWidth={2}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* ログアウトボタン */}
-        <div className="px-4 py-6">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-4 text-slate-500 hover:text-red-600 transition-colors"
-          >
-            <LogOut size={18} />
-            <span className="font-medium">ログアウト</span>
-          </button>
+        {/* スキル診断カード（横スクロール） */}
+        <div className="mt-4">
+          <div className="px-4 mb-3">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">スキル診断</p>
+          </div>
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 px-4 pb-2" style={{ width: 'max-content' }}>
+              {skillCards.map((card) => {
+                const score = getSkillScore(card.key);
+                const isDiagnosed = score !== null && score > 0;
+                
+                return (
+                  <button
+                    key={card.key}
+                    onClick={() => navigate(`/skill-diagnosis/${card.key}`)}
+                    className="flex-shrink-0 w-20 rounded-2xl p-3 text-white transition-all hover:opacity-90 hover:scale-105"
+                    style={{ background: card.gradient }}
+                  >
+                    <p className="text-xs font-bold text-white/90 mb-1 truncate">{card.name}</p>
+                    {isDiagnosed ? (
+                      <p className="text-lg font-black">{score}<span className="text-xs">点</span></p>
+                    ) : (
+                      <p className="text-xs font-semibold text-white/80">診断 →</p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
+
+        {/* フッタースペース */}
+        <div className="h-8" />
 
       </div>
     </div>
