@@ -29,13 +29,13 @@ const getTypeGradient = (type: DesignerType) => {
   }
 };
 
-// スキル診断カードの設定（色付き）
+// スキル診断カードの設定（グラデーション付き）
 const skillCards = [
-  { key: 'design', name: skillCategoryNames.design, color: '#ef4444', bgColor: 'bg-red-500' },
-  { key: 'planning', name: skillCategoryNames.planning, color: '#3b82f6', bgColor: 'bg-blue-500' },
-  { key: 'client', name: skillCategoryNames.client, color: '#f59e0b', bgColor: 'bg-amber-500' },
-  { key: 'business', name: skillCategoryNames.business, color: '#22c55e', bgColor: 'bg-emerald-500' },
-  { key: 'mindset', name: skillCategoryNames.mindset, color: '#8b5cf6', bgColor: 'bg-purple-500' },
+  { key: 'design', name: skillCategoryNames.design, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+  { key: 'planning', name: skillCategoryNames.planning, gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+  { key: 'client', name: skillCategoryNames.client, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+  { key: 'business', name: skillCategoryNames.business, gradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' },
+  { key: 'mindset', name: skillCategoryNames.mindset, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
 ];
 
 export default function NewHome() {
@@ -86,37 +86,14 @@ export default function NewHome() {
     { icon: Settings, label: '設定', path: '/settings' },
   ];
 
-  // スキルレーダーチャートデータ（色付き）
+  // スキルレーダーチャートデータ
   const skillData = [
-    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0, color: '#ef4444' },
-    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0, color: '#3b82f6' },
-    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0, color: '#f59e0b' },
-    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0, color: '#22c55e' },
-    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0, color: '#8b5cf6' },
+    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0 },
+    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0 },
+    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0 },
+    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0 },
+    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0 },
   ];
-
-  // カスタムラベル（色付き）
-  const CustomTick = (props: any) => {
-    const { x, y, payload } = props;
-    const skillName = payload.value;
-    const skillItem = skillData.find(s => s.skill === skillName);
-    const color = skillItem?.color || '#64748b';
-    
-    return (
-      <g transform={`translate(${x},${y})`}>
-        <text
-          x={0}
-          y={0}
-          textAnchor="middle"
-          fill={color}
-          fontSize={11}
-          fontWeight={600}
-        >
-          {skillName}
-        </text>
-      </g>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -215,7 +192,7 @@ export default function NewHome() {
                       <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis 
                         dataKey="skill" 
-                        tick={<CustomTick />}
+                        tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
                       />
                       <Radar
                         dataKey="value"
@@ -231,9 +208,9 @@ export default function NewHome() {
             </div>
           </div>
 
-          {/* スキル診断ボタン（横スクロール） */}
+          {/* スキル診断カード（横スクロール） */}
           <div className="mt-4">
-            <div className="px-4 mb-2">
+            <div className="px-4 mb-3">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">スキル診断</p>
             </div>
             <div className="overflow-x-auto scrollbar-hide">
@@ -246,17 +223,14 @@ export default function NewHome() {
                     <button
                       key={card.key}
                       onClick={() => navigate(`/skill-diagnosis/${card.key}`)}
-                      className="flex-shrink-0 w-24 rounded-xl p-3 text-center transition-all bg-white border border-slate-200 hover:shadow-md"
+                      className="flex-shrink-0 w-20 rounded-2xl p-3 text-white transition-all hover:opacity-90 hover:scale-105"
+                      style={{ background: card.gradient }}
                     >
-                      <div 
-                        className="w-3 h-3 rounded-full mx-auto mb-2"
-                        style={{ backgroundColor: card.color }}
-                      />
-                      <p className="text-xs font-semibold text-slate-700 mb-1 truncate">{card.name}</p>
+                      <p className="text-xs font-bold text-white/90 mb-1 truncate">{card.name}</p>
                       {isDiagnosed ? (
-                        <p className="text-sm font-bold" style={{ color: card.color }}>{score}点</p>
+                        <p className="text-lg font-black">{score}<span className="text-xs">点</span></p>
                       ) : (
-                        <p className="text-xs text-red-500 font-medium">診断 →</p>
+                        <p className="text-xs font-semibold text-white/80">診断 →</p>
                       )}
                     </button>
                   );
