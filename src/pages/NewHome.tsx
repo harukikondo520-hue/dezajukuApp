@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Wallet, ChevronRight, Sparkles, 
-  Settings, LogOut, RefreshCw, BarChart3, Image, MessageCircle
+  Settings, LogOut, RefreshCw, BarChart3
 } from 'lucide-react';
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
@@ -31,46 +31,11 @@ const getTypeGradient = (type: DesignerType) => {
 
 // スキル診断カードの設定
 const skillCards = [
-  { 
-    key: 'design', 
-    name: skillCategoryNames.design, 
-    type: 'image' as const,
-    icon: Image,
-    color: 'bg-rose-500',
-    description: 'デザイン作品で診断'
-  },
-  { 
-    key: 'planning', 
-    name: skillCategoryNames.planning, 
-    type: 'image' as const,
-    icon: Image,
-    color: 'bg-blue-500',
-    description: '設計資料で診断'
-  },
-  { 
-    key: 'client', 
-    name: skillCategoryNames.client, 
-    type: 'chat' as const,
-    icon: MessageCircle,
-    color: 'bg-amber-500',
-    description: 'AIと対話で診断'
-  },
-  { 
-    key: 'business', 
-    name: skillCategoryNames.business, 
-    type: 'chat' as const,
-    icon: MessageCircle,
-    color: 'bg-emerald-500',
-    description: 'AIと対話で診断'
-  },
-  { 
-    key: 'mindset', 
-    name: skillCategoryNames.mindset, 
-    type: 'chat' as const,
-    icon: MessageCircle,
-    color: 'bg-purple-500',
-    description: 'AIと対話で診断'
-  },
+  { key: 'design', name: skillCategoryNames.design },
+  { key: 'planning', name: skillCategoryNames.planning },
+  { key: 'client', name: skillCategoryNames.client },
+  { key: 'business', name: skillCategoryNames.business },
+  { key: 'mindset', name: skillCategoryNames.mindset },
 ];
 
 export default function NewHome() {
@@ -243,12 +208,11 @@ export default function NewHome() {
             </div>
           </div>
 
-          {/* スキル診断カード */}
+          {/* スキル診断ボタン */}
           <div className="px-4 mt-4">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">スキル診断</p>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
               {skillCards.map((card) => {
-                const Icon = card.icon;
                 const score = getSkillScore(card.key);
                 const isDiagnosed = score !== null && score > 0;
                 
@@ -256,21 +220,23 @@ export default function NewHome() {
                   <button
                     key={card.key}
                     onClick={() => navigate(`/skill-diagnosis/${card.key}`)}
-                    className="w-full bg-white rounded-xl p-4 flex items-center gap-4 hover:bg-slate-50 transition-all border border-slate-100"
+                    className={`rounded-xl p-3 text-left transition-all ${
+                      isDiagnosed 
+                        ? 'bg-white border border-slate-200' 
+                        : 'bg-slate-100 hover:bg-slate-200'
+                    }`}
                   >
-                    <div className={`w-10 h-10 rounded-xl ${card.color} flex items-center justify-center`}>
-                      <Icon size={20} className="text-white" />
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-slate-700">{card.name}</span>
+                      {isDiagnosed && (
+                        <span className="text-sm font-bold text-red-600">{score}点</span>
+                      )}
                     </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold text-slate-800">{card.name}</p>
-                      <p className="text-xs text-slate-500">{card.description}</p>
-                    </div>
-                    {isDiagnosed ? (
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-red-600">{score}点</p>
-                      </div>
-                    ) : (
-                      <ChevronRight size={20} className="text-slate-300" />
+                    {!isDiagnosed && (
+                      <span className="text-xs text-red-500 font-medium">診断する →</span>
+                    )}
+                    {isDiagnosed && (
+                      <span className="text-xs text-slate-400">再診断 →</span>
                     )}
                   </button>
                 );
