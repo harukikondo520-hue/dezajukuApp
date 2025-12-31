@@ -29,13 +29,13 @@ const getTypeGradient = (type: DesignerType) => {
   }
 };
 
-// スキル診断カードの設定
+// スキル診断カードの設定（色付き）
 const skillCards = [
-  { key: 'design', name: skillCategoryNames.design },
-  { key: 'planning', name: skillCategoryNames.planning },
-  { key: 'client', name: skillCategoryNames.client },
-  { key: 'business', name: skillCategoryNames.business },
-  { key: 'mindset', name: skillCategoryNames.mindset },
+  { key: 'design', name: skillCategoryNames.design, color: '#ef4444', bgColor: 'bg-red-500' },
+  { key: 'planning', name: skillCategoryNames.planning, color: '#3b82f6', bgColor: 'bg-blue-500' },
+  { key: 'client', name: skillCategoryNames.client, color: '#f59e0b', bgColor: 'bg-amber-500' },
+  { key: 'business', name: skillCategoryNames.business, color: '#22c55e', bgColor: 'bg-emerald-500' },
+  { key: 'mindset', name: skillCategoryNames.mindset, color: '#8b5cf6', bgColor: 'bg-purple-500' },
 ];
 
 export default function NewHome() {
@@ -86,14 +86,37 @@ export default function NewHome() {
     { icon: Settings, label: '設定', path: '/settings' },
   ];
 
-  // スキルレーダーチャートデータ
+  // スキルレーダーチャートデータ（色付き）
   const skillData = [
-    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0 },
-    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0 },
-    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0 },
-    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0 },
-    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0 },
+    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0, color: '#ef4444' },
+    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0, color: '#3b82f6' },
+    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0, color: '#f59e0b' },
+    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0, color: '#22c55e' },
+    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0, color: '#8b5cf6' },
   ];
+
+  // カスタムラベル（色付き）
+  const CustomTick = (props: any) => {
+    const { x, y, payload } = props;
+    const skillName = payload.value;
+    const skillItem = skillData.find(s => s.skill === skillName);
+    const color = skillItem?.color || '#64748b';
+    
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          textAnchor="middle"
+          fill={color}
+          fontSize={11}
+          fontWeight={600}
+        >
+          {skillName}
+        </text>
+      </g>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -179,26 +202,26 @@ export default function NewHome() {
           {/* スキルグラフ */}
           <div className="px-4 mt-4">
             <div className="bg-slate-50 rounded-2xl overflow-hidden">
-              <div className="px-5 py-4">
-                <div className="flex items-center justify-between mb-3">
+              <div className="px-2 py-4">
+                <div className="flex items-center justify-center mb-2">
                   <h3 className="font-bold text-slate-900 flex items-center gap-2">
                     <BarChart3 size={18} className="text-blue-500" />
                     スキルバランス
                   </h3>
                 </div>
-                <div style={{ width: '100%', height: 200 }}>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <RadarChart data={skillData} outerRadius={70}>
-                      <PolarGrid stroke="#cbd5e1" />
+                <div style={{ width: '100%', height: 280 }}>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <RadarChart data={skillData} outerRadius={100}>
+                      <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis 
                         dataKey="skill" 
-                        tick={{ fill: '#64748b', fontSize: 10 }}
+                        tick={<CustomTick />}
                       />
                       <Radar
                         dataKey="value"
-                        stroke={typeInfo ? typeInfo.color : '#3b82f6'}
-                        fill={typeInfo ? typeInfo.color : '#3b82f6'}
-                        fillOpacity={hasAnySkillDiagnosis ? 0.3 : 0.1}
+                        stroke={typeInfo ? typeInfo.color : '#6366f1'}
+                        fill={typeInfo ? typeInfo.color : '#6366f1'}
+                        fillOpacity={hasAnySkillDiagnosis ? 0.25 : 0.1}
                         strokeWidth={2}
                       />
                     </RadarChart>
@@ -208,39 +231,37 @@ export default function NewHome() {
             </div>
           </div>
 
-          {/* スキル診断ボタン */}
-          <div className="px-4 mt-4">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">スキル診断</p>
-            <div className="grid grid-cols-2 gap-2">
-              {skillCards.map((card) => {
-                const score = getSkillScore(card.key);
-                const isDiagnosed = score !== null && score > 0;
-                
-                return (
-                  <button
-                    key={card.key}
-                    onClick={() => navigate(`/skill-diagnosis/${card.key}`)}
-                    className={`rounded-xl p-3 text-left transition-all ${
-                      isDiagnosed 
-                        ? 'bg-white border border-slate-200' 
-                        : 'bg-slate-100 hover:bg-slate-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-slate-700">{card.name}</span>
-                      {isDiagnosed && (
-                        <span className="text-sm font-bold text-red-600">{score}点</span>
+          {/* スキル診断ボタン（横スクロール） */}
+          <div className="mt-4">
+            <div className="px-4 mb-2">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">スキル診断</p>
+            </div>
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-2 px-4 pb-2" style={{ width: 'max-content' }}>
+                {skillCards.map((card) => {
+                  const score = getSkillScore(card.key);
+                  const isDiagnosed = score !== null && score > 0;
+                  
+                  return (
+                    <button
+                      key={card.key}
+                      onClick={() => navigate(`/skill-diagnosis/${card.key}`)}
+                      className="flex-shrink-0 w-24 rounded-xl p-3 text-center transition-all bg-white border border-slate-200 hover:shadow-md"
+                    >
+                      <div 
+                        className="w-3 h-3 rounded-full mx-auto mb-2"
+                        style={{ backgroundColor: card.color }}
+                      />
+                      <p className="text-xs font-semibold text-slate-700 mb-1 truncate">{card.name}</p>
+                      {isDiagnosed ? (
+                        <p className="text-sm font-bold" style={{ color: card.color }}>{score}点</p>
+                      ) : (
+                        <p className="text-xs text-red-500 font-medium">診断 →</p>
                       )}
-                    </div>
-                    {!isDiagnosed && (
-                      <span className="text-xs text-red-500 font-medium">診断する →</span>
-                    )}
-                    {isDiagnosed && (
-                      <span className="text-xs text-slate-400">再診断 →</span>
-                    )}
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
