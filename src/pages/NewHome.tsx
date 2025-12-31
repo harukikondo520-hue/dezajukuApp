@@ -133,33 +133,53 @@ export default function NewHome() {
         {/* === 下部：マイ情報 === */}
         <div className="bg-white">
           
-          {/* デザイナータイプ（シンプル版） */}
+          {/* デザイナータイプカード */}
           <div className="px-4 py-5 border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-slate-400 mb-1">デザイナータイプ</p>
-                {typeInfo ? (
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: typeColor }}
-                    />
-                    <span className="font-bold text-slate-900">{typeInfo.name}</span>
-                  </div>
-                ) : (
-                  <span className="text-slate-400">未診断</span>
-                )}
-              </div>
-              <button
+            <p className="text-xs text-slate-400 mb-3">デザイナータイプ</p>
+            {typeInfo ? (
+              <div 
+                className="bg-white rounded-2xl border-2 overflow-hidden cursor-pointer hover:shadow-md transition-all"
+                style={{ borderColor: typeColor }}
                 onClick={() => navigate('/comprehensive-diagnosis')}
-                className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-600 transition-colors"
               >
-                {typeInfo ? '再診断' : '診断する'}
-                <ChevronRight size={16} />
-              </button>
-            </div>
-            {typeInfo && (
-              <p className="text-sm text-slate-500 mt-2 line-clamp-2">{typeInfo.description}</p>
+                <div className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-xl flex items-center justify-center"
+                        style={{ backgroundColor: `${typeColor}15` }}
+                      >
+                        <div 
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: typeColor }}
+                        />
+                      </div>
+                      <span className="text-lg font-bold text-slate-900">{typeInfo.name}</span>
+                    </div>
+                    <ChevronRight size={20} className="text-slate-300" />
+                  </div>
+                  <p className="text-sm text-slate-500 line-clamp-2">{typeInfo.description}</p>
+                </div>
+                <div 
+                  className="px-4 py-2 text-xs font-medium text-center"
+                  style={{ backgroundColor: `${typeColor}10`, color: typeColor }}
+                >
+                  タップして再診断
+                </div>
+              </div>
+            ) : (
+              <div 
+                className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-4 text-white cursor-pointer hover:opacity-90 transition-all"
+                onClick={() => navigate('/comprehensive-diagnosis')}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-white/80 text-sm mb-1">まずは診断を受けよう</p>
+                    <p className="text-lg font-bold">デザイナー総合診断</p>
+                  </div>
+                  <Sparkles size={28} className="text-white/80" />
+                </div>
+              </div>
             )}
           </div>
 
