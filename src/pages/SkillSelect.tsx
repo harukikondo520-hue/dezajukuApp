@@ -115,7 +115,7 @@ export default function SkillSelect() {
                 <div className="text-right">
                   {isDiagnosed ? (
                     <div>
-                      <p className="text-xl font-black" style={{ color: item.color }}>{score}</p>
+                      <p className="text-xl font-black number-display" style={{ color: item.color }}>{score}</p>
                       <p className="text-xs text-slate-400">点</p>
                     </div>
                   ) : (
