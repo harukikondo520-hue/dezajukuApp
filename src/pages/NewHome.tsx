@@ -57,7 +57,6 @@ export default function NewHome() {
   // アクションボタン
   const actionButtons = [
     { icon: Wallet, label: '収入記録', path: '/income-management' },
-    { icon: Sparkles, label: '総合診断', path: '/comprehensive-diagnosis' },
     { icon: User, label: 'プロフィール', path: '/profile' },
     { icon: Settings, label: '設定', path: '/settings' },
   ];
@@ -110,7 +109,7 @@ export default function NewHome() {
           </div>
 
           {/* アクションボタン（シンプル版） */}
-          <div className="grid grid-cols-4 px-4">
+          <div className="grid grid-cols-3 px-4">
             {actionButtons.map((action) => {
               const Icon = action.icon;
               return (
