@@ -36,6 +36,7 @@ export async function sendMessageToDify(
   conversationId?: string,
   onStream?: (text: string) => void,
   userContext?: UserContext,
+  systemPrompt?: string,
   mode?: 'project_support' | 'self_analysis' | 'free_talk'
 ): Promise<DifyResponse> {
   const apiKey = import.meta.env.VITE_DIFY_API_KEY;
@@ -50,6 +51,11 @@ export async function sendMessageToDify(
     // モード情報を追加
     chat_mode: mode || 'free_talk',
   };
+  
+  // システムプロンプトがある場合は追加
+  if (systemPrompt) {
+    inputs.system_prompt = systemPrompt;
+  }
   
   if (userContext) {
     if (userContext.name) {

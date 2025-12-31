@@ -105,27 +105,34 @@ export default function NewHome() {
         onClick={() => handleSkillClick(skillName)}
         style={{ cursor: 'pointer' }}
       >
+        {/* タップエリアを広げるための透明な矩形 */}
+        <rect
+          x={-40}
+          y={-12}
+          width={80}
+          height={40}
+          fill="transparent"
+        />
         <text
           x={0}
           y={0}
           dy={0}
           textAnchor="middle"
-          fill={isDiagnosed ? '#374151' : '#9ca3af'}
-          fontSize={10}
-          fontWeight={isDiagnosed ? 600 : 400}
-          className="hover:fill-red-600 transition-colors"
+          fill={isDiagnosed ? '#374151' : '#6b7280'}
+          fontSize={12}
+          fontWeight={isDiagnosed ? 700 : 500}
         >
           {skillName}
         </text>
         <text
           x={0}
-          y={12}
+          y={16}
           textAnchor="middle"
-          fill={isDiagnosed ? '#ef4444' : '#d1d5db'}
-          fontSize={9}
+          fill={isDiagnosed ? '#ef4444' : '#9ca3af'}
+          fontSize={11}
           fontWeight={600}
         >
-          {isDiagnosed ? `${score}点` : 'タップで診断'}
+          {isDiagnosed ? `${score}点` : 'タップ'}
         </text>
       </g>
     );
@@ -215,17 +222,17 @@ export default function NewHome() {
           {/* スキルグラフ（常に表示） */}
           <div className="px-4 mt-4">
             <div className="bg-slate-50 rounded-2xl overflow-hidden">
-              <div className="px-5 py-4">
+              <div className="px-4 py-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-bold text-slate-900 flex items-center gap-2">
                     <BarChart3 size={18} className="text-blue-500" />
                     スキルバランス
                   </h3>
                 </div>
-                <p className="text-xs text-slate-500 mb-3">各項目をタップして診断</p>
-                <div style={{ width: '100%', height: 220 }}>
-                  <ResponsiveContainer width="100%" height={220}>
-                    <RadarChart data={skillData} outerRadius={70}>
+                <p className="text-xs text-slate-500 mb-2">各項目をタップして診断</p>
+                <div style={{ width: '100%', height: 320 }}>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <RadarChart data={skillData} outerRadius={100}>
                       <PolarGrid stroke="#cbd5e1" />
                       <PolarAngleAxis 
                         dataKey="skill" 

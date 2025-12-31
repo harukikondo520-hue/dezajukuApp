@@ -172,14 +172,15 @@ export default function SkillDiagnosisDetail() {
     if (!config || !user) return;
     
     setIsLoading(true);
+    setError(null);
     try {
       const response = await sendMessageToDify(
         '診断を開始してください',
-        user.id,
-        undefined,
-        { name: user.email || 'ユーザー' },
-        config.systemPrompt,
-        'self_analysis'
+        '', // 新しい会話なので空文字列
+        undefined, // onStream
+        { name: user.email || 'ユーザー' }, // userContext
+        config.systemPrompt, // systemPrompt
+        'self_analysis' // mode
       );
       
       if (response.answer) {
@@ -190,7 +191,8 @@ export default function SkillDiagnosisDetail() {
         }]);
       }
     } catch (err) {
-      setError('診断の開始に失敗しました');
+      console.error('診断開始エラー:', err);
+      setError('診断の開始に失敗しました。もう一度お試しください。');
     } finally {
       setIsLoading(false);
     }
@@ -208,15 +210,16 @@ export default function SkillDiagnosisDetail() {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    setError(null);
     
     try {
       const response = await sendMessageToDify(
         input,
-        user.id,
-        undefined,
-        { name: user.email || 'ユーザー' },
-        config.systemPrompt,
-        'self_analysis'
+        '', // 新しい会話なので空文字列
+        undefined, // onStream
+        { name: user.email || 'ユーザー' }, // userContext
+        config.systemPrompt, // systemPrompt
+        'self_analysis' // mode
       );
       
       if (response.answer) {
@@ -237,7 +240,8 @@ export default function SkillDiagnosisDetail() {
         }
       }
     } catch (err) {
-      setError('メッセージの送信に失敗しました');
+      console.error('メッセージ送信エラー:', err);
+      setError('メッセージの送信に失敗しました。もう一度お試しください。');
     } finally {
       setIsLoading(false);
     }
@@ -265,44 +269,49 @@ export default function SkillDiagnosisDetail() {
       // 画像をBase64に変換
       const reader = new FileReader();
       reader.onload = async () => {
-        const base64 = reader.result as string;
-        
-        // Difyに画像分析をリクエスト
-        // Note: Difyの画像分析機能を使用（Vision対応モデルが必要）
-        const response = await sendMessageToDify(
-          `${config.imagePrompt}\n\n[画像がアップロードされました]`,
-          user.id,
-          undefined,
-          { 
-            name: user.email || 'ユーザー',
-            uploaded_image: base64,
-          },
-          config.imagePrompt || '',
-          'self_analysis'
-        );
-        
-        if (response.answer) {
-          setMessages([{
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: response.answer,
-          }]);
+        try {
+          const base64 = reader.result as string;
           
-          // スコアを抽出
-          const scoreMatch = response.answer.match(/【.*スコア】(\d+)点/);
-          if (scoreMatch) {
-            const extractedScore = parseInt(scoreMatch[1], 10);
-            setScore(extractedScore);
-            setDiagnosisComplete(true);
-            await saveScore(extractedScore);
+          // Difyに画像分析をリクエスト
+          // Note: Difyの画像分析機能を使用（Vision対応モデルが必要）
+          const response = await sendMessageToDify(
+            `${config.imagePrompt}\n\n[画像がアップロードされました]`,
+            '', // 新しい会話なので空文字列
+            undefined, // onStream
+            { 
+              name: user.email || 'ユーザー',
+            }, // userContext
+            config.imagePrompt || '', // systemPrompt
+            'self_analysis' // mode
+          );
+          
+          if (response.answer) {
+            setMessages([{
+              id: Date.now().toString(),
+              role: 'assistant',
+              content: response.answer,
+            }]);
+            
+            // スコアを抽出
+            const scoreMatch = response.answer.match(/【.*スコア】(\d+)点/);
+            if (scoreMatch) {
+              const extractedScore = parseInt(scoreMatch[1], 10);
+              setScore(extractedScore);
+              setDiagnosisComplete(true);
+              await saveScore(extractedScore);
+            }
           }
+        } catch (err) {
+          console.error('画像分析エラー:', err);
+          setError('画像の分析に失敗しました。もう一度お試しください。');
         }
         
         setIsLoading(false);
       };
       reader.readAsDataURL(selectedImage);
     } catch (err) {
-      setError('画像の分析に失敗しました');
+      console.error('画像読み込みエラー:', err);
+      setError('画像の読み込みに失敗しました');
       setIsLoading(false);
     }
   };
