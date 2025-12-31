@@ -213,7 +213,7 @@ export default function NewHome() {
 
             {/* スキル診断ボタン */}
             <button
-              onClick={() => navigate('/skill-diagnosis/design')}
+              onClick={() => navigate('/skill-select')}
               className="w-full mt-4 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90"
               style={{ backgroundColor: typeColor }}
             >

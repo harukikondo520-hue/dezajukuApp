@@ -445,7 +445,7 @@ export default function Profile() {
               </h2>
               {hasSkillDiagnosis && (
                 <button
-                  onClick={() => navigate('/skill-diagnosis')}
+                  onClick={() => navigate('/skill-select')}
                   className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                   title="再診断する"
                 >
@@ -492,7 +492,7 @@ export default function Profile() {
                     まだスキル診断を受けていません
                   </p>
                   <button
-                    onClick={() => navigate('/skill-diagnosis')}
+                    onClick={() => navigate('/skill-select')}
                     className="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
                     スキル診断を受ける

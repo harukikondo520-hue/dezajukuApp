@@ -17,6 +17,7 @@ import OnboardingGoalPage from './pages/OnboardingGoalPage';
 import SkillDiagnosisPage from './pages/SkillDiagnosisPage';
 import SkillDiagnosisResultPage from './pages/SkillDiagnosisResultPage';
 import SkillDiagnosisDetail from './pages/SkillDiagnosisDetail';
+import SkillSelect from './pages/SkillSelect';
 import IncomeManagement from './pages/IncomeManagement';
 import ComprehensiveDiagnosis from './pages/ComprehensiveDiagnosis';
 import Settings from './pages/Settings';
@@ -241,6 +242,14 @@ function AppRoutes() {
         element={
           <AuthenticatedRoute>
             <SkillDiagnosisDetail />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/skill-select"
+        element={
+          <AuthenticatedRoute>
+            <SkillSelect />
           </AuthenticatedRoute>
         }
       />
