@@ -19,6 +19,7 @@ import SkillDiagnosisResultPage from './pages/SkillDiagnosisResultPage';
 import SkillDiagnosisDetail from './pages/SkillDiagnosisDetail';
 import IncomeManagement from './pages/IncomeManagement';
 import ComprehensiveDiagnosis from './pages/ComprehensiveDiagnosis';
+import Settings from './pages/Settings';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
@@ -241,6 +242,14 @@ function AppRoutes() {
           <AuthenticatedRoute>
             <SkillDiagnosisDetail />
           </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <PrivateRoute>
+            <Settings />
+          </PrivateRoute>
         }
       />
     </Routes>
