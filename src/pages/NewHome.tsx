@@ -1,20 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  Wallet, Sparkles, 
-  LogOut, BarChart3, User, Settings, ChevronRight
-} from 'lucide-react';
-import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
+import { LogOut, ChevronRight, Zap, Target, Trophy } from 'lucide-react';
+import { useDiagnosisResult } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
-import { skillCategoryNames } from '../data/skillQuestions';
 import { DesignerTypeCode } from '../types/diagnosis';
-import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  Radar,
-  ResponsiveContainer,
-} from 'recharts';
 
 export default function NewHome() {
   const navigate = useNavigate();
@@ -22,20 +11,10 @@ export default function NewHome() {
   
   // 診断結果を取得
   const { data: diagnosis } = useDiagnosisResult(user?.id);
-  const { data: skillDiagnosis } = useSkillDiagnosis(user?.id);
   
   // 新タイプシステム対応
   const typeCode = diagnosis?.designer_type as DesignerTypeCode | undefined;
   const typeInfo = typeCode && designerTypes[typeCode] ? designerTypes[typeCode] : null;
-  const typeColor = typeInfo?.color || '#ef4444';
-  
-  const hasAnySkillDiagnosis = !!(
-    skillDiagnosis?.design_skill ||
-    skillDiagnosis?.planning_skill ||
-    skillDiagnosis?.client_skill ||
-    skillDiagnosis?.business_skill ||
-    skillDiagnosis?.mindset_skill
-  );
 
   const handleLogout = async () => {
     if (confirm('ログアウトしますか？')) {
@@ -44,191 +23,161 @@ export default function NewHome() {
     }
   };
 
-  // アクションボタン
-  const actionButtons = [
-    { icon: Wallet, label: '収入記録', path: '/income-management' },
-    { icon: User, label: 'プロフィール', path: '/profile' },
-    { icon: Settings, label: '設定', path: '/settings' },
-  ];
-
-  // スキルレーダーチャートデータ
-  const skillData = [
-    { skill: skillCategoryNames.design, value: skillDiagnosis?.design_skill || 0 },
-    { skill: skillCategoryNames.planning, value: skillDiagnosis?.planning_skill || 0 },
-    { skill: skillCategoryNames.client, value: skillDiagnosis?.client_skill || 0 },
-    { skill: skillCategoryNames.business, value: skillDiagnosis?.business_skill || 0 },
-    { skill: skillCategoryNames.mindset, value: skillDiagnosis?.mindset_skill || 0 },
-  ];
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto pb-8" style={{ maxWidth: '512px' }}>
-        
-        {/* === 上部：アクションカード === */}
-        <div className="bg-white pb-6">
-          {/* ヘッダー */}
-          <div className="flex items-center justify-between px-4 py-4">
-            <h1 className="text-xl font-bold text-slate-900">マイページ</h1>
-            <button 
-              onClick={handleLogout}
-              className="p-2 hover:bg-slate-100 rounded-full transition-all"
-            >
-              <LogOut size={20} className="text-slate-400" />
-            </button>
-          </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-lg mx-auto">
+        {/* ヘッダー */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-slate-100">
+          <h1 className="text-lg font-bold text-slate-900">プロフィール</h1>
+          <button 
+            onClick={handleLogout}
+            className="p-2 hover:bg-slate-100 rounded-full transition-all"
+          >
+            <LogOut size={20} className="text-slate-400" />
+          </button>
+        </div>
 
-          {/* プロフィール情報 */}
-          <div className="px-4 mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-100">
-                <img
-                  src="/dezajuku_icon_0531_1-05 copy.png"
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">{profile?.name || 'ゲスト'}</h2>
-                {typeInfo ? (
-                  <p className="text-sm font-medium" style={{ color: typeColor }}>
-                    {typeCode} - {typeInfo.name}
-                  </p>
-                ) : (
-                  <p className="text-sm text-slate-400">タイプ未診断</p>
-                )}
-              </div>
+        {/* プロフィール情報 */}
+        <div className="px-4 py-6 border-b border-slate-100">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-100">
+              <img
+                src="/dezajuku_icon_0531_1-05 copy.png"
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
             </div>
-          </div>
-
-          {/* アクションボタン（シンプル版） */}
-          <div className="grid grid-cols-3 px-4">
-            {actionButtons.map((action) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.label}
-                  onClick={() => navigate(action.path)}
-                  className="flex flex-col items-center gap-2 py-2 hover:opacity-70 transition-all"
-                >
-                  <Icon size={24} className="text-slate-600" />
-                  <span className="text-xs text-slate-500">{action.label}</span>
-                </button>
-              );
-            })}
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">{profile?.name || 'ゲスト'}</h2>
+              {typeInfo ? (
+                <p className="text-sm font-medium" style={{ color: typeInfo.color }}>
+                  {typeCode} - {typeInfo.name}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-400">タイプ未診断</p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* 区切り */}
-        <div className="h-2 bg-slate-100" />
-
-        {/* === 下部：マイ情報 === */}
-        <div className="bg-white">
-          
-          {/* デザイナータイプカード */}
-          <div className="px-4 py-5 border-b border-slate-100">
-            <p className="text-xs text-slate-400 mb-3">デザイナータイプ</p>
-            {typeInfo ? (
-              <div 
-                className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all"
-                style={{ background: `linear-gradient(135deg, ${typeColor} 0%, ${typeColor}dd 100%)` }}
-                onClick={() => navigate('/diagnosis')}
-              >
-                <div className="p-4 text-white relative">
-                  {/* 背景イラスト */}
-                  <div className="absolute right-2 bottom-2 opacity-20">
-                    <img
-                      src="https://i.ibb.co/cKzhRLcc/DEZAHUKU-red-1.png"
-                      alt=""
-                      className="w-20 h-20 object-contain"
-                    />
-                  </div>
-                  
-                  <div className="relative z-10">
-                    {/* グループバッジ */}
-                    <div className="inline-block px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold mb-2">
-                      Group {typeInfo.group}
-                    </div>
-                    
-                    {/* タイプコード */}
-                    <div className="text-3xl font-black mb-1 number-display tracking-wider">
-                      {typeCode}
-                    </div>
-                    
-                    {/* タイプ名 */}
-                    <h3 className="text-lg font-bold mb-1">
-                      {typeInfo.name}
-                    </h3>
-                    
-                    {/* タグライン */}
-                    <p className="text-white/80 text-sm">
-                      {typeInfo.tagline}
-                    </p>
-                  </div>
-                </div>
-                <div className="px-4 py-2 bg-black/10 text-white/90 text-xs font-medium text-center flex items-center justify-center gap-1">
-                  タップして詳細・再診断
-                  <ChevronRight size={14} />
-                </div>
-              </div>
-            ) : (
-              <div 
-                className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-4 text-white cursor-pointer hover:opacity-90 transition-all"
-                onClick={() => navigate('/diagnosis')}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-white/80 text-sm mb-1">まずは診断を受けよう</p>
-                    <p className="text-lg font-bold">デザイナータイプ診断</p>
-                  </div>
-                  <Sparkles size={28} className="text-white/80" />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* スキルバランス */}
-          <div className="px-4 py-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <BarChart3 size={18} className="text-slate-400" />
-                <span className="font-bold text-slate-900">スキルバランス</span>
-              </div>
-            </div>
-            
-            <div style={{ width: '100%', height: 260 }}>
-              <ResponsiveContainer width="100%" height={260}>
-                <RadarChart data={skillData} outerRadius={90}>
-                  <PolarGrid stroke="#e2e8f0" />
-                  <PolarAngleAxis 
-                    dataKey="skill" 
-                    tick={{ fill: '#64748b', fontSize: 11 }}
-                  />
-                  <Radar
-                    dataKey="value"
-                    stroke={typeColor}
-                    fill={typeColor}
-                    fillOpacity={hasAnySkillDiagnosis ? 0.2 : 0.05}
-                    strokeWidth={2}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* スキル診断ボタン */}
-            <button
-              onClick={() => navigate('/skill-select')}
-              className="w-full mt-4 py-3 rounded-xl text-white font-semibold transition-all hover:opacity-90"
-              style={{ backgroundColor: typeColor }}
+        {/* 診断結果 */}
+        {typeInfo ? (
+          <div className="px-4 py-6">
+            {/* メインカード */}
+            <div
+              className="rounded-2xl overflow-hidden mb-6"
+              style={{ background: `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}cc 100%)` }}
             >
-              {hasAnySkillDiagnosis ? 'スキル診断をやり直す' : 'スキル診断する'}
-            </button>
-          </div>
+              <div className="p-5 text-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold">
+                    Group {typeInfo.group}
+                  </div>
+                  <button
+                    onClick={() => navigate('/diagnosis')}
+                    className="text-xs text-white/80 hover:text-white flex items-center gap-1"
+                  >
+                    再診断 <ChevronRight size={14} />
+                  </button>
+                </div>
+                <div className="text-4xl font-black mb-1 tracking-wider number-display">
+                  {typeCode}
+                </div>
+                <h3 className="text-xl font-bold mb-1">
+                  {typeInfo.name}
+                </h3>
+                <p className="text-white/80 text-sm">
+                  {typeInfo.combination}
+                </p>
+                <p className="text-base font-medium italic mt-2">
+                  "{typeInfo.tagline}"
+                </p>
+              </div>
+            </div>
 
-        </div>
+            {/* 特徴 */}
+            <div className="bg-slate-50 rounded-2xl p-5 mb-4">
+              <h3 className="font-bold text-slate-800 mb-3">✨ あなたの特徴</h3>
+              <ul className="space-y-2">
+                {typeInfo.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2 text-slate-600 text-sm">
+                    <span className="text-slate-400 mt-0.5">•</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 0→1アクション */}
+            <div 
+              className="rounded-2xl p-5 text-white mb-4"
+              style={{ backgroundColor: typeInfo.color }}
+            >
+              <h3 className="font-bold mb-2 flex items-center gap-2">
+                <Zap className="w-5 h-5" />
+                0→1 アクション
+              </h3>
+              <p className="text-sm leading-relaxed text-white/90">
+                {typeInfo.action}
+              </p>
+            </div>
+
+            {/* 武器 */}
+            <div className="bg-slate-50 rounded-2xl p-5 mb-4">
+              <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <Target className="w-5 h-5" style={{ color: typeInfo.color }} />
+                あなたの武器
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {typeInfo.weapons.map((weapon, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1.5 rounded-full text-sm font-medium"
+                    style={{ backgroundColor: `${typeInfo.color}15`, color: typeInfo.color }}
+                  >
+                    {weapon}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* 勝ち筋 */}
+            <div className="bg-slate-900 rounded-2xl p-5">
+              <h3 className="font-bold text-white mb-2 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-yellow-400" />
+                勝ち筋
+              </h3>
+              <p className="text-sm leading-relaxed text-slate-200">
+                {typeInfo.winningStrategy}
+              </p>
+            </div>
+          </div>
+        ) : (
+          /* 未診断の場合 */
+          <div className="px-4 py-12">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">🎯</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">
+                まずは診断を受けよう
+              </h3>
+              <p className="text-sm text-slate-500 mb-6">
+                あなたのデザイナータイプを診断して<br />
+                最適な戦略を見つけましょう
+              </p>
+              <button
+                onClick={() => navigate('/diagnosis')}
+                className="px-8 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition"
+              >
+                診断を始める
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* フッタースペース */}
-        <div className="h-8" />
-
+        <div className="h-4" />
       </div>
     </div>
   );

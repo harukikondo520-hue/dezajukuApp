@@ -78,7 +78,7 @@ function OnboardingRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (profile?.onboarding_completed) {
-    return <Navigate to="/" />;
+    return <Navigate to="/chat" />;
   }
 
   return <>{children}</>;
@@ -95,7 +95,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return user ? <Navigate to="/" /> : <>{children}</>;
+  return user ? <Navigate to="/chat" /> : <>{children}</>;
 }
 
 function AppRoutes() {
@@ -141,6 +141,7 @@ function AppRoutes() {
           </OnboardingRoute>
         }
       />
+      {/* メインルート: AIチャットがデフォルト */}
       <Route
         path="/"
         element={
@@ -266,18 +267,13 @@ function AppRoutes() {
 }
 
 function App() {
-  const [showOpening, setShowOpening] = useState(true);
-
-  useEffect(() => {
-    const hasSeenOpening = sessionStorage.getItem('hasSeenOpening');
-    if (hasSeenOpening) {
-      setShowOpening(false);
-    }
-  }, []);
+  const [showOpening] = useState(() => {
+    return !sessionStorage.getItem('hasSeenOpening');
+  });
 
   const handleOpeningComplete = () => {
     sessionStorage.setItem('hasSeenOpening', 'true');
-    setShowOpening(false);
+    window.location.reload();
   };
 
   if (showOpening) {
