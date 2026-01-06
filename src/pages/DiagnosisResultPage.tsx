@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Share2, Download, ChevronRight, Zap, Target, Trophy } from 'lucide-react';
+import { Home, Share2, Zap, Target, Trophy } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { calculateDiagnosisResult, calcAxisPercentage } from '../utils/diagnosisCalc';
-import { DesignerTypeInfo, AxisScores, AxisResult, DesignerTypeCode } from '../types/diagnosis';
+import { calculateDiagnosisResult } from '../utils/diagnosisCalc';
 
 export default function DiagnosisResultPage() {
   const location = useLocation();
@@ -14,8 +13,6 @@ export default function DiagnosisResultPage() {
   const [saved, setSaved] = useState(false);
 
   const answers: number[] = location.state?.answers || [];
-
-  // 診断結果を計算
   const result = answers.length === 18 ? calculateDiagnosisResult(answers) : null;
 
   // 結果を保存
@@ -25,7 +22,6 @@ export default function DiagnosisResultPage() {
 
       setSaving(true);
       try {
-        // 既存の診断結果を確認
         const { data: existing } = await supabase
           .from('skill_diagnosis')
           .select('id')
@@ -90,9 +86,8 @@ export default function DiagnosisResultPage() {
     );
   }
 
-  const { scores, axes, typeCode, typeInfo } = result;
+  const { scores, typeCode, typeInfo } = result;
 
-  // シェア機能
   const handleShare = () => {
     const text = `私のデザイナータイプは「${typeInfo.name}」でした！\n\n${typeInfo.tagline}\n\n#デザジュク #デザイナー診断`;
     const url = window.location.origin;
@@ -108,78 +103,64 @@ export default function DiagnosisResultPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-lg mx-auto px-4 py-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-lg mx-auto">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between px-4 py-4">
           <button
             onClick={() => navigate('/')}
-            className="p-2 rounded-full hover:bg-gray-100 transition"
+            className="p-2 rounded-full hover:bg-slate-100 transition"
           >
             <Home className="w-6 h-6 text-slate-600" />
           </button>
-          <div className="flex gap-2">
-            <button
-              onClick={handleShare}
-              className="p-2 rounded-full hover:bg-gray-100 transition"
-            >
-              <Share2 className="w-5 h-5 text-slate-600" />
-            </button>
-          </div>
+          <button
+            onClick={handleShare}
+            className="p-2 rounded-full hover:bg-slate-100 transition"
+          >
+            <Share2 className="w-5 h-5 text-slate-600" />
+          </button>
         </div>
 
-        {/* タイトル */}
-        <div className="text-center mb-6">
-          <p className="text-sm text-slate-500 mb-2">あなたのデザイナータイプは...</p>
-        </div>
-
-        {/* メインカード（MBTI風） */}
-        <div
-          className="rounded-3xl p-6 mb-6 text-white relative overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}dd 100%)` }}
-        >
-          {/* 背景イラスト */}
-          <div className="absolute right-4 bottom-4 opacity-20">
-            <img
-              src="https://i.ibb.co/cKzhRLcc/DEZAHUKU-red-1.png"
-              alt=""
-              className="w-32 h-32 object-contain"
-            />
-          </div>
-
-          <div className="relative z-10">
-            {/* グループバッジ */}
-            <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-3 backdrop-blur-sm">
-              Group {typeInfo.group} - {typeInfo.group === 'A' ? '自分起点' : '他者起点'}
+        {/* メインカード */}
+        <div className="px-4">
+          <div
+            className="rounded-3xl overflow-hidden relative"
+            style={{ background: `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}cc 100%)` }}
+          >
+            {/* イラスト */}
+            <div className="flex justify-center pt-8 pb-4">
+              <img
+                src="https://i.ibb.co/cKzhRLcc/DEZAHUKU-red-1.png"
+                alt="デザイナータイプ"
+                className="w-40 h-40 object-contain"
+              />
             </div>
 
-            {/* タイプコード */}
-            <div className="text-5xl font-black mb-2 tracking-wider number-display">
-              {typeCode}
+            {/* タイプ情報 */}
+            <div className="text-center text-white px-6 pb-8">
+              <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold mb-3">
+                Group {typeInfo.group} - {typeInfo.group === 'A' ? '自分起点' : '他者起点'}
+              </div>
+              <div className="text-5xl font-black mb-2 tracking-wider number-display">
+                {typeCode}
+              </div>
+              <h1 className="text-2xl font-bold mb-2">
+                {typeInfo.name}
+              </h1>
+              <p className="text-white/80 text-sm mb-2">
+                {typeInfo.combination}
+              </p>
+              <p className="text-lg font-medium italic">
+                "{typeInfo.tagline}"
+              </p>
             </div>
-
-            {/* タイプ名 */}
-            <h1 className="text-2xl font-bold mb-2">
-              {typeInfo.name}
-            </h1>
-
-            {/* 組み合わせ */}
-            <p className="text-white/80 text-sm mb-3">
-              {typeInfo.combination}
-            </p>
-
-            {/* タグライン */}
-            <p className="text-lg font-medium italic">
-              "{typeInfo.tagline}"
-            </p>
           </div>
         </div>
 
         {/* 3軸バーグラフ */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+        <div className="px-4 py-6">
           <h3 className="font-bold text-slate-800 mb-4">あなたの3つの軸</h3>
 
-          {/* 思考OS */}
           <AxisBar
             label="思考OS"
             labelA="Logic"
@@ -189,8 +170,6 @@ export default function DiagnosisResultPage() {
             colorA="#3b82f6"
             colorB="#f59e0b"
           />
-
-          {/* 武器種 */}
           <AxisBar
             label="武器種"
             labelA="Craft"
@@ -200,8 +179,6 @@ export default function DiagnosisResultPage() {
             colorA="#22c55e"
             colorB="#8b5cf6"
           />
-
-          {/* エンジン */}
           <AxisBar
             label="エンジン"
             labelA="Self"
@@ -214,77 +191,85 @@ export default function DiagnosisResultPage() {
         </div>
 
         {/* 特徴 */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
-          <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${typeInfo.color}20` }}>
-              ✨
-            </span>
-            あなたの特徴
-          </h3>
-          <ul className="space-y-2">
-            {typeInfo.features.map((feature, i) => (
-              <li key={i} className="flex items-start gap-2 text-slate-600">
-                <span className="text-slate-400 mt-1">•</span>
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
+        <div className="px-4 pb-6">
+          <div className="bg-slate-50 rounded-2xl p-5">
+            <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+              ✨ あなたの特徴
+            </h3>
+            <ul className="space-y-2">
+              {typeInfo.features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-2 text-slate-600 text-sm">
+                  <span className="text-slate-400 mt-0.5">•</span>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* 0→1アクション */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-5 mb-6 text-white">
-          <h3 className="font-bold mb-2 flex items-center gap-2">
-            <Zap className="w-5 h-5" />
-            0→1 アクション
-          </h3>
-          <p className="leading-relaxed">
-            {typeInfo.action}
-          </p>
+        <div className="px-4 pb-6">
+          <div 
+            className="rounded-2xl p-5 text-white"
+            style={{ backgroundColor: typeInfo.color }}
+          >
+            <h3 className="font-bold mb-2 flex items-center gap-2">
+              <Zap className="w-5 h-5" />
+              0→1 アクション
+            </h3>
+            <p className="text-sm leading-relaxed text-white/90">
+              {typeInfo.action}
+            </p>
+          </div>
         </div>
 
         {/* 武器 */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
-          <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
-            <Target className="w-5 h-5" style={{ color: typeInfo.color }} />
-            あなたの武器
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {typeInfo.weapons.map((weapon, i) => (
-              <span
-                key={i}
-                className="px-3 py-1.5 rounded-full text-sm font-medium"
-                style={{ backgroundColor: `${typeInfo.color}15`, color: typeInfo.color }}
-              >
-                {weapon}
-              </span>
-            ))}
+        <div className="px-4 pb-6">
+          <div className="bg-slate-50 rounded-2xl p-5">
+            <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <Target className="w-5 h-5" style={{ color: typeInfo.color }} />
+              あなたの武器
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {typeInfo.weapons.map((weapon, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1.5 rounded-full text-sm font-medium"
+                  style={{ backgroundColor: `${typeInfo.color}15`, color: typeInfo.color }}
+                >
+                  {weapon}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* 勝ち筋 */}
-        <div className="bg-slate-900 rounded-2xl p-5 mb-6 text-white">
-          <h3 className="font-bold mb-2 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-yellow-400" />
-            勝ち筋
-          </h3>
-          <p className="leading-relaxed text-slate-200">
-            {typeInfo.winningStrategy}
-          </p>
+        <div className="px-4 pb-6">
+          <div className="bg-slate-900 rounded-2xl p-5 text-white">
+            <h3 className="font-bold mb-2 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-yellow-400" />
+              勝ち筋
+            </h3>
+            <p className="text-sm leading-relaxed text-slate-200">
+              {typeInfo.winningStrategy}
+            </p>
+          </div>
         </div>
 
         {/* ホームへ戻るボタン */}
-        <button
-          onClick={() => navigate('/')}
-          className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-2xl
-            hover:bg-slate-200 transition-all duration-200 flex items-center justify-center gap-2"
-        >
-          ホームへ戻る
-          <ChevronRight className="w-5 h-5" />
-        </button>
+        <div className="px-4 pb-8">
+          <button
+            onClick={() => navigate('/')}
+            className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-xl
+              hover:bg-slate-200 transition-all duration-200"
+          >
+            ホームへ戻る
+          </button>
+        </div>
 
-        {/* 保存中表示 */}
         {saving && (
-          <p className="text-center text-sm text-slate-400 mt-4">
+          <p className="text-center text-sm text-slate-400 pb-4">
             結果を保存中...
           </p>
         )}
