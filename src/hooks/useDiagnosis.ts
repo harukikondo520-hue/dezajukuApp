@@ -1,23 +1,33 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { DesignerType } from '../types/diagnosis';
+import { DesignerTypeCode, ThinkingAxis, WeaponAxis, EngineAxis, ValueAnswer } from '../types/diagnosis';
 
-// skill_diagnosisテーブルの構造に合わせた型
+// skill_diagnosisテーブルの構造に合わせた型（新タイプシステム対応）
 interface DiagnosisData {
   id: string;
   user_id: string;
-  designer_type: DesignerType;
+  designer_type: DesignerTypeCode | string;  // 新旧両方に対応
   design_skill: number;
   planning_skill: number;
   client_skill: number;
   business_skill: number;
   mindset_skill: number;
-  raw_answers: Record<string, number>;
+  raw_answers: number[] | Record<string, number>;
   ex_answers?: Record<string, string> | null;
-  values?: Array<{ questionId: number; question: string; answer: string }> | null;
+  values?: ValueAnswer[] | null;
   diagnosed_at: string;
   created_at: string;
   updated_at: string;
+  // 新タイプ診断用カラム
+  score_logic?: number;
+  score_emotion?: number;
+  score_craft?: number;
+  score_business?: number;
+  score_self?: number;
+  score_others?: number;
+  axis_thinking?: ThinkingAxis;
+  axis_weapon?: WeaponAxis;
+  axis_engine?: EngineAxis;
 }
 
 interface SkillDiagnosis {

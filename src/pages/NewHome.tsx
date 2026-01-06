@@ -7,7 +7,7 @@ import {
 import { useDiagnosisResult, useSkillDiagnosis } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
 import { skillCategoryNames } from '../data/skillQuestions';
-import { DesignerType } from '../types/diagnosis';
+import { DesignerTypeCode } from '../types/diagnosis';
 import {
   RadarChart,
   PolarGrid,
@@ -15,19 +15,6 @@ import {
   Radar,
   ResponsiveContainer,
 } from 'recharts';
-
-// タイプ別カラー
-const getTypeColor = (type: DesignerType) => {
-  switch (type) {
-    case 'artist': return '#ef4444';
-    case 'strategist': return '#3b82f6';
-    case 'partner': return '#22c55e';
-    case 'business_designer': return '#f59e0b';
-    case 'growth': return '#8b5cf6';
-    case 'all_rounder': return '#14b8a6';
-    default: return '#ef4444';
-  }
-};
 
 export default function NewHome() {
   const navigate = useNavigate();
@@ -37,8 +24,11 @@ export default function NewHome() {
   const { data: diagnosis } = useDiagnosisResult(user?.id);
   const { data: skillDiagnosis } = useSkillDiagnosis(user?.id);
   
-  const typeInfo = diagnosis?.designer_type ? designerTypes[diagnosis.designer_type as DesignerType] : null;
-  const typeColor = typeInfo ? getTypeColor(typeInfo.type) : '#6366f1';
+  // 新タイプシステム対応
+  const typeCode = diagnosis?.designer_type as DesignerTypeCode | undefined;
+  const typeInfo = typeCode && designerTypes[typeCode] ? designerTypes[typeCode] : null;
+  const typeColor = typeInfo?.color || '#ef4444';
+  
   const hasAnySkillDiagnosis = !!(
     skillDiagnosis?.design_skill ||
     skillDiagnosis?.planning_skill ||
@@ -100,7 +90,9 @@ export default function NewHome() {
               <div>
                 <h2 className="text-xl font-bold text-slate-900">{profile?.name || 'ゲスト'}</h2>
                 {typeInfo ? (
-                  <p className="text-sm" style={{ color: typeColor }}>{typeInfo.name}</p>
+                  <p className="text-sm font-medium" style={{ color: typeColor }}>
+                    {typeCode} - {typeInfo.name}
+                  </p>
                 ) : (
                   <p className="text-sm text-slate-400">タイプ未診断</p>
                 )}
@@ -137,44 +129,56 @@ export default function NewHome() {
             <p className="text-xs text-slate-400 mb-3">デザイナータイプ</p>
             {typeInfo ? (
               <div 
-                className="bg-white rounded-2xl border-2 overflow-hidden cursor-pointer hover:shadow-md transition-all"
-                style={{ borderColor: typeColor }}
-                onClick={() => navigate('/comprehensive-diagnosis')}
+                className="rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all"
+                style={{ background: `linear-gradient(135deg, ${typeColor} 0%, ${typeColor}dd 100%)` }}
+                onClick={() => navigate('/diagnosis')}
               >
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <div 
-                        className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: `${typeColor}15` }}
-                      >
-                        <div 
-                          className="w-4 h-4 rounded-full"
-                          style={{ backgroundColor: typeColor }}
-                        />
-                      </div>
-                      <span className="text-lg font-bold text-slate-900">{typeInfo.name}</span>
-                    </div>
-                    <ChevronRight size={20} className="text-slate-300" />
+                <div className="p-4 text-white relative">
+                  {/* 背景イラスト */}
+                  <div className="absolute right-2 bottom-2 opacity-20">
+                    <img
+                      src="https://i.ibb.co/cKzhRLcc/DEZAHUKU-red-1.png"
+                      alt=""
+                      className="w-20 h-20 object-contain"
+                    />
                   </div>
-                  <p className="text-sm text-slate-500 line-clamp-2">{typeInfo.description}</p>
+                  
+                  <div className="relative z-10">
+                    {/* グループバッジ */}
+                    <div className="inline-block px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold mb-2">
+                      Group {typeInfo.group}
+                    </div>
+                    
+                    {/* タイプコード */}
+                    <div className="text-3xl font-black mb-1 number-display tracking-wider">
+                      {typeCode}
+                    </div>
+                    
+                    {/* タイプ名 */}
+                    <h3 className="text-lg font-bold mb-1">
+                      {typeInfo.name}
+                    </h3>
+                    
+                    {/* タグライン */}
+                    <p className="text-white/80 text-sm">
+                      {typeInfo.tagline}
+                    </p>
+                  </div>
                 </div>
-                <div 
-                  className="px-4 py-2 text-xs font-medium text-center"
-                  style={{ backgroundColor: `${typeColor}10`, color: typeColor }}
-                >
-                  タップして再診断
+                <div className="px-4 py-2 bg-black/10 text-white/90 text-xs font-medium text-center flex items-center justify-center gap-1">
+                  タップして詳細・再診断
+                  <ChevronRight size={14} />
                 </div>
               </div>
             ) : (
               <div 
                 className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-4 text-white cursor-pointer hover:opacity-90 transition-all"
-                onClick={() => navigate('/comprehensive-diagnosis')}
+                onClick={() => navigate('/diagnosis')}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-white/80 text-sm mb-1">まずは診断を受けよう</p>
-                    <p className="text-lg font-bold">デザイナー総合診断</p>
+                    <p className="text-lg font-bold">デザイナータイプ診断</p>
                   </div>
                   <Sparkles size={28} className="text-white/80" />
                 </div>
