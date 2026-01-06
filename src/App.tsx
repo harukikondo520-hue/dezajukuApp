@@ -7,20 +7,9 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import NewHome from './pages/NewHome';
 import AIChat from './pages/AIChat';
-import VideoLectures from './pages/VideoLectures';
-import Profile from './pages/Profile';
-import Onboarding from './pages/Onboarding';
+import ProfilePage from './pages/ProfilePage';
 import DiagnosisPage from './pages/DiagnosisPage';
 import DiagnosisResultPage from './pages/DiagnosisResultPage';
-import ValueDiagnosisPage from './pages/ValueDiagnosisPage';
-import OnboardingGoalPage from './pages/OnboardingGoalPage';
-import SkillDiagnosisPage from './pages/SkillDiagnosisPage';
-import SkillDiagnosisResultPage from './pages/SkillDiagnosisResultPage';
-import SkillDiagnosisDetail from './pages/SkillDiagnosisDetail';
-import SkillSelect from './pages/SkillSelect';
-import IncomeManagement from './pages/IncomeManagement';
-import ComprehensiveDiagnosis from './pages/ComprehensiveDiagnosis';
-import Settings from './pages/Settings';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
@@ -37,8 +26,9 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" />;
   }
 
+  // 診断未完了の場合は診断画面へ
   if (profile && !profile.onboarding_completed) {
-    return <Navigate to="/onboarding" />;
+    return <Navigate to="/diagnosis" />;
   }
 
   return <Layout>{children}</Layout>;
@@ -62,7 +52,7 @@ function AuthenticatedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function OnboardingRoute({ children }: { children: React.ReactNode }) {
+function DiagnosisRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
 
   if (loading) {
@@ -77,15 +67,14 @@ function OnboardingRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" />;
   }
 
-  if (profile?.onboarding_completed) {
-    return <Navigate to="/chat" />;
-  }
-
+  // 既に診断完了している場合はホームへ（再診断の場合は除く）
+  // ※ profileページから「やり直す」を押した場合は許可
+  
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -95,12 +84,22 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return user ? <Navigate to="/chat" /> : <>{children}</>;
+  if (user) {
+    // 診断完了済みならホームへ、未完了なら診断へ
+    if (profile?.onboarding_completed) {
+      return <Navigate to="/" />;
+    } else {
+      return <Navigate to="/diagnosis" />;
+    }
+  }
+
+  return <>{children}</>;
 }
 
 function AppRoutes() {
   return (
     <Routes>
+      {/* 認証画面 */}
       <Route
         path="/login"
         element={
@@ -117,31 +116,26 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
+
+      {/* 診断画面 */}
       <Route
-        path="/onboarding"
+        path="/diagnosis"
         element={
-          <OnboardingRoute>
-            <Onboarding />
-          </OnboardingRoute>
-        }
-      />
-      <Route
-        path="/onboarding/diagnosis"
-        element={
-          <OnboardingRoute>
+          <DiagnosisRoute>
             <DiagnosisPage />
-          </OnboardingRoute>
+          </DiagnosisRoute>
         }
       />
       <Route
-        path="/onboarding/result"
+        path="/diagnosis/result"
         element={
-          <OnboardingRoute>
+          <AuthenticatedRoute>
             <DiagnosisResultPage />
-          </OnboardingRoute>
+          </AuthenticatedRoute>
         }
       />
-      {/* メインルート: AIチャットがデフォルト */}
+
+      {/* メイン画面（タブナビゲーション） */}
       <Route
         path="/"
         element={
@@ -159,106 +153,10 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/videos"
-        element={
-          <PrivateRoute>
-            <VideoLectures />
-          </PrivateRoute>
-        }
-      />
-      <Route
         path="/profile"
         element={
           <PrivateRoute>
-            <Profile />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/income-management"
-        element={
-          <PrivateRoute>
-            <IncomeManagement />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/diagnosis"
-        element={
-          <AuthenticatedRoute>
-            <DiagnosisPage />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/diagnosis/result"
-        element={
-          <AuthenticatedRoute>
-            <DiagnosisResultPage />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/skill-diagnosis"
-        element={
-          <AuthenticatedRoute>
-            <SkillDiagnosisPage />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/skill-diagnosis/result"
-        element={
-          <AuthenticatedRoute>
-            <SkillDiagnosisResultPage />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/value-diagnosis"
-        element={
-          <AuthenticatedRoute>
-            <ValueDiagnosisPage />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/onboarding/goal"
-        element={
-          <AuthenticatedRoute>
-            <OnboardingGoalPage />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/comprehensive-diagnosis"
-        element={
-          <AuthenticatedRoute>
-            <ComprehensiveDiagnosis />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/skill-diagnosis/:skillType"
-        element={
-          <AuthenticatedRoute>
-            <SkillDiagnosisDetail />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/skill-select"
-        element={
-          <AuthenticatedRoute>
-            <SkillSelect />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <PrivateRoute>
-            <Settings />
+            <ProfilePage />
           </PrivateRoute>
         }
       />

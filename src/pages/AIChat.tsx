@@ -36,7 +36,17 @@ export default function AIChat() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  const [currentMode, setCurrentMode] = useState<ChatMode>('free_talk');
+  
+  // URLパラメータからモードを読み取る
+  const getInitialMode = (): ChatMode => {
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode');
+    if (mode === 'project' || mode === 'project_support') return 'project_support';
+    if (mode === 'analysis' || mode === 'self_analysis') return 'self_analysis';
+    return 'free_talk';
+  };
+  
+  const [currentMode, setCurrentMode] = useState<ChatMode>(getInitialMode);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // React Query フック
