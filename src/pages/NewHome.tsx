@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Palette, ClipboardList, Users, Mail, ChevronRight, Lightbulb, MessageCircle } from 'lucide-react';
+import { Palette, ClipboardList, Mail, ChevronRight, Lightbulb, MessageCircle } from 'lucide-react';
 import { useDiagnosisResult } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
 import { DesignerTypeCode } from '../types/diagnosis';
 
-// AI一覧データ（4つの添削AI）
+// AI一覧データ（3つの添削AI）
 const aiCards = [
   {
     id: 'design_review',
@@ -24,15 +24,6 @@ const aiCards = [
     iconBg: 'bg-blue-100',
     iconColor: 'text-blue-500',
     path: '/sixstep-review',
-  },
-  {
-    id: 'client_review',
-    name: 'クライアント',
-    description: '対応相談',
-    icon: Users,
-    iconBg: 'bg-green-100',
-    iconColor: 'text-green-500',
-    path: '/client-review',
   },
   {
     id: 'sales_review',
@@ -158,7 +149,7 @@ export default function NewHome() {
 
         {/* AI添削メニュー */}
         <div className="bg-white rounded-3xl p-5">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             {aiCards.map((ai) => {
               const Icon = ai.icon;
               return (

@@ -12,7 +12,6 @@ import DiagnosisPage from './pages/DiagnosisPage';
 import DiagnosisResultPage from './pages/DiagnosisResultPage';
 import DesignReview from './pages/DesignReview';
 import SixStepReview from './pages/SixStepReview';
-import ClientReview from './pages/ClientReview';
 import SalesReview from './pages/SalesReview';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -179,14 +178,6 @@ function AppRoutes() {
         element={
           <AuthenticatedRoute>
             <SixStepReview />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/client-review"
-        element={
-          <AuthenticatedRoute>
-            <ClientReview />
           </AuthenticatedRoute>
         }
       />
