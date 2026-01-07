@@ -10,28 +10,22 @@ const aiCards = [
   {
     id: 'design_review',
     name: 'デザイン添削',
-    description: '画像で添削',
     icon: Palette,
-    iconBg: 'bg-red-100',
     iconColor: 'text-red-500',
     path: '/design-review',
   },
   {
     id: 'sixstep_review',
     name: '6STEP添削',
-    description: '制作プロセス',
     icon: ClipboardList,
-    iconBg: 'bg-blue-100',
     iconColor: 'text-blue-500',
     path: '/sixstep-review',
   },
   {
     id: 'sales_review',
     name: '営業文添削',
-    description: '提案文添削',
     icon: Mail,
-    iconBg: 'bg-purple-100',
-    iconColor: 'text-purple-500',
+    iconColor: 'text-yellow-500',
     path: '/sales-review',
   },
 ];
@@ -149,21 +143,17 @@ export default function NewHome() {
 
         {/* AI添削メニュー */}
         <div className="bg-white rounded-3xl p-5">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2">
             {aiCards.map((ai) => {
               const Icon = ai.icon;
               return (
                 <button
                   key={ai.id}
                   onClick={() => handleAICardClick(ai.path)}
-                  className="flex flex-col items-center gap-2"
+                  className="flex flex-col items-center gap-1.5 py-3 hover:bg-slate-50 rounded-xl transition"
                 >
-                  <div className={`w-12 h-12 ${ai.iconBg} rounded-xl flex items-center justify-center`}>
-                    <Icon className={`w-6 h-6 ${ai.iconColor}`} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs font-medium text-slate-800 leading-tight">{ai.name}</p>
-                  </div>
+                  <Icon className={`w-6 h-6 ${ai.iconColor}`} />
+                  <p className="text-xs font-medium text-slate-700">{ai.name}</p>
                 </button>
               );
             })}
