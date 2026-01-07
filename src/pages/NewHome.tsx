@@ -72,69 +72,46 @@ export default function NewHome() {
         
         {/* プロフィールカード */}
         <div className="bg-white rounded-3xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-slate-900">
-              {profile?.name || 'ゲスト'}
-            </h2>
-            <button 
-              onClick={() => navigate('/profile')}
-              className="text-sm text-cyan-500 font-medium"
-            >
-              プロフィール
-            </button>
-          </div>
-          
-          {typeInfo ? (
-            <button 
-              onClick={() => navigate('/profile')}
-              className="flex items-center justify-between w-full"
-            >
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: typeInfo.color + '20' }}
-                >
-                  <span style={{ color: typeInfo.color }} className="text-xs">✦</span>
-                </div>
-                <span className="text-sm text-slate-700">{typeInfo.name}</span>
-              </div>
-              <ChevronRight size={18} className="text-slate-400" />
-            </button>
-          ) : (
-            <button 
-              onClick={() => navigate('/diagnosis')}
-              className="flex items-center justify-between w-full"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
-                  <span className="text-slate-400 text-xs">?</span>
-                </div>
-                <span className="text-sm text-slate-500">タイプ診断を受ける</span>
-              </div>
-              <ChevronRight size={18} className="text-slate-400" />
-            </button>
-          )}
-        </div>
-
-        {/* ハルキAIへの相談カード */}
-        <div className="bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-3xl p-5">
           <button 
-            onClick={() => navigate('/chat')}
-            className="flex items-center gap-4 w-full text-left"
+            onClick={() => navigate('/profile')}
+            className="flex items-center gap-4 w-full"
           >
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden">
-              <img 
-                src="/haruki_icon.jpg" 
-                alt="ハルキ" 
+            <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
+              <img
+                src="/dezajuku_icon_0531_1-05 copy.png"
+                alt="Profile"
                 className="w-full h-full object-cover"
               />
             </div>
+            <div className="flex-1 text-left">
+              <h2 className="text-base font-bold text-slate-900">
+                {profile?.name || 'ゲスト'}
+              </h2>
+              {typeInfo ? (
+                <p className="text-sm text-slate-500">{typeInfo.name}</p>
+              ) : (
+                <p className="text-sm text-slate-400">タイプ未診断</p>
+              )}
+            </div>
+            <ChevronRight size={18} className="text-slate-400" />
+          </button>
+        </div>
+
+        {/* タイプ診断への誘導カード */}
+        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-3xl p-5">
+          <button 
+            onClick={() => navigate('/diagnosis')}
+            className="flex items-center gap-4 w-full text-left"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
+              <span className="text-3xl">🎯</span>
+            </div>
             <div className="flex-1">
               <h3 className="text-white font-bold text-base mb-0.5">
-                ハルキAIに相談しよう
+                {typeInfo ? 'タイプ診断をやり直す' : 'タイプ診断を受けよう'}
               </h3>
               <p className="text-white/80 text-sm">
-                何でも気軽に質問してね！
+                {typeInfo ? '新しい自分を発見しよう' : 'あなたのデザイナータイプを診断'}
               </p>
             </div>
             <ChevronRight size={20} className="text-white/80" />
