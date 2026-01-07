@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/Layout';
@@ -10,6 +10,10 @@ import AIChat from './pages/AIChat';
 import ProfilePage from './pages/ProfilePage';
 import DiagnosisPage from './pages/DiagnosisPage';
 import DiagnosisResultPage from './pages/DiagnosisResultPage';
+import DesignReview from './pages/DesignReview';
+import SixStepReview from './pages/SixStepReview';
+import ClientReview from './pages/ClientReview';
+import SalesReview from './pages/SalesReview';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
@@ -158,6 +162,40 @@ function AppRoutes() {
           <PrivateRoute>
             <ProfilePage />
           </PrivateRoute>
+        }
+      />
+
+      {/* 添削AI（独立画面） */}
+      <Route
+        path="/design-review"
+        element={
+          <AuthenticatedRoute>
+            <DesignReview />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/sixstep-review"
+        element={
+          <AuthenticatedRoute>
+            <SixStepReview />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/client-review"
+        element={
+          <AuthenticatedRoute>
+            <ClientReview />
+          </AuthenticatedRoute>
+        }
+      />
+      <Route
+        path="/sales-review"
+        element={
+          <AuthenticatedRoute>
+            <SalesReview />
+          </AuthenticatedRoute>
         }
       />
     </Routes>

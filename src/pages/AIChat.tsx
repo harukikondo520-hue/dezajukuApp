@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Send, User, Plus, MessageSquare, Trash2, Menu, X, Palette, ClipboardList, Users, Mail, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Send, User, Plus, MessageSquare, Trash2, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
 import { useConversations, useConversationMessages, useDiagnosisData, useCreateConversation, useDeleteConversation, useUpdateConversationTitle } from '../hooks/useConversations';
 import { ConversationListSkeleton } from '../components/Skeleton';
-import { getModeLabel, getModeDescription, ChatMode } from '../lib/aiPrompts';
 
 interface Message {
   id: string;
@@ -21,38 +20,17 @@ interface Conversation {
   id: string;
   title: string;
   dify_conversation_id: string | null;
-  mode: ChatMode;
   created_at: string;
   updated_at: string;
 }
 
-// 4つの添削AIモード
-const AI_MODES: ChatMode[] = ['design_review', 'sixstep_review', 'client_review', 'sales_review'];
-
 export default function AIChat() {
-  const location = useLocation();
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
-  
-  // URLパラメータからモードを読み取る
-  const getInitialMode = (): ChatMode => {
-    const params = new URLSearchParams(location.search);
-    const mode = params.get('mode');
-    if (mode === 'design_review') return 'design_review';
-    if (mode === 'sixstep_review') return 'sixstep_review';
-    if (mode === 'client_review') return 'client_review';
-    if (mode === 'sales_review') return 'sales_review';
-    // 後方互換性
-    if (mode === 'project' || mode === 'project_support') return 'client_review';
-    if (mode === 'analysis' || mode === 'self_analysis') return 'design_review';
-    return 'design_review';
-  };
-  
-  const [currentMode, setCurrentMode] = useState<ChatMode>(getInitialMode);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // React Query フック
@@ -72,25 +50,6 @@ export default function AIChat() {
   const difyApiKey = import.meta.env.VITE_DIFY_API_KEY;
   const difyApiUrl = import.meta.env.VITE_DIFY_API_URL;
   const useDify = !!(difyApiKey && difyApiUrl);
-
-  // ホーム画面から初期質問を受け取る
-  useEffect(() => {
-    const initialQuestion = location.state?.initialQuestion;
-    if (initialQuestion && !currentConversation) {
-      // 新しい会話を作成して質問を自動送信
-      createNewConversation().then((conv) => {
-        if (conv) {
-          setInput(initialQuestion);
-          // 少し遅延してから自動送信
-          setTimeout(() => {
-            handleSubmit(new Event('submit') as any, initialQuestion);
-          }, 500);
-        }
-      });
-      // stateをクリア
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
 
   // 会話が変更されたらメッセージをロード
   useEffect(() => {
@@ -132,7 +91,6 @@ export default function AIChat() {
     }
   };
 
-  // AIでトークルームタイトルを生成する関数
   const generateConversationTitle = async (userMessage: string, aiResponse: string) => {
     if (!currentConversation || !user) return;
 
@@ -145,7 +103,7 @@ AI: ${aiResponse.slice(0, 100)}`;
       const response = await sendMessageToDify(
         titlePrompt,
         '',
-        (chunk) => {},
+        () => {},
         { name: profile?.name }
       );
 
@@ -176,7 +134,6 @@ AI: ${aiResponse.slice(0, 100)}`;
     if (!confirm('このトークルームを削除しますか？')) return;
     if (!user) return;
 
-    // 削除したトークルームが現在のものだった場合
     if (currentConversation?.id === conversationId) {
       if (conversations.length > 1) {
         const nextConversation = conversations.find((c) => c.id !== conversationId);
@@ -201,25 +158,17 @@ AI: ${aiResponse.slice(0, 100)}`;
 
     const { error } = await supabase
       .from('conversation_messages')
-      .insert([
-        {
-          conversation_id: conversationId,
-          role,
-          content,
-        },
-      ]);
+      .insert([{ conversation_id: conversationId, role, content }]);
 
     if (error) {
       console.error('メッセージ保存エラー:', error);
     }
 
-    // トークルームのupdated_atを更新
     await supabase
       .from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversationId);
   };
-
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -229,9 +178,9 @@ AI: ${aiResponse.slice(0, 100)}`;
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent, initialQ?: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const messageText = initialQ || input.trim();
+    const messageText = input.trim();
     if (!messageText || isLoading) return;
 
     setIsLoading(true);
@@ -239,18 +188,16 @@ AI: ${aiResponse.slice(0, 100)}`;
 
     let conversation = currentConversation;
 
-    // トークルームがない場合は作成
     if (!conversation) {
       try {
         conversation = await createNewConversation();
         if (!conversation) {
-          setError('トークルームの作成に失敗しました。もう一度お試しください。');
+          setError('トークルームの作成に失敗しました。');
           setIsLoading(false);
           return;
         }
       } catch (error) {
-        console.error('トークルーム作成エラー:', error);
-        setError('トークルームの作成に失敗しました。もう一度お試しください。');
+        setError('トークルームの作成に失敗しました。');
         setIsLoading(false);
         return;
       }
@@ -264,27 +211,20 @@ AI: ${aiResponse.slice(0, 100)}`;
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    
-    const userInput = messageText;
     setInput('');
 
-    // 現在の会話ID
     const conversationId = conversation.id;
 
-    // メッセージを保存
     try {
-      await saveMessage('user', userInput, conversationId);
+      await saveMessage('user', messageText, conversationId);
     } catch (err) {
       console.error('メッセージ保存エラー:', err);
     }
 
-    // ストリーミング用のメッセージID（エラーハンドリング用に外で宣言）
     let streamingMessageId = '';
 
-    // Dify APIが設定されている場合
     if (useDify) {
       try {
-        // ストリーミング用のメッセージを追加
         streamingMessageId = (Date.now() + 1).toString();
         const streamingMessage: Message = {
           id: streamingMessageId,
@@ -295,7 +235,6 @@ AI: ${aiResponse.slice(0, 100)}`;
         };
         setMessages((prev) => [...prev, streamingMessage]);
 
-        // ユーザーコンテキストを構築
         const userContext: any = {
           name: profile?.name,
           goal: profile?.goal,
@@ -303,7 +242,6 @@ AI: ${aiResponse.slice(0, 100)}`;
         };
 
         if (diagnosisData) {
-          // デザイナータイプ情報
           if (diagnosisData.designer_type) {
             const typeInfo = designerTypes[diagnosisData.designer_type as keyof typeof designerTypes];
             if (typeInfo) {
@@ -311,29 +249,13 @@ AI: ${aiResponse.slice(0, 100)}`;
               userContext.designerTypeDescription = typeInfo.description;
             }
           }
-
-          // スキル診断情報
-          if (diagnosisData.design_skill !== null && diagnosisData.design_skill !== undefined) {
-            userContext.designSkill = diagnosisData.design_skill;
-            userContext.planningSkill = diagnosisData.planning_skill;
-            userContext.clientSkill = diagnosisData.client_skill;
-            userContext.businessSkill = diagnosisData.business_skill;
-            userContext.mindsetSkill = diagnosisData.mindset_skill;
-          }
-
-          // 価値観情報
-          if (diagnosisData.values && Array.isArray(diagnosisData.values)) {
-            userContext.values = diagnosisData.values;
-          }
         }
 
-        // Dify APIにメッセージを送信（ストリーミング）
         let streamedContent = '';
         const response = await sendMessageToDify(
-          userInput,
+          messageText,
           conversation.dify_conversation_id || '',
           (chunk) => {
-            // ストリーミングでテキストを更新
             streamedContent += chunk;
             setMessages((prev) =>
               prev.map((msg) =>
@@ -344,10 +266,9 @@ AI: ${aiResponse.slice(0, 100)}`;
             );
           },
           userContext,
-          currentMode // モード情報を渡す
+          'free_talk'
         );
 
-        // ストリーミング完了後、isStreamingをfalseに
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === streamingMessageId
@@ -356,18 +277,15 @@ AI: ${aiResponse.slice(0, 100)}`;
           )
         );
 
-        // AIの応答をDBに保存
         const assistantContent = response.answer || streamedContent;
         if (assistantContent) {
           await saveMessage('assistant', assistantContent, conversationId);
         }
 
-        // タイトルが「新しい会話」の場合、AIでタイトルを生成
         if (conversation.title === '新しい会話' && assistantContent) {
-          await generateConversationTitle(userInput, assistantContent);
+          await generateConversationTitle(messageText, assistantContent);
         }
 
-        // Dify会話IDを保存
         if (response.conversation_id && !conversation.dify_conversation_id) {
           await supabase
             .from('conversations')
@@ -380,15 +298,12 @@ AI: ${aiResponse.slice(0, 100)}`;
         }
       } catch (err: any) {
         console.error('Dify API エラー:', err);
-        const errorMsg = err.message || 'AIからの応答に失敗しました。もう一度お試しください。';
-        setError(errorMsg);
+        setError(err.message || 'AIからの応答に失敗しました。');
         
-        // エラー時、ストリーミング中のメッセージを削除
         if (streamingMessageId) {
           setMessages((prev) => prev.filter(msg => msg.id !== streamingMessageId));
         }
         
-        // ユーザーフレンドリーなエラーメッセージを追加
         const errorMessage: Message = {
           id: (Date.now() + 2).toString(),
           role: 'assistant',
@@ -400,15 +315,14 @@ AI: ${aiResponse.slice(0, 100)}`;
         setIsLoading(false);
       }
     } else {
-      // Dify未設定の場合はプレースホルダー
       setTimeout(async () => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
           content: 'Dify APIが設定されていません。.envファイルにVITE_DIFY_API_KEYとVITE_DIFY_API_URLを設定してください。',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
 
         try {
           await saveMessage('assistant', assistantMessage.content, conversationId);
@@ -416,19 +330,9 @@ AI: ${aiResponse.slice(0, 100)}`;
           console.error('メッセージ保存エラー:', err);
         }
 
-      setIsLoading(false);
-    }, 1000);
+        setIsLoading(false);
+      }, 1000);
     }
-  };
-
-
-  const getPlaceholderResponse = (question: string): string => {
-    const responses = [
-      'ご質問ありがとうございます。Dify連携が完了すると、より詳細な回答をお届けできるようになります。',
-      '素晴らしい質問ですね！ハルキAIとして、あなたのデザイナーキャリアを全力でサポートします。',
-      'デザジュクの創設者として、あなたの成長を心から応援しています。この機能は近日中にフル稼働します。',
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
   };
 
   const suggestedQuestions = [
@@ -438,9 +342,9 @@ AI: ${aiResponse.slice(0, 100)}`;
     '営業文の書き方',
   ];
 
-    return (
+  return (
     <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 80px)', maxHeight: 'calc(100vh - 80px)' }}>
-      {/* サイドバー（モバイルはオーバーレイ） */}
+      {/* サイドバー */}
       <div
         className={`fixed inset-0 z-40 transition-opacity lg:hidden ${
           isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -454,7 +358,6 @@ AI: ${aiResponse.slice(0, 100)}`;
         }`}
       >
         <div className="flex flex-col h-full overflow-hidden">
-          {/* サイドバーヘッダー */}
           <div className="p-4 border-b border-slate-700">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">トークルーム</h2>
@@ -474,7 +377,6 @@ AI: ${aiResponse.slice(0, 100)}`;
             </button>
           </div>
 
-          {/* トークルーム一覧 */}
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {conversationsLoading ? (
               <ConversationListSkeleton />
@@ -493,10 +395,7 @@ AI: ${aiResponse.slice(0, 100)}`;
                       ? 'bg-red-600'
                       : 'hover:bg-slate-800'
                   }`}
-                  onClick={() => {
-                    loadConversation(conv);
-                    setIsSidebarOpen(false);
-                  }}
+                  onClick={() => loadConversation(conv)}
                 >
                   <div className="flex items-start gap-2">
                     <MessageSquare size={16} className="mt-0.5 flex-shrink-0" />
@@ -523,73 +422,42 @@ AI: ${aiResponse.slice(0, 100)}`;
                 </div>
               ))
             )}
-        </div>
+          </div>
         </div>
       </div>
 
       {/* メインチャットエリア */}
       <div className="flex-1 flex flex-col min-w-0 relative overflow-hidden h-full">
-        {/* ヘッダー：モード切替 */}
+        {/* ヘッダー */}
         <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
-            {/* 戻るボタン */}
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 hover:bg-slate-50 rounded-lg transition"
-            >
-              <ArrowLeft size={24} className="text-slate-700" />
-            </button>
-            
-            {/* ハンバーガーメニュー（モバイル） */}
+          <div className="max-w-4xl mx-auto flex items-center gap-4">
             <button
               onClick={() => setIsSidebarOpen(true)}
               className="lg:hidden p-2 hover:bg-slate-50 rounded-lg transition"
             >
               <Menu size={24} className="text-slate-700" />
             </button>
-
-            {/* モード選択 */}
-            <div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide">
-              {AI_MODES.map((mode) => {
-                const ModeIcon = mode === 'design_review' ? Palette 
-                  : mode === 'sixstep_review' ? ClipboardList 
-                  : mode === 'client_review' ? Users 
-                  : Mail;
-                const isActive = currentMode === mode;
-
-                return (
-                  <button
-                    key={mode}
-                    onClick={() => setCurrentMode(mode)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-xs whitespace-nowrap transition-all duration-300 ${
-                      isActive
-                        ? 'bg-red-600 text-white shadow-md'
-                        : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    <ModeIcon size={14} />
-                    <span>{getModeLabel(mode)}</span>
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-3">
+              <img
+                src="/haruki_icon.jpg"
+                alt="ハルキ"
+                className="w-10 h-10 rounded-xl object-cover"
+              />
+              <div>
+                <h1 className="font-bold text-slate-900">ハルキAI</h1>
+                <p className="text-xs text-slate-500">デザジュク創設者と話そう</p>
+              </div>
             </div>
-          </div>
-          
-          {/* モード説明 */}
-          <div className="max-w-4xl mx-auto mt-2">
-            <p className="text-xs text-slate-500 pl-2">
-              {getModeDescription(currentMode)}
-            </p>
           </div>
         </div>
 
         {error && (
           <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center flex-shrink-0">
             {error}
-      </div>
+          </div>
         )}
 
-        {/* メッセージエリア - チャットのみスクロール可能 */}
+        {/* メッセージエリア */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
@@ -620,104 +488,88 @@ AI: ${aiResponse.slice(0, 100)}`;
             </div>
           ) : (
             <>
-        {messages.map((message) => (
-          <div
-            key={message.id}
+              {messages.map((message) => (
+                <div
+                  key={message.id}
                   className={`flex items-start gap-3 ${
                     message.role === 'user' ? 'flex-row-reverse' : ''
                   }`}
-          >
-            <div
+                >
+                  <div
                     className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
-                message.role === 'user'
-                  ? 'bg-slate-200'
-                        : ''
-              }`}
-            >
-              {message.role === 'user' ? (
-                <User size={20} className="text-slate-600" />
-              ) : (
+                      message.role === 'user' ? 'bg-slate-200' : ''
+                    }`}
+                  >
+                    {message.role === 'user' ? (
+                      <User size={20} className="text-slate-600" />
+                    ) : (
                       <img
                         src="/haruki_icon.jpg"
                         alt="ハルキさん"
                         className="w-full h-full object-cover"
                       />
-              )}
-            </div>
-            <div
-              className={`rounded-2xl px-4 py-3 ${
-                message.role === 'user'
-                  ? 'bg-slate-900 text-white rounded-tr-none'
-                  : 'bg-slate-100 text-slate-900 rounded-tl-none'
-              }`}
-              style={{ maxWidth: '75%' }}
-            >
+                    )}
+                  </div>
+                  <div
+                    className={`rounded-2xl px-4 py-3 ${
+                      message.role === 'user'
+                        ? 'bg-slate-900 text-white rounded-tr-none'
+                        : 'bg-slate-100 text-slate-900 rounded-tl-none'
+                    }`}
+                    style={{ maxWidth: '75%' }}
+                  >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
                       {message.content}
                     </p>
-            </div>
-          </div>
-        ))}
+                  </div>
+                </div>
+              ))}
 
-              {/* ローディングインジケーター - ストリーミング中は表示しない */}
               {isLoading && !messages.some(msg => msg.isStreaming) && (
-          <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img
                       src="/haruki_icon.jpg"
                       alt="ハルキさん"
                       className="w-full h-full object-cover"
                     />
-            </div>
-            <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
-                    <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                        <div
-                          className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                          style={{ animationDelay: '0ms' }}
-                        />
-                        <div
-                          className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                          style={{ animationDelay: '150ms' }}
-                        />
-                        <div
-                          className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                          style={{ animationDelay: '300ms' }}
-                        />
-                      </div>
-                      <span className="text-xs text-slate-500">考え中...</span>
-              </div>
-            </div>
-          </div>
-        )}
+                  </div>
+                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
 
-        <div ref={messagesEndRef} />
+              <div ref={messagesEndRef} />
             </>
           )}
         </div>
 
-        {/* 入力エリア - 常に下部に固定 */}
+        {/* 入力エリア */}
         <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 sticky bottom-0">
           <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+            <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder={isLoading ? "送信中..." : "ハルキAIに質問する..."}
                 className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
-            disabled={isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
                 className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
-                title={!input.trim() ? "メッセージを入力してください" : isLoading ? "送信中..." : "送信"}
-          >
-            <Send size={20} />
-          </button>
-        </div>
-      </form>
+              >
+                <Send size={20} />
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

@@ -14,7 +14,7 @@ const aiCards = [
     icon: Palette,
     color: '#ef4444',
     bgColor: 'bg-red-50',
-    mode: 'design_review',
+    path: '/design-review',
   },
   {
     id: 'sixstep_review',
@@ -23,7 +23,7 @@ const aiCards = [
     icon: ClipboardList,
     color: '#3b82f6',
     bgColor: 'bg-blue-50',
-    mode: 'sixstep_review',
+    path: '/sixstep-review',
   },
   {
     id: 'client_review',
@@ -32,7 +32,7 @@ const aiCards = [
     icon: Users,
     color: '#22c55e',
     bgColor: 'bg-green-50',
-    mode: 'client_review',
+    path: '/client-review',
   },
   {
     id: 'sales_review',
@@ -41,7 +41,7 @@ const aiCards = [
     icon: Mail,
     color: '#8b5cf6',
     bgColor: 'bg-purple-50',
-    mode: 'sales_review',
+    path: '/sales-review',
   },
 ];
 
@@ -57,8 +57,8 @@ export default function NewHome() {
   const typeInfo = typeCode && designerTypes[typeCode] ? designerTypes[typeCode] : null;
 
   // AIカードをタップしたときの処理
-  const handleAICardClick = (mode: string) => {
-    navigate(`/chat?mode=${mode}`);
+  const handleAICardClick = (path: string) => {
+    navigate(path);
   };
 
   // 今日のワンポイント（タイプに応じたTips）
@@ -93,7 +93,7 @@ export default function NewHome() {
               return (
                 <button
                   key={ai.id}
-                  onClick={() => handleAICardClick(ai.mode)}
+                  onClick={() => handleAICardClick(ai.path)}
                   className={`${ai.bgColor} rounded-2xl p-4 text-left hover:scale-[1.02] transition-transform`}
                 >
                   <div
