@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Palette, ClipboardList, Mail, ChevronRight, Lightbulb, MessageCircle } from 'lucide-react';
+import { Palette, ClipboardList, Mail, ChevronRight } from 'lucide-react';
 import { useDiagnosisResult } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
 import { DesignerTypeCode } from '../types/diagnosis';
@@ -10,24 +10,42 @@ const aiCards = [
   {
     id: 'design_review',
     name: 'デザイン添削',
+    description: 'デザインを5つの観点で採点',
     icon: Palette,
     iconColor: 'text-red-500',
+    bgColor: 'bg-red-50',
     path: '/design-review',
   },
   {
     id: 'sixstep_review',
     name: '6STEP添削',
+    description: '制作プロセスをチェック',
     icon: ClipboardList,
     iconColor: 'text-blue-500',
+    bgColor: 'bg-blue-50',
     path: '/sixstep-review',
   },
   {
     id: 'sales_review',
     name: '営業文添削',
+    description: '提案文・営業文を改善',
     icon: Mail,
     iconColor: 'text-yellow-500',
+    bgColor: 'bg-yellow-50',
     path: '/sales-review',
   },
+];
+
+// ハルキの一言リスト
+const harukiQuotes = [
+  '本日もぶち上げ。',
+  'デザインは愛。',
+  '今日も最高の1日にしよう。',
+  '行動した人だけが結果を出せる。',
+  '自分を信じて進め。',
+  '失敗は成功のもと。',
+  'まずはやってみよう。',
+  '継続は力なり。',
 ];
 
 export default function NewHome() {
@@ -46,24 +64,11 @@ export default function NewHome() {
     navigate(path);
   };
 
-  // 今日のワンポイント（タイプに応じたTips）
-  const getTodaysTip = () => {
-    if (!typeInfo) {
-      return '診断を受けて、あなた専用のアドバイスを受け取りましょう！';
-    }
-    
-    const tips: Record<string, string> = {
-      LCS: '技術力を武器に、今日も1pxにこだわっていきましょう。',
-      ECS: '今日も自分の世界観を大切に。作品が誰かの心を動かします。',
-      LBS: '自分のプロダクトを育てましょう。今日の1%が明日の100%に。',
-      EBS: '発信を止めるな。今日のあなたの言葉が誰かを救う。',
-      LCO: '今日も「整理整頓」の力で、誰かの仕事を楽にしましょう。',
-      ECO: '今日もヒアリングを大切に。相手の想いを形にしていきましょう。',
-      LBO: '数字で語れるデザイナーは強い。今日も「売上」にこだわりましょう。',
-      EBO: '今日もチームの空気を作りましょう。あなたがいるから回っている。',
-    };
-    
-    return tips[typeCode as string] || typeInfo.action;
+  // 日付に基づいてハルキの一言を選択（1日1つ固定）
+  const getTodaysQuote = () => {
+    const today = new Date();
+    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
+    return harukiQuotes[dayOfYear % harukiQuotes.length];
   };
 
   return (
@@ -97,90 +102,50 @@ export default function NewHome() {
           </button>
         </div>
 
-        {/* タイプ診断への誘導カード */}
-        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-3xl p-5">
-          <button 
-            onClick={() => navigate('/diagnosis')}
-            className="flex items-center gap-4 w-full text-left"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
-              <span className="text-3xl">🎯</span>
+        {/* コンドウハルキの本日の一言 */}
+        <div className="bg-white rounded-3xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm">
+              <img
+                src="/haruki_icon.jpg"
+                alt="コンドウハルキ"
+                className="w-full h-full object-cover"
+              />
             </div>
-            <div className="flex-1">
-              <h3 className="text-white font-bold text-base mb-0.5">
-                {typeInfo ? 'タイプ診断をやり直す' : 'タイプ診断を受けよう'}
-              </h3>
-              <p className="text-white/80 text-sm">
-                {typeInfo ? '新しい自分を発見しよう' : 'あなたのデザイナータイプを診断'}
+            <div className="flex-1 pt-1">
+              <p className="text-xs font-medium text-slate-400 mb-1">
+                コンドウハルキの本日の一言
+              </p>
+              <p className="text-lg font-bold text-slate-900 leading-relaxed">
+                「{getTodaysQuote()}」
               </p>
             </div>
-            <ChevronRight size={20} className="text-white/80" />
-          </button>
+          </div>
         </div>
 
         {/* AI添削メニュー */}
-        <div className="bg-white rounded-3xl p-5">
-          <div className="grid grid-cols-3 gap-2">
-            {aiCards.map((ai) => {
-              const Icon = ai.icon;
-              return (
-                <button
-                  key={ai.id}
-                  onClick={() => handleAICardClick(ai.path)}
-                  className="flex flex-col items-center gap-1.5 py-3 hover:bg-slate-50 rounded-xl transition"
-                >
+        <div className="space-y-3">
+          <h3 className="text-sm font-bold text-slate-500 px-1">添削AIを使う</h3>
+          
+          {aiCards.map((ai) => {
+            const Icon = ai.icon;
+            return (
+              <button
+                key={ai.id}
+                onClick={() => handleAICardClick(ai.path)}
+                className="w-full bg-white rounded-2xl p-4 flex items-center gap-4 hover:bg-slate-50 transition"
+              >
+                <div className={`w-12 h-12 rounded-xl ${ai.bgColor} flex items-center justify-center`}>
                   <Icon className={`w-6 h-6 ${ai.iconColor}`} />
-                  <p className="text-xs font-medium text-slate-700">{ai.name}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 今日のワンポイント */}
-        <div className="bg-white rounded-3xl p-5">
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="w-5 h-5 text-yellow-500" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-slate-900 text-sm mb-1">今日のワンポイント</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                {typeInfo && (
-                  <span className="font-medium" style={{ color: typeInfo.color }}>
-                    「{typeInfo.name}」
-                  </span>
-                )}
-                {typeInfo ? 'のあなたへ：' : ''}
-                {getTodaysTip()}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* リンクセクション */}
-        <div className="bg-white rounded-3xl overflow-hidden">
-          <button 
-            onClick={() => navigate('/chat')}
-            className="flex items-center gap-4 w-full px-5 py-4 hover:bg-slate-50 transition"
-          >
-            <MessageCircle size={20} className="text-slate-400" />
-            <span className="flex-1 text-left text-sm font-medium text-slate-700">
-              過去のチャット履歴
-            </span>
-            <ChevronRight size={18} className="text-slate-400" />
-          </button>
-          <div className="h-px bg-slate-100 mx-5" />
-          <button 
-            onClick={() => navigate('/diagnosis')}
-            className="flex items-center gap-4 w-full px-5 py-4 hover:bg-slate-50 transition"
-          >
-            <span className="text-slate-400">🎯</span>
-            <span className="flex-1 text-left text-sm font-medium text-slate-700">
-              タイプ診断をやり直す
-            </span>
-            <ChevronRight size={18} className="text-slate-400" />
-          </button>
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-slate-900 text-sm">{ai.name}</p>
+                  <p className="text-xs text-slate-500">{ai.description}</p>
+                </div>
+                <ChevronRight size={18} className="text-slate-300" />
+              </button>
+            );
+          })}
         </div>
 
       </div>
