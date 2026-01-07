@@ -36,17 +36,6 @@ const aiCards = [
   },
 ];
 
-// ハルキの一言リスト
-const harukiQuotes = [
-  '本日もぶち上げ。',
-  'デザインは愛。',
-  '今日も最高の1日にしよう。',
-  '行動した人だけが結果を出せる。',
-  '自分を信じて進め。',
-  '失敗は成功のもと。',
-  'まずはやってみよう。',
-  '継続は力なり。',
-];
 
 export default function NewHome() {
   const navigate = useNavigate();
@@ -64,12 +53,6 @@ export default function NewHome() {
     navigate(path);
   };
 
-  // 日付に基づいてハルキの一言を選択（1日1つ固定）
-  const getTodaysQuote = () => {
-    const today = new Date();
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
-    return harukiQuotes[dayOfYear % harukiQuotes.length];
-  };
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -117,7 +100,7 @@ export default function NewHome() {
                 コンドウハルキの本日の一言
               </p>
               <p className="text-lg font-bold text-slate-900 leading-relaxed">
-                「{getTodaysQuote()}」
+                「本日もぶち上げ。」
               </p>
             </div>
           </div>

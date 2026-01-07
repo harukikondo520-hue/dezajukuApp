@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Home } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { diagnosisQuestions } from '../data/questions';
 
 export default function DiagnosisPage() {
@@ -65,24 +65,16 @@ export default function DiagnosisPage() {
       {/* ヘッダー */}
       <div className="px-4 py-3 border-b border-slate-100 sticky top-0 bg-white z-10">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrevPage}
-              disabled={currentPage === 0}
-              className="p-2 rounded-full hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
-            >
-              <ChevronLeft className="w-5 h-5 text-slate-600" />
-            </button>
-            <button
-              onClick={() => navigate('/')}
-              className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition"
-            >
-              <Home className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={() => navigate('/')}
+            className="p-2 rounded-full hover:bg-slate-100 transition"
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </button>
           <span className="text-sm text-slate-500 font-medium">
             {currentPage + 1} / 3
           </span>
+          <div className="w-9" /> {/* バランス用の空スペース */}
         </div>
       </div>
 
@@ -199,11 +191,19 @@ export default function DiagnosisPage() {
 
       {/* フッター */}
       <div className="px-4 py-4 border-t border-slate-100 bg-white sticky bottom-0">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto flex gap-3">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 0}
+            className="flex-1 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl
+              hover:bg-slate-200 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            もどる
+          </button>
           <button
             onClick={handleNextPage}
             disabled={!isPageComplete}
-            className="w-full py-3 bg-red-500 text-white font-bold rounded-xl
+            className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl
               hover:bg-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {currentPage === 2 ? '結果を見る' : '次へ'}

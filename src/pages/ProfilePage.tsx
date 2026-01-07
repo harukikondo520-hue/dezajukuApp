@@ -217,9 +217,6 @@ export default function ProfilePage() {
           ) : (
             /* 未診断の場合 */
             <div className="text-center py-8">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl">🎯</span>
-              </div>
               <h3 className="text-lg font-bold text-slate-900 mb-2">
                 まずは診断を受けよう
               </h3>
