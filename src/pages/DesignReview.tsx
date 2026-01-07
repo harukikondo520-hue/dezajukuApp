@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Send, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Upload, Send, Image, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 
@@ -16,7 +16,6 @@ interface Message {
 export default function DesignReview() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const [isStarted, setIsStarted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -47,23 +46,6 @@ export default function DesignReview() {
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
-    }
-  };
-
-  const handleStartFromIntro = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageSelectedFromIntro = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        setIsStarted(true);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -142,140 +124,141 @@ export default function DesignReview() {
     }
   };
 
-  // 詳細画面（イントロ）
-  if (!isStarted) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        {/* ヘッダー */}
-        <div className="flex-shrink-0 px-4 py-4">
+  return (
+    <div className="min-h-screen bg-slate-100 flex flex-col">
+      {/* ヘッダー */}
+      <div className="flex-shrink-0 bg-white px-4 py-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
             className="p-2 hover:bg-slate-100 rounded-xl transition"
           >
             <ArrowLeft size={20} className="text-slate-700" />
           </button>
-        </div>
-
-        {/* メイン画像 */}
-        <div className="px-4">
-          <div className="aspect-square max-w-xs mx-auto">
-            <img
-              src="/haruki_icon.jpg"
-              alt="デザイン添削AI"
-              className="w-full h-full object-cover rounded-2xl"
-            />
-          </div>
-        </div>
-
-        {/* 赤いエリア */}
-        <div className="flex-1 bg-red-500 mt-6 rounded-t-[2rem] px-6 py-8">
-          <h1 className="text-2xl font-black text-white mb-4">
-            デザイン添削AI
-          </h1>
-          <p className="text-white/90 text-sm leading-relaxed mb-8">
-            プロのアートディレクター目線で、あなたのデザインを5つの観点から100点満点で評価します。
-            目的達成力・レイアウト・メリハリ・配色・伝達力の観点から具体的な改善点をお伝えします。
-          </p>
-
-          {/* アップロードボタン */}
-          <button
-            onClick={handleStartFromIntro}
-            className="w-full border-2 border-dashed border-white/50 rounded-2xl py-6 flex flex-col items-center gap-2 hover:bg-white/10 transition"
-          >
-            <Upload size={24} className="text-white" />
-            <span className="text-white font-medium">アップロード</span>
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleImageSelectedFromIntro}
-            className="hidden"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // チャット画面
-  return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
-      {/* ヘッダー */}
-      <div className="flex-shrink-0 bg-red-500 px-4 py-4">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <button
-            onClick={() => setIsStarted(false)}
-            className="p-2 hover:bg-white/10 rounded-xl transition"
-          >
-            <ArrowLeft size={20} className="text-white" />
-          </button>
-          <h1 className="text-lg font-bold text-white">デザイン添削</h1>
+          <h1 className="text-lg font-bold text-slate-900">デザイン添削</h1>
         </div>
       </div>
 
-      {/* メッセージエリア */}
+      {/* メインエリア */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex items-start gap-3 ${
-                message.role === 'user' ? 'flex-row-reverse' : ''
-              }`}
-            >
-              <div
-                className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
-                  message.role === 'user' ? 'bg-slate-200' : ''
-                }`}
-              >
-                {message.role === 'user' ? (
-                  <span className="text-slate-600 font-bold text-sm">You</span>
-                ) : (
-                  <img
-                    src="/haruki_icon.jpg"
-                    alt="ハルキ"
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-              <div
-                className={`rounded-2xl px-4 py-3 ${
-                  message.role === 'user'
-                    ? 'bg-red-500 text-white rounded-tr-none'
-                    : 'bg-white text-slate-900 rounded-tl-none'
-                }`}
-                style={{ maxWidth: '80%' }}
-              >
-                {message.imageUrl && (
-                  <img
-                    src={message.imageUrl}
-                    alt="アップロード画像"
-                    className="rounded-lg mb-2 max-w-full"
-                  />
-                )}
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                  {message.content}
+        <div className="max-w-2xl mx-auto px-4 py-6">
+          {messages.length === 0 ? (
+            <div className="space-y-4">
+              <div className="bg-white rounded-3xl p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                  <Image className="w-8 h-8 text-red-500" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900 mb-2">
+                  デザインを添削します
+                </h2>
+                <p className="text-sm text-slate-500 mb-6">
+                  添削してほしいデザイン画像をアップロードしてください
                 </p>
-              </div>
-            </div>
-          ))}
 
-          {isLoading && !messages.some((msg) => msg.isStreaming) && (
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
-                <img src="/haruki_icon.jpg" alt="ハルキ" className="w-full h-full object-cover" />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 text-white font-bold rounded-xl hover:bg-cyan-600 transition"
+                >
+                  <Upload size={20} />
+                  画像をアップロード
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
               </div>
-              <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+
+              <div className="bg-white rounded-3xl p-5">
+                <h3 className="font-bold text-slate-800 mb-4 text-sm">評価観点（各100点満点）</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { color: 'bg-red-100 text-red-500', label: '目的達成力（売上貢献）' },
+                    { color: 'bg-blue-100 text-blue-500', label: 'レイアウト（視線誘導・余白）' },
+                    { color: 'bg-green-100 text-green-500', label: 'メリハリ（主役の明確化）' },
+                    { color: 'bg-yellow-100 text-yellow-600', label: '配色（読みやすさ）' },
+                    { color: 'bg-purple-100 text-purple-500', label: '伝達力（刺さり・言い回し）' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg ${item.color.split(' ')[0]} flex items-center justify-center`}>
+                        <span className={`text-sm font-bold ${item.color.split(' ')[1]}`}>{i + 1}</span>
+                      </div>
+                      <span className="text-sm text-slate-700">{item.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          )}
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex items-start gap-3 ${
+                    message.role === 'user' ? 'flex-row-reverse' : ''
+                  }`}
+                >
+                  <div
+                    className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
+                      message.role === 'user' ? 'bg-slate-200' : ''
+                    }`}
+                  >
+                    {message.role === 'user' ? (
+                      <span className="text-slate-600 font-bold text-sm">You</span>
+                    ) : (
+                      <img
+                        src="/haruki_icon.jpg"
+                        alt="ハルキ"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div
+                    className={`rounded-2xl px-4 py-3 ${
+                      message.role === 'user'
+                        ? 'bg-cyan-500 text-white rounded-tr-none'
+                        : 'bg-white text-slate-900 rounded-tl-none'
+                    }`}
+                    style={{ maxWidth: '80%' }}
+                  >
+                    {message.imageUrl && (
+                      <img
+                        src={message.imageUrl}
+                        alt="アップロード画像"
+                        className="rounded-lg mb-2 max-w-full"
+                      />
+                    )}
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
 
-          <div ref={messagesEndRef} />
+              {isLoading && !messages.some((msg) => msg.isStreaming) && (
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
+                    <img
+                      src="/haruki_icon.jpg"
+                      alt="ハルキ"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
       </div>
 
@@ -284,7 +267,11 @@ export default function DesignReview() {
         <div className="max-w-2xl mx-auto">
           {imagePreview && (
             <div className="mb-3 relative inline-block">
-              <img src={imagePreview} alt="プレビュー" className="h-20 rounded-xl" />
+              <img
+                src={imagePreview}
+                alt="プレビュー"
+                className="h-20 rounded-xl"
+              />
               <button
                 onClick={handleRemoveImage}
                 className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
@@ -302,11 +289,18 @@ export default function DesignReview() {
               <Upload size={20} className="text-slate-600" />
             </button>
             <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            <input
               type="text"
               value={additionalText}
               onChange={(e) => setAdditionalText(e.target.value)}
               placeholder="補足コメント（任意）"
-              className="flex-1 px-4 py-3 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="flex-1 px-4 py-3 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -317,7 +311,7 @@ export default function DesignReview() {
             <button
               onClick={handleSubmit}
               disabled={(!selectedImage && !additionalText.trim()) || isLoading}
-              className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-3 bg-cyan-500 text-white rounded-xl hover:bg-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
             </button>
