@@ -13,18 +13,17 @@ interface Message {
 }
 
 const STEPS = [
-  { id: 1, title: '目的整理', description: '何のためのデザインか', placeholder: '例: 新規オープンするカフェの集客用Instagram投稿。ターゲットは20-30代女性。' },
-  { id: 2, title: 'ワンメッセージ', description: '一番伝えたいこと', placeholder: '例: 「毎日通いたくなる、こだわりの一杯」' },
-  { id: 3, title: '世界観', description: 'トーン＆ムード', placeholder: '例: ナチュラル、温かみ、落ち着いた雰囲気、ベージュ基調' },
-  { id: 4, title: 'リサーチ', description: '参考事例・競合', placeholder: '例: Pinterest「カフェ Instagram」で検索。参考にしたい投稿URL: ...' },
-  { id: 5, title: 'ラフ', description: 'レイアウト構成', placeholder: '例: 中央に商品写真、上部にキャッチコピー、下部に店名とロゴ' },
-  { id: 6, title: 'デザイン', description: '制作内容', placeholder: '例: Canvaで制作。写真はiPhoneで撮影。フォントはNoto Sans JP使用。' },
+  { id: 1, title: '目的整理', description: '何のためのデザインか', placeholder: '例: 新規オープンするカフェの集客用Instagram投稿', color: 'bg-red-100 text-red-500' },
+  { id: 2, title: 'ワンメッセージ', description: '一番伝えたいこと', placeholder: '例: 「毎日通いたくなる、こだわりの一杯」', color: 'bg-orange-100 text-orange-500' },
+  { id: 3, title: '世界観', description: 'トーン＆ムード', placeholder: '例: ナチュラル、温かみ、落ち着いた雰囲気', color: 'bg-yellow-100 text-yellow-600' },
+  { id: 4, title: 'リサーチ', description: '参考事例・競合', placeholder: '例: Pinterest「カフェ Instagram」で検索', color: 'bg-green-100 text-green-500' },
+  { id: 5, title: 'ラフ', description: 'レイアウト構成', placeholder: '例: 中央に商品写真、上部にキャッチコピー', color: 'bg-blue-100 text-blue-500' },
+  { id: 6, title: 'デザイン', description: '制作内容', placeholder: '例: Canvaで制作、フォントはNoto Sans JP', color: 'bg-purple-100 text-purple-500' },
 ];
 
 export default function SixStepReview() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
   const [stepInputs, setStepInputs] = useState<Record<number, string>>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -192,20 +191,17 @@ export default function SixStepReview() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* ヘッダー */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3">
+      <div className="flex-shrink-0 bg-white px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
-            className="p-2 hover:bg-slate-100 rounded-lg transition"
+            className="p-2 hover:bg-slate-100 rounded-xl transition"
           >
             <ArrowLeft size={20} className="text-slate-700" />
           </button>
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">6STEP添削</h1>
-            <p className="text-xs text-slate-500">デザイン制作の6ステップを添削</p>
-          </div>
+          <h1 className="text-lg font-bold text-slate-900">6STEP添削</h1>
         </div>
       </div>
 
@@ -214,13 +210,13 @@ export default function SixStepReview() {
         <div className="max-w-2xl mx-auto px-4 py-6">
           {!isStarted ? (
             /* 入力フォーム */
-            <div>
-              {/* ステップ説明 */}
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ClipboardList className="w-8 h-8 text-blue-500" />
+            <div className="space-y-4">
+              {/* 説明カード */}
+              <div className="bg-white rounded-3xl p-6 text-center">
+                <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <ClipboardList className="w-7 h-7 text-blue-500" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900 mb-2">
+                <h2 className="text-lg font-bold text-slate-900 mb-2">
                   6STEPで制作を進めよう
                 </h2>
                 <p className="text-sm text-slate-500">
@@ -228,20 +224,14 @@ export default function SixStepReview() {
                 </p>
               </div>
 
-              {/* ステップ入力フォーム */}
-              <div className="space-y-4 mb-8">
+              {/* ステップ入力カード */}
+              <div className="bg-white rounded-3xl p-5 space-y-4">
                 {STEPS.map((step) => (
-                  <div
-                    key={step.id}
-                    className={`bg-slate-50 rounded-2xl p-4 border-2 transition ${
-                      currentStep === step.id ? 'border-blue-500' : 'border-transparent'
-                    }`}
-                    onClick={() => setCurrentStep(step.id)}
-                  >
+                  <div key={step.id}>
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="w-7 h-7 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                        {step.id}
-                      </span>
+                      <div className={`w-8 h-8 rounded-lg ${step.color.split(' ')[0]} flex items-center justify-center`}>
+                        <span className={`text-sm font-bold ${step.color.split(' ')[1]}`}>{step.id}</span>
+                      </div>
                       <div>
                         <h3 className="font-bold text-slate-900 text-sm">{step.title}</h3>
                         <p className="text-xs text-slate-500">{step.description}</p>
@@ -251,28 +241,28 @@ export default function SixStepReview() {
                       value={stepInputs[step.id] || ''}
                       onChange={(e) => handleStepChange(step.id, e.target.value)}
                       placeholder={step.placeholder}
-                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                      rows={2}
                     />
                   </div>
                 ))}
-              </div>
 
-              {/* 送信ボタン */}
-              <button
-                onClick={handleStartReview}
-                disabled={isLoading}
-                className="w-full py-4 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <Loader2 size={20} className="animate-spin" />
-                ) : (
-                  <>
-                    添削を受ける
-                    <ChevronRight size={20} />
-                  </>
-                )}
-              </button>
+                {/* 送信ボタン */}
+                <button
+                  onClick={handleStartReview}
+                  disabled={isLoading}
+                  className="w-full py-4 bg-cyan-500 text-white font-bold rounded-xl hover:bg-cyan-600 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <>
+                      添削を受ける
+                      <ChevronRight size={20} />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           ) : (
             /* チャット表示 */
@@ -302,8 +292,8 @@ export default function SixStepReview() {
                   <div
                     className={`rounded-2xl px-4 py-3 ${
                       message.role === 'user'
-                        ? 'bg-slate-900 text-white rounded-tr-none'
-                        : 'bg-slate-100 text-slate-900 rounded-tl-none'
+                        ? 'bg-cyan-500 text-white rounded-tr-none'
+                        : 'bg-white text-slate-900 rounded-tl-none'
                     }`}
                     style={{ maxWidth: '80%' }}
                   >
@@ -319,7 +309,7 @@ export default function SixStepReview() {
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img src="/haruki_icon.jpg" alt="ハルキ" className="w-full h-full object-cover" />
                   </div>
-                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+                  <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3">
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -337,14 +327,14 @@ export default function SixStepReview() {
 
       {/* 入力エリア（チャット開始後） */}
       {isStarted && (
-        <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3">
+        <div className="flex-shrink-0 bg-white px-4 py-3">
           <div className="max-w-2xl mx-auto flex items-center gap-2">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="質問や追加の相談..."
-              className="flex-1 px-4 py-3 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-4 py-3 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -355,7 +345,7 @@ export default function SixStepReview() {
             <button
               onClick={handleSendMessage}
               disabled={!input.trim() || isLoading}
-              className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-3 bg-cyan-500 text-white rounded-xl hover:bg-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
             </button>
@@ -365,4 +355,3 @@ export default function SixStepReview() {
     </div>
   );
 }
-

@@ -129,20 +129,17 @@ export default function DesignReview() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
       {/* ヘッダー */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 px-4 py-3">
+      <div className="flex-shrink-0 bg-white px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/')}
-            className="p-2 hover:bg-slate-100 rounded-lg transition"
+            className="p-2 hover:bg-slate-100 rounded-xl transition"
           >
             <ArrowLeft size={20} className="text-slate-700" />
           </button>
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">デザイン添削</h1>
-            <p className="text-xs text-slate-500">画像をアップロードして添削を受ける</p>
-          </div>
+          <h1 className="text-lg font-bold text-slate-900">デザイン添削</h1>
         </div>
       </div>
 
@@ -151,60 +148,56 @@ export default function DesignReview() {
         <div className="max-w-2xl mx-auto px-4 py-6">
           {messages.length === 0 ? (
             /* 初期状態：アップロード促進UI */
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Image className="w-10 h-10 text-red-500" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">
-                デザインを添削します
-              </h2>
-              <p className="text-sm text-slate-500 mb-8 max-w-sm mx-auto">
-                添削してほしいデザイン画像をアップロードしてください。
-                プロのアートディレクター目線で5つの観点から評価します。
-              </p>
+            <div className="space-y-4">
+              {/* メインカード */}
+              <div className="bg-white rounded-3xl p-6 text-center">
+                <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                  <Image className="w-8 h-8 text-red-500" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900 mb-2">
+                  デザインを添削します
+                </h2>
+                <p className="text-sm text-slate-500 mb-6">
+                  添削してほしいデザイン画像をアップロードしてください
+                </p>
 
-              {/* 評価観点 */}
-              <div className="bg-slate-50 rounded-2xl p-5 text-left mb-8">
-                <h3 className="font-bold text-slate-800 mb-3 text-sm">評価観点（各100点満点）</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-red-500 rounded-full" />
-                    目的達成力（売上貢献）
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full" />
-                    レイアウト（視線誘導・余白）
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full" />
-                    メリハリ（主役の明確化）
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-yellow-500 rounded-full" />
-                    配色（読みやすさ）
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full" />
-                    伝達力（刺さり・言い回し）
-                  </li>
-                </ul>
+                {/* アップロードボタン */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-cyan-500 text-white font-bold rounded-xl hover:bg-cyan-600 transition"
+                >
+                  <Upload size={20} />
+                  画像をアップロード
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                />
               </div>
 
-              {/* アップロードボタン */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition"
-              >
-                <Upload size={20} />
-                画像をアップロード
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
+              {/* 評価観点カード */}
+              <div className="bg-white rounded-3xl p-5">
+                <h3 className="font-bold text-slate-800 mb-4 text-sm">評価観点（各100点満点）</h3>
+                <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { color: 'bg-red-100 text-red-500', label: '目的達成力（売上貢献）' },
+                    { color: 'bg-blue-100 text-blue-500', label: 'レイアウト（視線誘導・余白）' },
+                    { color: 'bg-green-100 text-green-500', label: 'メリハリ（主役の明確化）' },
+                    { color: 'bg-yellow-100 text-yellow-600', label: '配色（読みやすさ）' },
+                    { color: 'bg-purple-100 text-purple-500', label: '伝達力（刺さり・言い回し）' },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg ${item.color.split(' ')[0]} flex items-center justify-center`}>
+                        <span className={`text-sm font-bold ${item.color.split(' ')[1]}`}>{i + 1}</span>
+                      </div>
+                      <span className="text-sm text-slate-700">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
             /* チャット表示 */
@@ -234,8 +227,8 @@ export default function DesignReview() {
                   <div
                     className={`rounded-2xl px-4 py-3 ${
                       message.role === 'user'
-                        ? 'bg-slate-900 text-white rounded-tr-none'
-                        : 'bg-slate-100 text-slate-900 rounded-tl-none'
+                        ? 'bg-cyan-500 text-white rounded-tr-none'
+                        : 'bg-white text-slate-900 rounded-tl-none'
                     }`}
                     style={{ maxWidth: '80%' }}
                   >
@@ -263,7 +256,7 @@ export default function DesignReview() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="bg-slate-100 rounded-2xl rounded-tl-none px-4 py-3">
+                  <div className="bg-white rounded-2xl rounded-tl-none px-4 py-3">
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -280,7 +273,7 @@ export default function DesignReview() {
       </div>
 
       {/* 入力エリア */}
-      <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3">
+      <div className="flex-shrink-0 bg-white px-4 py-3">
         <div className="max-w-2xl mx-auto">
           {/* 画像プレビュー */}
           {imagePreview && (
@@ -288,7 +281,7 @@ export default function DesignReview() {
               <img
                 src={imagePreview}
                 alt="プレビュー"
-                className="h-20 rounded-lg"
+                className="h-20 rounded-xl"
               />
               <button
                 onClick={handleRemoveImage}
@@ -318,7 +311,7 @@ export default function DesignReview() {
               value={additionalText}
               onChange={(e) => setAdditionalText(e.target.value)}
               placeholder="補足コメント（任意）"
-              className="flex-1 px-4 py-3 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="flex-1 px-4 py-3 bg-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -329,7 +322,7 @@ export default function DesignReview() {
             <button
               onClick={handleSubmit}
               disabled={(!selectedImage && !additionalText.trim()) || isLoading}
-              className="p-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-3 bg-cyan-500 text-white rounded-xl hover:bg-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
             </button>
@@ -339,4 +332,3 @@ export default function DesignReview() {
     </div>
   );
 }
-
