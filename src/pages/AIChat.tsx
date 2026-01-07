@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Send, Bot, User, Plus, MessageSquare, Trash2, Menu, X, Briefcase, Target, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Send, User, Plus, MessageSquare, Trash2, Menu, X, Palette, ClipboardList, Users, Mail, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
 import { useConversations, useConversationMessages, useDiagnosisData, useCreateConversation, useDeleteConversation, useUpdateConversationTitle } from '../hooks/useConversations';
-import { ConversationListSkeleton, ChatMessageSkeleton } from '../components/Skeleton';
-import { getModeLabel, getModeDescription, getModeIcon } from '../lib/aiPrompts';
+import { ConversationListSkeleton } from '../components/Skeleton';
+import { getModeLabel, getModeDescription, ChatMode } from '../lib/aiPrompts';
 
 interface Message {
   id: string;
@@ -21,12 +21,13 @@ interface Conversation {
   id: string;
   title: string;
   dify_conversation_id: string | null;
-  mode: 'project_support' | 'self_analysis' | 'free_talk';
+  mode: ChatMode;
   created_at: string;
   updated_at: string;
 }
 
-type ChatMode = 'project_support' | 'self_analysis' | 'free_talk';
+// 4つの添削AIモード
+const AI_MODES: ChatMode[] = ['design_review', 'sixstep_review', 'client_review', 'sales_review'];
 
 export default function AIChat() {
   const location = useLocation();
@@ -41,9 +42,14 @@ export default function AIChat() {
   const getInitialMode = (): ChatMode => {
     const params = new URLSearchParams(location.search);
     const mode = params.get('mode');
-    if (mode === 'project' || mode === 'project_support') return 'project_support';
-    if (mode === 'analysis' || mode === 'self_analysis') return 'self_analysis';
-    return 'free_talk';
+    if (mode === 'design_review') return 'design_review';
+    if (mode === 'sixstep_review') return 'sixstep_review';
+    if (mode === 'client_review') return 'client_review';
+    if (mode === 'sales_review') return 'sales_review';
+    // 後方互換性
+    if (mode === 'project' || mode === 'project_support') return 'client_review';
+    if (mode === 'analysis' || mode === 'self_analysis') return 'design_review';
+    return 'design_review';
   };
   
   const [currentMode, setCurrentMode] = useState<ChatMode>(getInitialMode);
@@ -544,21 +550,24 @@ AI: ${aiResponse.slice(0, 100)}`;
 
             {/* モード選択 */}
             <div className="flex items-center gap-2 flex-1 overflow-x-auto scrollbar-hide">
-              {(['free_talk', 'project_support', 'self_analysis'] as ChatMode[]).map((mode) => {
-                const ModeIcon = mode === 'project_support' ? Briefcase : mode === 'self_analysis' ? Target : MessageCircle;
+              {AI_MODES.map((mode) => {
+                const ModeIcon = mode === 'design_review' ? Palette 
+                  : mode === 'sixstep_review' ? ClipboardList 
+                  : mode === 'client_review' ? Users 
+                  : Mail;
                 const isActive = currentMode === mode;
 
-  return (
+                return (
                   <button
                     key={mode}
                     onClick={() => setCurrentMode(mode)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-300 ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-xs whitespace-nowrap transition-all duration-300 ${
                       isActive
                         ? 'bg-red-600 text-white shadow-md'
                         : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <ModeIcon size={16} />
+                    <ModeIcon size={14} />
                     <span>{getModeLabel(mode)}</span>
                   </button>
                 );

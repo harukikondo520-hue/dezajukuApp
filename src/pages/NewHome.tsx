@@ -1,47 +1,47 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageCircle, Briefcase, Search, MessageSquare, Lightbulb } from 'lucide-react';
+import { Palette, ClipboardList, Users, Mail, Lightbulb } from 'lucide-react';
 import { useDiagnosisResult } from '../hooks/useDiagnosis';
 import { designerTypes } from '../data/questions';
 import { DesignerTypeCode } from '../types/diagnosis';
 
-// AI一覧データ
+// AI一覧データ（4つの添削AI）
 const aiCards = [
   {
-    id: 'haruki',
-    name: 'ハルキAI',
-    description: '総合相談',
-    icon: MessageCircle,
+    id: 'design_review',
+    name: 'デザイン添削',
+    description: 'デザインを画像で送って添削',
+    icon: Palette,
     color: '#ef4444',
     bgColor: 'bg-red-50',
-    mode: 'casual',
+    mode: 'design_review',
   },
   {
-    id: 'project',
-    name: '案件サポートAI',
-    description: '案件相談',
-    icon: Briefcase,
+    id: 'sixstep_review',
+    name: '6STEP添削',
+    description: '6STEPシートの添削',
+    icon: ClipboardList,
     color: '#3b82f6',
     bgColor: 'bg-blue-50',
-    mode: 'project',
+    mode: 'sixstep_review',
   },
   {
-    id: 'analysis',
-    name: '自己分析AI',
-    description: 'キャリア相談',
-    icon: Search,
+    id: 'client_review',
+    name: 'クライアントワーク添削',
+    description: 'クライアント対応の相談',
+    icon: Users,
     color: '#22c55e',
     bgColor: 'bg-green-50',
-    mode: 'analysis',
+    mode: 'client_review',
   },
   {
-    id: 'brainstorm',
-    name: '壁打ちAI',
-    description: 'アイデア出し',
-    icon: MessageSquare,
+    id: 'sales_review',
+    name: '営業文添削',
+    description: '営業文・提案文の添削',
+    icon: Mail,
     color: '#8b5cf6',
     bgColor: 'bg-purple-50',
-    mode: 'casual',
+    mode: 'sales_review',
   },
 ];
 
