@@ -19,7 +19,7 @@ const aiCards = [
   {
     id: 'sixstep_review',
     name: '6STEP添削',
-    description: '6STEPシートの添削',
+    description: '6STEPでデザイン制作',
     icon: ClipboardList,
     color: '#3b82f6',
     bgColor: 'bg-blue-50',
@@ -47,7 +47,7 @@ const aiCards = [
 
 export default function NewHome() {
   const navigate = useNavigate();
-  const { profile, user } = useAuth();
+  const { user } = useAuth();
   
   // 診断結果を取得
   const { data: diagnosis } = useDiagnosisResult(user?.id);
@@ -84,42 +84,6 @@ export default function NewHome() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* 簡易プロフィールカード */}
-        <button
-          onClick={() => navigate('/profile')}
-          className="w-full mb-8"
-        >
-          <div
-            className="rounded-2xl p-5 text-white relative overflow-hidden"
-            style={{ 
-              background: typeInfo 
-                ? `linear-gradient(135deg, ${typeInfo.color} 0%, ${typeInfo.color}cc 100%)`
-                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full overflow-hidden bg-white/20 flex-shrink-0">
-                <img
-                  src="/dezajuku_icon_0531_1-05 copy.png"
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="text-left">
-                <h2 className="text-lg font-bold">{profile?.name || 'ゲスト'}</h2>
-                {typeInfo ? (
-                  <>
-                    <p className="text-white/90 font-medium">{typeInfo.name}</p>
-                    <p className="text-white/70 text-sm">{typeInfo.combination}</p>
-                  </>
-                ) : (
-                  <p className="text-white/70 text-sm">タイプ未診断</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </button>
-
         {/* AI一覧セクション */}
         <div className="mb-8">
           <h2 className="text-lg font-bold text-slate-900 mb-4">AIに相談する</h2>
