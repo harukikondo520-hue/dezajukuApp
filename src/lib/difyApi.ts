@@ -31,13 +31,53 @@ interface UserContext {
   projects?: Array<{ name: string; reward: number; status: string }>;
 }
 
+interface UploadedFile {
+  id: string;
+  type: string;
+  transfer_method: string;
+}
+
+// 画像をDify APIにアップロードする関数
+export async function uploadImageToDify(file: File): Promise<UploadedFile> {
+  const apiKey = import.meta.env.VITE_DIFY_API_KEY;
+  const apiUrl = import.meta.env.VITE_DIFY_API_URL;
+
+  if (!apiKey || !apiUrl) {
+    throw new Error('Dify API の設定が完了していません');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('user', 'user');
+
+  const response = await fetch(`${apiUrl}/files/upload`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`画像アップロードエラー: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return {
+    id: data.id,
+    type: 'image',
+    transfer_method: 'local_file',
+  };
+}
+
 export async function sendMessageToDify(
   message: string,
   conversationId?: string,
   onStream?: (text: string) => void,
   userContext?: UserContext,
   systemPrompt?: string,
-  mode?: 'project_support' | 'self_analysis' | 'free_talk'
+  mode?: 'project_support' | 'self_analysis' | 'free_talk',
+  imageFile?: File
 ): Promise<DifyResponse> {
   const apiKey = import.meta.env.VITE_DIFY_API_KEY;
   const apiUrl = import.meta.env.VITE_DIFY_API_URL;
@@ -118,6 +158,18 @@ export async function sendMessageToDify(
     }
   }
 
+  // 画像がある場合はアップロードしてファイルIDを取得
+  let files: UploadedFile[] = [];
+  if (imageFile) {
+    try {
+      const uploadedFile = await uploadImageToDify(imageFile);
+      files = [uploadedFile];
+    } catch (error) {
+      console.error('画像アップロードエラー:', error);
+      // 画像アップロードが失敗してもテキストメッセージは送信する
+    }
+  }
+
   const response = await fetch(`${apiUrl}/chat-messages`, {
     method: 'POST',
     headers: {
@@ -130,6 +182,7 @@ export async function sendMessageToDify(
       response_mode: onStream ? 'streaming' : 'blocking',
       conversation_id: conversationId || '',
       user: 'user',
+      files: files.length > 0 ? files : undefined,
     }),
   });
 

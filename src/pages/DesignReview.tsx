@@ -65,6 +65,7 @@ export default function DesignReview() {
     setMessages((prev) => [...prev, userMessage]);
 
     const messageText = additionalText || 'このデザインを添削してください。';
+    const imageToSend = selectedImage; // 送信前に画像を保持
     setAdditionalText('');
     handleRemoveImage();
 
@@ -95,7 +96,9 @@ export default function DesignReview() {
           scrollToBottom();
         },
         { name: profile?.name },
-        'design_review'
+        'design_review',
+        undefined,
+        imageToSend || undefined // 画像ファイルを渡す
       );
 
       setMessages((prev) =>
