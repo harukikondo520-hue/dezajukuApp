@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, Share2, Zap, Target, Trophy } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { calculateDiagnosisResult } from '../utils/diagnosisCalc';
@@ -8,6 +9,7 @@ import { calculateDiagnosisResult } from '../utils/diagnosisCalc';
 export default function DiagnosisResultPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -59,6 +61,9 @@ export default function DiagnosisResultPage() {
             .insert(diagnosisData);
         }
 
+        // キャッシュを無効化して最新データを取得できるようにする
+        queryClient.invalidateQueries({ queryKey: ['diagnosis-result', user.id] });
+        
         setSaved(true);
       } catch (error) {
         console.error('診断結果の保存に失敗:', error);
