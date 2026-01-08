@@ -205,7 +205,7 @@ export default function AIChat() {
   // カスタム送信ハンドラー（会話の作成とメッセージ保存を含む）
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const messageText = input.trim();
+    const messageText = (input || '').trim();
     if (!messageText || isLoading) return;
 
     let conversation = currentConversation;
@@ -448,7 +448,7 @@ export default function AIChat() {
               />
               <button
                 type="submit"
-                disabled={!input.trim() || isLoading}
+                disabled={!(input || '').trim() || isLoading}
                 className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
                 <Send size={20} />
