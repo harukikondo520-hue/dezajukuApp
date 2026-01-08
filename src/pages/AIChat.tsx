@@ -75,7 +75,7 @@ export default function AIChat() {
   };
 
   // Vercel AI SDK useChat フック
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, error, setInput } = useChat({
+  const { messages, input, handleInputChange, isLoading, setMessages, error, setInput, append } = useChat({
     api: '/api/chat',
     body: {
       systemPrompt: buildSystemPrompt(),
@@ -230,22 +230,34 @@ export default function AIChat() {
     const messageText = inputValue.trim();
     if (!messageText || isLoading) return;
 
-    let conversation = currentConversation;
+    try {
+      let conversation = currentConversation;
 
-    // 会話がない場合は新規作成
-    if (!conversation) {
-      conversation = await createNewConversation();
+      // 会話がない場合は新規作成
       if (!conversation) {
-        alert('トークルームの作成に失敗しました。');
-        return;
+        conversation = await createNewConversation();
+        if (!conversation) {
+          alert('トークルームの作成に失敗しました。');
+          return;
+        }
       }
+
+      // ユーザーメッセージを保存
+      await saveMessage('user', messageText, conversation.id);
+
+      // 入力をクリア
+      setInputValue('');
+      if (setInput) setInput('');
+
+      // Vercel AI SDKのappendを使用してメッセージを送信
+      await append({
+        role: 'user',
+        content: messageText,
+      });
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('メッセージの送信に失敗しました。');
     }
-
-    // ユーザーメッセージを保存
-    await saveMessage('user', messageText, conversation.id);
-
-    // Vercel AI SDKのsubmitを実行
-    handleSubmit(e);
   };
 
   const suggestedQuestions = [
