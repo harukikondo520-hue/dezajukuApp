@@ -74,7 +74,7 @@ export default function AIChat() {
   };
 
   // Vercel AI SDK useChat フック
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, error } = useChat({
     api: '/api/chat',
     body: {
       systemPrompt: buildSystemPrompt(),
@@ -92,7 +92,15 @@ export default function AIChat() {
         }
       }
     },
+    onError: (error) => {
+      console.error('AIチャットエラー:', error);
+    },
   });
+
+  // エラー表示
+  if (error) {
+    console.error('useChat error:', error);
+  }
 
   // 会話が変更されたらメッセージをロード
   useEffect(() => {
@@ -440,7 +448,7 @@ export default function AIChat() {
             <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
               <input
                 type="text"
-                value={input}
+                value={input || ''}
                 onChange={handleInputChange}
                 placeholder={isLoading ? "送信中..." : "ハルキAIに質問する..."}
                 className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
