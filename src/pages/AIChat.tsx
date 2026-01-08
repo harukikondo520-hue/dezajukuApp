@@ -30,6 +30,7 @@ export default function AIChat() {
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [initialMessages, setInitialMessages] = useState<any[]>([]);
+  const [inputValue, setInputValue] = useState('');
 
   // 選択中の会話のメッセージを取得
   const { data: conversationMessages = [] } = useConversationMessages(currentConversation?.id || null);
@@ -74,7 +75,7 @@ export default function AIChat() {
   };
 
   // Vercel AI SDK useChat フック
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, error } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, error, setInput } = useChat({
     api: '/api/chat',
     body: {
       systemPrompt: buildSystemPrompt(),
@@ -96,6 +97,13 @@ export default function AIChat() {
       console.error('AIチャットエラー:', error);
     },
   });
+
+  // inputValueをuseChatのinputと同期
+  useEffect(() => {
+    if (input !== undefined) {
+      setInputValue(input);
+    }
+  }, [input]);
 
   // エラー表示
   if (error) {
@@ -210,10 +218,16 @@ export default function AIChat() {
     scrollToBottom();
   }, [messages]);
 
+  // 入力値の変更ハンドラー
+  const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    handleInputChange(e);
+  };
+
   // カスタム送信ハンドラー（会話の作成とメッセージ保存を含む）
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const messageText = (input || '').trim();
+    const messageText = inputValue.trim();
     if (!messageText || isLoading) return;
 
     let conversation = currentConversation;
@@ -371,7 +385,10 @@ export default function AIChat() {
                 {suggestedQuestions.map((question, index) => (
                   <button
                     key={index}
-                    onClick={() => handleInputChange({ target: { value: question } } as any)}
+                    onClick={() => {
+                      setInputValue(question);
+                      if (setInput) setInput(question);
+                    }}
                     className="w-full text-left text-sm px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition border border-slate-200"
                   >
                     {question}
@@ -448,15 +465,15 @@ export default function AIChat() {
             <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
               <input
                 type="text"
-                value={input || ''}
-                onChange={handleInputChange}
+                value={inputValue}
+                onChange={onInputChange}
                 placeholder={isLoading ? "送信中..." : "ハルキAIに質問する..."}
                 className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
                 disabled={isLoading}
               />
               <button
                 type="submit"
-                disabled={!(input || '').trim() || isLoading}
+                disabled={!inputValue.trim() || isLoading}
                 className="p-2 sm:p-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400"
               >
                 <Send size={20} />
