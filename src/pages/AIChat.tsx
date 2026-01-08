@@ -75,7 +75,7 @@ export default function AIChat() {
   };
 
   // Vercel AI SDK useChat フック
-  const { messages, input, handleInputChange, isLoading, setMessages, error, setInput, append } = useChat({
+  const { messages, isLoading, setMessages, error, append } = useChat({
     api: '/api/chat',
     body: {
       systemPrompt: buildSystemPrompt(),
@@ -98,13 +98,6 @@ export default function AIChat() {
     },
   });
 
-  // inputValueをuseChatのinputと同期
-  useEffect(() => {
-    if (input !== undefined) {
-      setInputValue(input);
-    }
-  }, [input]);
-
   // エラー表示
   if (error) {
     console.error('useChat error:', error);
@@ -124,7 +117,8 @@ export default function AIChat() {
       setInitialMessages([]);
       setMessages([]);
     }
-  }, [conversationMessages, currentConversation, setMessages]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationMessages, currentConversation]);
 
   const loadConversation = (conversation: Conversation) => {
     setCurrentConversation(conversation);
@@ -221,7 +215,6 @@ export default function AIChat() {
   // 入力値の変更ハンドラー
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
-    handleInputChange(e);
   };
 
   // カスタム送信ハンドラー（会話の作成とメッセージ保存を含む）
@@ -247,15 +240,14 @@ export default function AIChat() {
 
       // 入力をクリア
       setInputValue('');
-      if (setInput) setInput('');
 
       // Vercel AI SDKのappendを使用してメッセージを送信
-      await append({
+      append({
         role: 'user',
         content: messageText,
       });
-    } catch (error) {
-      console.error('送信エラー:', error);
+    } catch (err) {
+      console.error('送信エラー:', err);
       alert('メッセージの送信に失敗しました。');
     }
   };
@@ -397,10 +389,7 @@ export default function AIChat() {
                 {suggestedQuestions.map((question, index) => (
                   <button
                     key={index}
-                    onClick={() => {
-                      setInputValue(question);
-                      if (setInput) setInput(question);
-                    }}
+                    onClick={() => setInputValue(question)}
                     className="w-full text-left text-sm px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition border border-slate-200"
                   >
                     {question}
