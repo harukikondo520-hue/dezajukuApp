@@ -1,20 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useChat } from '@ai-sdk/react';
 import { Send, User, Plus, MessageSquare, Trash2, Menu, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { sendMessageToDify } from '../lib/difyApi';
 import { supabase } from '../lib/supabase';
 import { designerTypes } from '../data/questions';
 import { useConversations, useConversationMessages, useDiagnosisData, useCreateConversation, useDeleteConversation, useUpdateConversationTitle } from '../hooks/useConversations';
 import { ConversationListSkeleton } from '../components/Skeleton';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  isStreaming?: boolean;
-}
 
 interface Conversation {
   id: string;
@@ -25,47 +16,99 @@ interface Conversation {
 }
 
 export default function AIChat() {
-  const navigate = useNavigate();
   const { profile, user } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // React Query フック
   const { data: conversations = [], isLoading: conversationsLoading } = useConversations(user?.id);
   const { data: diagnosisData = null } = useDiagnosisData(user?.id);
-  const createConversation = useCreateConversation();
+  const createConversationMutation = useCreateConversation();
   const deleteConversation = useDeleteConversation();
   const updateConversationTitle = useUpdateConversationTitle();
 
   // トークルーム関連
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [initialMessages, setInitialMessages] = useState<any[]>([]);
 
   // 選択中の会話のメッセージを取得
   const { data: conversationMessages = [] } = useConversationMessages(currentConversation?.id || null);
 
-  const difyApiKey = import.meta.env.VITE_DIFY_API_KEY;
-  const difyApiUrl = import.meta.env.VITE_DIFY_API_URL;
-  const useDify = !!(difyApiKey && difyApiUrl);
+  // システムプロンプトを構築
+  const buildSystemPrompt = () => {
+    let prompt = `あなたは「ハルキAI」です。デザジュク（デザインスクール）の創設者コンドウハルキの分身として、デザイナーの成長をサポートします。
+
+## キャラクター設定
+- 親しみやすく、熱意のある話し方
+- 「〜だね」「〜だよ」などカジュアルな口調
+- 時に厳しいフィードバックも愛を持って伝える
+- 「ぶち上げ」「最高」などポジティブな言葉を使う
+
+## 得意分野
+- デザインの添削とフィードバック
+- キャリア相談・案件獲得のアドバイス
+- モチベーション維持のサポート
+- デザイナーとしてのマインドセット
+
+## 回答スタイル
+- 具体的で実践的なアドバイスを心がける
+- 長すぎず、要点を絞って回答
+- 必要に応じて箇条書きを使用
+- 励ましの言葉を忘れずに`;
+
+    // ユーザー情報を追加
+    if (profile?.name) {
+      prompt += `\n\n## ユーザー情報\n- 名前: ${profile.name}`;
+    }
+
+    // 診断結果を追加
+    if (diagnosisData?.designer_type) {
+      const typeInfo = designerTypes[diagnosisData.designer_type as keyof typeof designerTypes];
+      if (typeInfo) {
+        prompt += `\n- デザイナータイプ: ${typeInfo.name}（${typeInfo.tagline}）`;
+        prompt += `\n- 特徴: ${typeInfo.description}`;
+      }
+    }
+
+    return prompt;
+  };
+
+  // Vercel AI SDK useChat フック
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
+    api: '/api/chat',
+    body: {
+      systemPrompt: buildSystemPrompt(),
+    },
+    initialMessages,
+    onFinish: async (message) => {
+      // AIの応答をデータベースに保存
+      if (currentConversation) {
+        await saveMessage('assistant', message.content, currentConversation.id);
+        
+        // 新しい会話の場合はタイトルを生成
+        if (currentConversation.title === '新しい会話' && messages.length > 0) {
+          const userMessage = messages.find(m => m.role === 'user')?.content || '';
+          await generateConversationTitle(userMessage, message.content);
+        }
+      }
+    },
+  });
 
   // 会話が変更されたらメッセージをロード
   useEffect(() => {
     if (conversationMessages.length > 0) {
-      setMessages(
-        conversationMessages.map((msg) => ({
-          id: msg.id,
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-          timestamp: new Date(msg.created_at),
-        }))
-      );
+      const formattedMessages = conversationMessages.map((msg) => ({
+        id: msg.id,
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content,
+      }));
+      setInitialMessages(formattedMessages);
+      setMessages(formattedMessages);
     } else if (currentConversation) {
+      setInitialMessages([]);
       setMessages([]);
     }
-  }, [conversationMessages, currentConversation]);
+  }, [conversationMessages, currentConversation, setMessages]);
 
   const loadConversation = (conversation: Conversation) => {
     setCurrentConversation(conversation);
@@ -76,13 +119,14 @@ export default function AIChat() {
     if (!user) return null;
 
     try {
-      const newConv = await createConversation.mutateAsync({
+      const newConv = await createConversationMutation.mutateAsync({
         userId: user.id,
         title: '新しい会話',
       });
       
       setCurrentConversation(newConv);
       setMessages([]);
+      setInitialMessages([]);
       setIsSidebarOpen(false);
       return newConv;
     } catch (error) {
@@ -95,19 +139,8 @@ export default function AIChat() {
     if (!currentConversation || !user) return;
 
     try {
-      const titlePrompt = `以下の会話の内容を、15文字以内の簡潔なタイトルにしてください。タイトルのみを返してください。
-
-ユーザー: ${userMessage.slice(0, 100)}
-AI: ${aiResponse.slice(0, 100)}`;
-
-      const response = await sendMessageToDify(
-        titlePrompt,
-        '',
-        () => {},
-        { name: profile?.name }
-      );
-
-      const generatedTitle = response.answer.trim().slice(0, 30);
+      // シンプルにユーザーメッセージの最初の部分をタイトルにする
+      const generatedTitle = userMessage.slice(0, 20) + (userMessage.length > 20 ? '...' : '');
 
       await updateConversationTitle.mutateAsync({
         conversationId: currentConversation.id,
@@ -117,16 +150,7 @@ AI: ${aiResponse.slice(0, 100)}`;
       
       setCurrentConversation((prev) => (prev ? { ...prev, title: generatedTitle } : null));
     } catch (error) {
-      console.error('タイトル生成エラー:', error);
-      const fallbackTitle = userMessage.slice(0, 20) + (userMessage.length > 20 ? '...' : '');
-      
-      await updateConversationTitle.mutateAsync({
-        conversationId: currentConversation.id,
-        title: fallbackTitle,
-        userId: user.id,
-      });
-      
-      setCurrentConversation((prev) => (prev ? { ...prev, title: fallbackTitle } : null));
+      console.error('タイトル更新エラー:', error);
     }
   };
 
@@ -178,161 +202,28 @@ AI: ${aiResponse.slice(0, 100)}`;
     scrollToBottom();
   }, [messages]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // カスタム送信ハンドラー（会話の作成とメッセージ保存を含む）
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const messageText = input.trim();
     if (!messageText || isLoading) return;
 
-    setIsLoading(true);
-    setError('');
-
     let conversation = currentConversation;
 
+    // 会話がない場合は新規作成
     if (!conversation) {
-      try {
-        conversation = await createNewConversation();
-        if (!conversation) {
-          setError('トークルームの作成に失敗しました。');
-          setIsLoading(false);
-          return;
-        }
-      } catch (error) {
-        setError('トークルームの作成に失敗しました。');
-        setIsLoading(false);
+      conversation = await createNewConversation();
+      if (!conversation) {
+        alert('トークルームの作成に失敗しました。');
         return;
       }
     }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: messageText,
-      timestamp: new Date(),
-    };
+    // ユーザーメッセージを保存
+    await saveMessage('user', messageText, conversation.id);
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-
-    const conversationId = conversation.id;
-
-    try {
-      await saveMessage('user', messageText, conversationId);
-    } catch (err) {
-      console.error('メッセージ保存エラー:', err);
-    }
-
-    let streamingMessageId = '';
-
-    if (useDify) {
-      try {
-        streamingMessageId = (Date.now() + 1).toString();
-        const streamingMessage: Message = {
-          id: streamingMessageId,
-          role: 'assistant',
-          content: '',
-          timestamp: new Date(),
-          isStreaming: true,
-        };
-        setMessages((prev) => [...prev, streamingMessage]);
-
-        const userContext: any = {
-          name: profile?.name,
-          goal: profile?.goal,
-          currentProblem: profile?.current_problem,
-        };
-
-        if (diagnosisData) {
-          if (diagnosisData.designer_type) {
-            const typeInfo = designerTypes[diagnosisData.designer_type as keyof typeof designerTypes];
-            if (typeInfo) {
-              userContext.designerType = typeInfo.name;
-              userContext.designerTypeDescription = typeInfo.description;
-            }
-          }
-        }
-
-        let streamedContent = '';
-        const response = await sendMessageToDify(
-          messageText,
-          conversation.dify_conversation_id || '',
-          (chunk) => {
-            streamedContent += chunk;
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === streamingMessageId
-                  ? { ...msg, content: streamedContent, isStreaming: true }
-                  : msg
-              )
-            );
-          },
-          userContext,
-          'free_talk'
-        );
-
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === streamingMessageId
-              ? { ...msg, content: response.answer || streamedContent, isStreaming: false }
-              : msg
-          )
-        );
-
-        const assistantContent = response.answer || streamedContent;
-        if (assistantContent) {
-          await saveMessage('assistant', assistantContent, conversationId);
-        }
-
-        if (conversation.title === '新しい会話' && assistantContent) {
-          await generateConversationTitle(messageText, assistantContent);
-        }
-
-        if (response.conversation_id && !conversation.dify_conversation_id) {
-          await supabase
-            .from('conversations')
-            .update({ dify_conversation_id: response.conversation_id })
-            .eq('id', conversation.id);
-
-          setCurrentConversation((prev) =>
-            prev ? { ...prev, dify_conversation_id: response.conversation_id } : null
-          );
-        }
-      } catch (err: any) {
-        console.error('Dify API エラー:', err);
-        setError(err.message || 'AIからの応答に失敗しました。');
-        
-        if (streamingMessageId) {
-          setMessages((prev) => prev.filter(msg => msg.id !== streamingMessageId));
-        }
-        
-        const errorMessage: Message = {
-          id: (Date.now() + 2).toString(),
-          role: 'assistant',
-          content: '申し訳ございません。現在AIからの応答が取得できません。しばらく経ってから再度お試しください。',
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, errorMessage]);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      setTimeout(async () => {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: 'Dify APIが設定されていません。.envファイルにVITE_DIFY_API_KEYとVITE_DIFY_API_URLを設定してください。',
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-
-        try {
-          await saveMessage('assistant', assistantMessage.content, conversationId);
-        } catch (err) {
-          console.error('メッセージ保存エラー:', err);
-        }
-
-        setIsLoading(false);
-      }, 1000);
-    }
+    // Vercel AI SDKのsubmitを実行
+    handleSubmit(e);
   };
 
   const suggestedQuestions = [
@@ -451,12 +342,6 @@ AI: ${aiResponse.slice(0, 100)}`;
           </div>
         </div>
 
-        {error && (
-          <div className="px-4 py-2 bg-red-50 text-red-600 text-sm text-center flex-shrink-0">
-            {error}
-          </div>
-        )}
-
         {/* メッセージエリア */}
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
           {messages.length === 0 ? (
@@ -478,7 +363,7 @@ AI: ${aiResponse.slice(0, 100)}`;
                 {suggestedQuestions.map((question, index) => (
                   <button
                     key={index}
-                    onClick={() => setInput(question)}
+                    onClick={() => handleInputChange({ target: { value: question } } as any)}
                     className="w-full text-left text-sm px-4 py-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition border border-slate-200"
                   >
                     {question}
@@ -525,7 +410,7 @@ AI: ${aiResponse.slice(0, 100)}`;
                 </div>
               ))}
 
-              {isLoading && !messages.some(msg => msg.isStreaming) && (
+              {isLoading && (
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden">
                     <img
@@ -551,12 +436,12 @@ AI: ${aiResponse.slice(0, 100)}`;
 
         {/* 入力エリア */}
         <div className="flex-shrink-0 border-t border-slate-200 bg-white px-4 py-3 sticky bottom-0">
-          <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
+          <form onSubmit={onSubmit} className="max-w-4xl mx-auto">
             <div className="flex items-center gap-2 bg-slate-100 rounded-2xl p-2">
               <input
                 type="text"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={handleInputChange}
                 placeholder={isLoading ? "送信中..." : "ハルキAIに質問する..."}
                 className="flex-1 bg-transparent px-3 sm:px-4 py-2 text-sm sm:text-base text-slate-900 placeholder-slate-400 focus:outline-none"
                 disabled={isLoading}
