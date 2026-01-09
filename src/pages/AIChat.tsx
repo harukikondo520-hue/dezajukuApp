@@ -171,7 +171,7 @@ export function ChatPage() {
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !(input || '').trim()}
             className="
               bg-red-500 text-white p-3 rounded-xl
               hover:bg-red-600 transition-colors
