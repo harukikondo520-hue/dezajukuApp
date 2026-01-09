@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
 import { ChevronLeft, Send } from 'lucide-react';
 
 // モードの定義
