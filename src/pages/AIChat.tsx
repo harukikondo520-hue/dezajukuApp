@@ -64,10 +64,10 @@ export function ChatPage() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="flex flex-col bg-gray-50" style={{ height: 'calc(100vh - 64px)' }}>
 
       {/* ===== ヘッダー ===== */}
-      <header className="bg-white border-b px-4 py-3 flex items-center gap-3">
+      <header className="bg-white border-b px-4 py-3 flex items-center gap-3 flex-shrink-0">
         <button
           onClick={() => navigate('/')}
           className="p-1 hover:bg-gray-100 rounded-lg"
@@ -81,7 +81,7 @@ export function ChatPage() {
       </header>
 
       {/* ===== モード切替タブ ===== */}
-      <div className="bg-white border-b px-4 py-2">
+      <div className="bg-white border-b px-4 py-2 flex-shrink-0">
         <div className="flex gap-2">
           {MODES.map((mode) => (
             <button
@@ -155,7 +155,7 @@ export function ChatPage() {
       {/* ===== 入力欄 ===== */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white border-t p-4"
+        className="bg-white border-t p-4 flex-shrink-0"
       >
         <div className="flex gap-2">
           <input
