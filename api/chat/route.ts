@@ -16,14 +16,14 @@ export async function POST(req: Request) {
     const systemPrompt = createSystemPrompt(mode, userType);
 
     // ③ OpenAI APIを呼び出す
-    const result = streamText({
+    const result = await streamText({
       model: openai('gpt-4o-mini'),  // 使用するモデル
       system: systemPrompt,          // AIの性格
       messages: messages,            // 会話履歴
     });
 
     // ④ ストリーミングで返す
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 
   } catch (error) {
     console.error('Chat API Error:', error);
