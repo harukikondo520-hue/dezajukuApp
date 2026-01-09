@@ -34,13 +34,13 @@ export default async function handler(req: Request) {
 - 必要に応じて箇条書きを使用
 - 励ましの言葉を忘れずに`;
 
-    const result = streamText({
+    const result = await streamText({
       model: openai('gpt-4o-mini'),
       system: systemPrompt || defaultSystemPrompt,
       messages,
     });
 
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(
