@@ -4,9 +4,9 @@ import { Send } from 'lucide-react';
 
 // モードの定義（壁打ち、6STEP添削、営業文添削）
 const MODES = [
-  { id: 'casual', label: '壁打ち', emoji: '💭' },
-  { id: 'sixstep', label: '6STEP添削', emoji: '📝' },
-  { id: 'sales', label: '営業文添削', emoji: '✉️' },
+  { id: 'casual', label: '壁打ち' },
+  { id: 'sixstep', label: '6STEP添削' },
+  { id: 'sales', label: '営業文添削' },
 ] as const;
 
 type Mode = 'casual' | 'sixstep' | 'sales';
@@ -121,14 +121,14 @@ export function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col bg-slate-50" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="min-h-screen bg-slate-50 pb-36">
       {/* ヘッダー */}
-      <header className="bg-white border-b border-slate-200 px-4 py-3 flex-shrink-0">
+      <header className="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-10">
         <h1 className="text-lg font-bold text-slate-900 text-center">ハルキAI</h1>
       </header>
 
       {/* モード切替タブ */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2 flex-shrink-0">
+      <div className="bg-white border-b border-slate-200 px-4 py-2 sticky top-12 z-10">
         <div className="flex gap-2">
           {MODES.map((mode) => (
             <button
@@ -142,14 +142,14 @@ export function ChatPage() {
                 }
               `}
             >
-              {mode.emoji} {mode.label}
+              {mode.label}
             </button>
           ))}
         </div>
       </div>
 
       {/* メッセージ一覧 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="p-4 space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -198,9 +198,12 @@ export function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 入力欄 */}
-      <form onSubmit={handleSubmit} className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
-        <div className="flex gap-2">
+      {/* 入力欄（固定表示） */}
+      <form 
+        onSubmit={handleSubmit} 
+        className="fixed bottom-16 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20"
+      >
+        <div className="max-w-lg mx-auto flex gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
