@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MessageCircle, User } from 'lucide-react';
+import { MessageCircle, User } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,7 +10,6 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: 'ホーム', icon: Home },
     { path: '/chat', label: 'AI', icon: MessageCircle },
     { path: '/profile', label: 'プロフィール', icon: User },
   ];
@@ -25,7 +24,7 @@ export default function Layout({ children }: LayoutProps) {
       {/* ボトムナビゲーション */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
         <div className="max-w-lg mx-auto">
-          <div className="grid grid-cols-3 gap-0">
+          <div className="grid grid-cols-2 gap-0">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;

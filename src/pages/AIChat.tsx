@@ -1,50 +1,39 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useChat } from '@ai-sdk/react';
-import { ChevronLeft, Send } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Send } from 'lucide-react';
 
-// モードの定義
+// モードの定義（壁打ち、6STEP添削、営業文添削）
 const MODES = [
   { id: 'casual', label: '壁打ち', emoji: '💭' },
-  { id: 'project', label: '案件サポート', emoji: '💼' },
-  { id: 'analysis', label: '自己分析', emoji: '🔍' },
+  { id: 'sixstep', label: '6STEP添削', emoji: '📝' },
+  { id: 'sales', label: '営業文添削', emoji: '✉️' },
 ] as const;
 
-type Mode = 'casual' | 'project' | 'analysis';
+type Mode = 'casual' | 'sixstep' | 'sales';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export function ChatPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // URLからモードを取得（デフォルトは casual）
   const currentMode = (searchParams.get('mode') as Mode) || 'casual';
 
-  // ユーザーのタイプ（後でストアから取得するように変更）
-  const userType = '翻訳するデザイナー';
-
-  // ★★★ ここがVercel AI SDKの核心 ★★★
-  const {
-    messages,           // メッセージの配列
-    input,              // 入力欄の値
-    handleInputChange,  // 入力欄が変わったときの処理
-    handleSubmit,       // 送信したときの処理
-    isLoading,          // AIが返答中かどうか
-    setMessages,        // メッセージを直接セットする
-  } = useChat({
-    api: '/api/chat',   // バックエンドのURL
-    body: {             // 追加で送るデータ
-      mode: currentMode,
-      userType: userType,
+  // メッセージ状態
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 'welcome',
+      role: 'assistant',
+      content: getWelcomeMessage(currentMode),
     },
-    initialMessages: [  // 最初のメッセージ
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: getWelcomeMessage(currentMode),
-      },
-    ],
-  });
+  ]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // メッセージが増えたら一番下にスクロール
   useEffect(() => {
@@ -63,35 +52,93 @@ export function ChatPage() {
     ]);
   };
 
-  return (
-    <div className="flex flex-col bg-gray-50" style={{ height: 'calc(100vh - 64px)' }}>
+  // メッセージ送信
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
 
-      {/* ===== ヘッダー ===== */}
-      <header className="bg-white border-b px-4 py-3 flex items-center gap-3 flex-shrink-0">
-        <button
-          onClick={() => navigate('/')}
-          className="p-1 hover:bg-gray-100 rounded-lg"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        <div>
-          <h1 className="font-bold text-gray-900">ハルキAI</h1>
-          <p className="text-xs text-gray-500">{userType}</p>
-        </div>
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input.trim(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          mode: currentMode,
+        }),
+      });
+
+      if (!response.ok) throw new Error('API error');
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader');
+
+      const aiMessageId = (Date.now() + 1).toString();
+      let aiContent = '';
+
+      setMessages((prev) => [
+        ...prev,
+        { id: aiMessageId, role: 'assistant', content: '' },
+      ]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text = new TextDecoder().decode(value);
+        aiContent += text;
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === aiMessageId ? { ...m, content: aiContent } : m
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      // エラー時はダミーレスポンス
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: getFallbackResponse(currentMode),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col bg-slate-50" style={{ height: 'calc(100vh - 64px)' }}>
+      {/* ヘッダー */}
+      <header className="bg-white border-b border-slate-200 px-4 py-3 flex-shrink-0">
+        <h1 className="text-lg font-bold text-slate-900 text-center">ハルキAI</h1>
       </header>
 
-      {/* ===== モード切替タブ ===== */}
-      <div className="bg-white border-b px-4 py-2 flex-shrink-0">
+      {/* モード切替タブ */}
+      <div className="bg-white border-b border-slate-200 px-4 py-2 flex-shrink-0">
         <div className="flex gap-2">
           {MODES.map((mode) => (
             <button
               key={mode.id}
               onClick={() => handleModeChange(mode.id)}
               className={`
-                flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors
+                flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all
                 ${currentMode === mode.id
-                  ? 'bg-red-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-red-500 text-white shadow-md'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }
               `}
             >
@@ -101,7 +148,7 @@ export function ChatPage() {
         </div>
       </div>
 
-      {/* ===== メッセージ一覧 ===== */}
+      {/* メッセージ一覧 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div
@@ -120,8 +167,8 @@ export function ChatPage() {
               className={`
                 max-w-[75%] rounded-2xl px-4 py-3
                 ${message.role === 'user'
-                  ? 'bg-red-500 text-white rounded-tr-md'
-                  : 'bg-white border border-gray-200 text-gray-900 rounded-tl-md'
+                  ? 'bg-red-500 text-white rounded-tr-sm'
+                  : 'bg-white border border-slate-200 text-slate-900 rounded-tl-sm shadow-sm'
                 }
               `}
             >
@@ -138,44 +185,40 @@ export function ChatPage() {
             <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-2">
               🤖
             </div>
-            <div className="bg-white border border-gray-200 rounded-2xl rounded-tl-md px-4 py-3">
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
               <div className="flex gap-1">
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
-                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]" />
               </div>
             </div>
           </div>
         )}
 
-        {/* スクロール用の空要素 */}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ===== 入力欄 ===== */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white border-t p-4 flex-shrink-0"
-      >
+      {/* 入力欄 */}
+      <form onSubmit={handleSubmit} className="bg-white border-t border-slate-200 p-4 flex-shrink-0">
         <div className="flex gap-2">
           <input
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="メッセージを入力..."
             disabled={isLoading}
             className="
-              flex-1 border border-gray-200 rounded-xl px-4 py-3
+              flex-1 border border-slate-200 rounded-xl px-4 py-3
               focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent
-              disabled:bg-gray-100 disabled:cursor-not-allowed
+              disabled:bg-slate-100 disabled:cursor-not-allowed
             "
           />
           <button
             type="submit"
-            disabled={isLoading || !(input || '').trim()}
+            disabled={isLoading || !input.trim()}
             className="
               bg-red-500 text-white p-3 rounded-xl
               hover:bg-red-600 transition-colors
-              disabled:bg-gray-300 disabled:cursor-not-allowed
+              disabled:bg-slate-300 disabled:cursor-not-allowed
             "
           >
             <Send className="w-5 h-5" />
@@ -196,27 +239,60 @@ function getWelcomeMessage(mode: Mode): string {
 デザインのこと、仕事のこと、モヤモヤしてること...
 なんでも気軽に話してくださいね！`;
 
-    case 'project':
-      return `案件サポートモードですね！💼
+    case 'sixstep':
+      return `6STEP添削モードですね！📝
 
-今進めている案件で困っていることはありますか？
+デザイン制作の6ステップについて添削します。
 
-- 見積もりの出し方
-- クライアントへの伝え方
-- 修正対応の判断
+1. 目的整理
+2. ワンメッセージ設計
+3. 世界観設計
+4. リサーチ
+5. ラフ構成
+6. デザイン生成
 
-なんでも相談してください！`;
+どのステップで困っていますか？`;
 
-    case 'analysis':
-      return `自己分析モードですね！🔍
+    case 'sales':
+      return `営業文添削モードですね！✉️
 
-自分の強みや方向性について、一緒に考えましょう。
+クラウドソーシングの提案文、SNSのDM、メールなど...
+どんな営業文でも添削します！
 
-- 自分の強みをもっと知りたい
-- どんな案件が向いているか
-- キャリアの方向性
+添削してほしい文章を送ってください。
+ぶち上げていきましょう！`;
+  }
+}
 
-何でも聞いてください！`;
+// フォールバックレスポンス
+function getFallbackResponse(mode: Mode): string {
+  switch (mode) {
+    case 'casual':
+      return `なるほど！いい質問ですね 💡
+
+もう少し詳しく教えてもらえますか？
+一緒に考えていきましょう！`;
+
+    case 'sixstep':
+      return `なるほど！その点について添削しますね 📝
+
+大事なのは「目的」に立ち返ることです。
+・なぜこのデザインが必要なのか
+・誰に届けたいのか
+・どんな行動を促したいのか
+
+この3点を明確にして、もう一度見直してみてください！`;
+
+    case 'sales':
+      return `営業文、見させてもらいました！✉️
+
+改善ポイントは3つです：
+1. 冒頭でベネフィットを明確に
+2. 具体的な実績や数字を入れる
+3. 相手が返信したくなるCTAを入れる
+
+この3点を意識して書き直してみてください！
+ぶち上げていきましょう！`;
   }
 }
 

@@ -5,14 +5,10 @@ import Layout from './components/Layout';
 import Opening from './components/Opening';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
-import NewHome from './pages/NewHome';
 import AIChat from './pages/AIChat';
 import ProfilePage from './pages/ProfilePage';
 import DiagnosisPage from './pages/DiagnosisPage';
 import DiagnosisResultPage from './pages/DiagnosisResultPage';
-import DesignReview from './pages/DesignReview';
-import SixStepReview from './pages/SixStepReview';
-import SalesReview from './pages/SalesReview';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuth();
@@ -88,9 +84,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (user) {
-    // 診断完了済みならホームへ、未完了なら診断へ
+    // 診断完了済みならチャットへ、未完了なら診断へ
     if (profile?.onboarding_completed) {
-      return <Navigate to="/" />;
+      return <Navigate to="/chat" />;
     } else {
       return <Navigate to="/diagnosis" />;
     }
@@ -138,15 +134,7 @@ function AppRoutes() {
         }
       />
 
-      {/* メイン画面（タブナビゲーション） */}
-      <Route
-        path="/"
-        element={
-          <PrivateRoute>
-            <NewHome />
-          </PrivateRoute>
-        }
-      />
+      {/* メイン画面（2タブナビゲーション: AI / プロフィール） */}
       <Route
         path="/chat"
         element={
@@ -164,31 +152,9 @@ function AppRoutes() {
         }
       />
 
-      {/* 添削AI（独立画面） */}
-      <Route
-        path="/design-review"
-        element={
-          <AuthenticatedRoute>
-            <DesignReview />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/sixstep-review"
-        element={
-          <AuthenticatedRoute>
-            <SixStepReview />
-          </AuthenticatedRoute>
-        }
-      />
-      <Route
-        path="/sales-review"
-        element={
-          <AuthenticatedRoute>
-            <SalesReview />
-          </AuthenticatedRoute>
-        }
-      />
+      {/* ルートはチャットにリダイレクト */}
+      <Route path="/" element={<Navigate to="/chat" replace />} />
+      <Route path="*" element={<Navigate to="/chat" replace />} />
     </Routes>
   );
 }
